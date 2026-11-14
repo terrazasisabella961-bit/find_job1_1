@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "104362505288",
+    "project_id": "found-job1-1",
+    "storage_bucket": "found-job1-1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104362505288:android:2bcd5eb80db84ce699947d",
+        "android_client_info": {
+          "package_name": "com.example.find_job1_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsTS9tzeM4PXb9t_EjTIIryR69x6aJsy4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

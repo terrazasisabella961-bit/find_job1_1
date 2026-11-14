@@ -1,0 +1,209 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsCompany(companyId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/companies/$(companyId))
+          .data.ownerUid == request.auth.uid;
+    }
+
+    function validCompany(data, ownerId) {
+      return data.ownerUid == ownerId
+        && data.name is string
+        && data.name.size() > 0
+        && data.sector is string
+        && data.sector.size() > 0
+        && data.description is string
+        && data.email is string
+        && data.phone is string
+        && data.city is string
+        && data.address is string
+        && data.website is string;
+    }
+
+    function validJob(data) {
+      return data.companyId is string
+        && data.ownerUid == request.auth.uid
+        && data.companyName is string
+        && data.companySector is string
+        && data.companyEmail is string
+        && data.companyPhone is string
+        && data.companyWebsite is string
+        && data.companyAddress is string
+        && data.title is string
+        && data.title.size() > 0
+        && data.description is string
+        && data.description.size() > 0
+        && data.area is string
+        && data.city is string
+        && data.modality in ['Presencial', 'Híbrida', 'Remota']
+        && data.employmentType is string
+        && data.experience is string
+        && data.currency in ['BOB', 'USD']
+        && data.status in ['draft', 'published', 'paused', 'closed']
+        && (data.salaryMinimum == null || data.salaryMinimum is int)
+        && (data.salaryMaximum == null || data.salaryMaximum is int)
+        && (!('zone' in data.keys()) || data.zone is string)
+        && (!('requiredDocuments' in data.keys())
+          || data.requiredDocuments is list)
+        && (!('skills' in data.keys()) || data.skills is list)
+        && (!('salaryConfidential' in data.keys())
+          || data.salaryConfidential is bool)
+        && (!('benefits' in data.keys()) || data.benefits is list)
+        && (!('publicationDate' in data.keys())
+          || data.publicationDate is timestamp)
+        && (!('vacancyCount' in data.keys())
+          || (data.vacancyCount is int && data.vacancyCount > 0))
+        && (!('applicationChannel' in data.keys())
+          || data.applicationChannel in ['app', 'email'])
+        && (!('contactEmail' in data.keys()) || data.contactEmail is string)
+        && (!('whatsApp' in data.keys()) || data.whatsApp is string);
+    }
+
+    function ownsInstitution(institutionId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/institutions/$(institutionId))
+          .data.ownerUid == request.auth.uid;
+    }
+
+    function verifiedInstitution(institutionId) {
+      return signedIn()
+        && request.auth.token.institution == true
+        && get(/databases/$(database)/documents/institutions/$(institutionId))
+          .data.ownerUid == request.auth.uid
+        && get(/databases/$(database)/documents/institutions/$(institutionId))
+          .data.verificationStatus == 'verified';
+    }
+
+    function validInstitution(data, ownerId) {
+      return data.ownerUid == ownerId
+        && data.legalName is string
+        && data.displayName is string
+        && data.type is string
+        && data.taxId is string
+        && data.accreditation is string
+        && data.country is string
+        && data.city is string
+        && data.address is string
+        && data.website is string
+        && data.primaryDomain is string
+        && data.secondaryDomains is list
+        && data.representativeName is string
+        && data.representativeRole is string
+        && data.phone is string
+        && data.contactEmail is string
+        && data.adminEmail is string
+        && data.twoFactorRequested is bool;
+    }
+
+    function validCourse(data, ownerId) {
+      return data.ownerUid == ownerId
+        && data.institutionName is string
+        && data.institutionLocation is string
+        && data.title is string
+        && data.title.size() > 0
+        && data.programType is string
+        && data.studyArea is string
+        && data.modality is string
+        && data.duration is string
+        && data.description is string
+        && data.description.size() > 0
+        && data.totalSeats is int
+        && data.totalSeats > 0
+        && data.minimumLevel is string
+        && data.requiredDocuments is list
+        && data.currency is string
+        && data.totalCost is number
+        && data.paymentPlan is string
+        && data.earlyDiscount is string
+        && data.includesCertification is bool
+        && data.publicationDate is timestamp
+        && data.applicationDeadline is timestamp
+        && data.startDate is timestamp
+        && data.whatsApp is string
+        && data.admissionsEmail is string
+        && (data.brochureUrl == null || data.brochureUrl is string)
+        && data.status in ['draft', 'published', 'retired'];
+    }
+
+    match /users/{userId} {
+      allow read, delete: if request.auth != null
+        && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId;
+    }
+
+    match /companies/{companyId} {
+      allow read: if signedIn() && request.auth.uid == companyId;
+      allow create: if signedIn()
+        && request.auth.uid == companyId
+        && validCompany(request.resource.data, companyId);
+      allow update: if signedIn()
+        && request.auth.uid == companyId
+        && resource.data.ownerUid == request.auth.uid
+        && validCompany(request.resource.data, companyId);
+      allow delete: if false;
+    }
+
+    match /jobs/{jobId} {
+      allow get, list: if resource.data.status == 'published'
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if signedIn()
+        && validJob(request.resource.data)
+        && request.resource.data.companyId == request.auth.uid
+        && ownsCompany(request.resource.data.companyId);
+      allow update: if signedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.companyId == resource.data.companyId
+        && ownsCompany(resource.data.companyId)
+        && validJob(request.resource.data);
+      allow delete: if signedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && ownsCompany(resource.data.companyId);
+    }
+
+    match /institutions/{institutionId} {
+      allow get: if signedIn()
+        && request.auth.uid == institutionId;
+      allow list: if false;
+      allow create: if signedIn()
+        && request.auth.uid == institutionId
+        && validInstitution(request.resource.data, institutionId)
+        && request.resource.data.verificationStatus == 'pending';
+      allow update: if signedIn()
+        && request.auth.uid == institutionId
+        && resource.data.ownerUid == request.auth.uid
+        && validInstitution(request.resource.data, institutionId)
+        && request.resource.data.verificationStatus
+          == resource.data.verificationStatus
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if false;
+    }
+
+    match /courses/{courseId} {
+      allow get, list: if resource.data.status == 'published'
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if signedIn()
+        && validCourse(request.resource.data, request.auth.uid)
+        && ownsInstitution(request.auth.uid)
+        && (request.resource.data.status == 'draft'
+          || (request.resource.data.status == 'published'
+            && verifiedInstitution(request.auth.uid)));
+      allow update: if signedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && validCourse(request.resource.data, request.auth.uid)
+        && ownsInstitution(request.auth.uid)
+        && (request.resource.data.status == 'draft'
+          || (request.resource.data.status in ['published', 'retired']
+            && verifiedInstitution(request.auth.uid)));
+      allow delete: if false;
+    }
+  }
+}

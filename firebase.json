@@ -1,0 +1,28 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "found-job1-1",
+          "appId": "1:104362505288:android:2bcd5eb80db84ce699947d",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "found-job1-1",
+          "configurations": {
+            "android": "1:104362505288:android:2bcd5eb80db84ce699947d",
+            "web": "1:104362505288:web:54c2efd55e0e762599947d"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  }
+}

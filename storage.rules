@@ -1,0 +1,32 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{userId}/cv/{fileName} {
+      allow read, delete: if request.auth != null
+        && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType in [
+          'application/pdf',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+    }
+
+    match /institutions/{institutionId}/courses/{courseId}/{fileName} {
+      function ownsInstitution() {
+        return request.auth != null
+          && request.auth.uid == institutionId
+          && firestore.get(
+            /databases/(default)/documents/institutions/$(institutionId)
+          ).data.ownerUid == request.auth.uid;
+      }
+
+      allow read: if ownsInstitution();
+      allow create, update: if ownsInstitution()
+        && request.resource.size <= 15 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+      allow delete: if ownsInstitution();
+    }
+  }
+}

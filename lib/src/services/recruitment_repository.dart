@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/company.dart';
 import '../models/job_posting.dart';
@@ -20,10 +22,15 @@ abstract interface class RecruitmentRepository {
 }
 
 class FirebaseRecruitmentRepository implements RecruitmentRepository {
-  FirebaseRecruitmentRepository({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+  FirebaseRecruitmentRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
+  static const _jobSaveTimeout = Duration(seconds: 30);
 
   @override
   Stream<Company?> watchCompany(String ownerUid) {
@@ -100,31 +107,92 @@ class FirebaseRecruitmentRepository implements RecruitmentRepository {
   @override
   Future<String> saveJob(JobPosting job) async {
     final jobs = _firestore.collection('jobs');
-    final reference = job.id.isEmpty ? jobs.doc() : jobs.doc(job.id);
-    final companyReference = _firestore
-        .collection('companies')
-        .doc(job.companyId);
+    final documentId = job.id.isEmpty ? jobs.doc().id : job.id;
+    final reference = jobs.doc(documentId);
+    var stage = 'authentication';
 
-    await _firestore.runTransaction((transaction) async {
-      final companySnapshot = await transaction.get(companyReference);
-      final companyData = companySnapshot.data();
-      if (!companySnapshot.exists ||
-          companyData == null ||
-          companyData['ownerUid'] != job.ownerUid) {
-        throw StateError('No tienes permiso para administrar esta empresa.');
+    Future<String> writeAndVerify() async {
+      try {
+        developer.log(
+          'Starting job save ($documentId, ${job.status})',
+          name: 'FirebaseRecruitmentRepository',
+        );
+        final user = _auth.currentUser;
+        if (user == null) {
+          throw StateError('Debes iniciar sesión para publicar un empleo.');
+        }
+        if (user.uid != job.ownerUid || job.companyId != user.uid) {
+          throw StateError(
+            'La sesión actual no corresponde a la empresa de esta oferta.',
+          );
+        }
+        if (job.title.trim().isEmpty || job.description.trim().isEmpty) {
+          throw ArgumentError('El título y la descripción son obligatorios.');
+        }
+
+        stage = 'write';
+        await reference
+            .set({
+              ...job.toMap(),
+              'createdAt': job.id.isEmpty
+                  ? FieldValue.serverTimestamp()
+                  : Timestamp.fromDate(job.createdAt),
+              'updatedAt': FieldValue.serverTimestamp(),
+            })
+            .timeout(_jobSaveTimeout);
+
+        stage = 'verification';
+        final saved = await reference
+            .get(const GetOptions(source: Source.server))
+            .timeout(_jobSaveTimeout);
+        final savedData = saved.data();
+        if (!saved.exists ||
+            savedData == null ||
+            savedData['ownerUid'] != user.uid ||
+            savedData['companyId'] != job.companyId ||
+            savedData['status'] != job.status ||
+            savedData['title'] != job.title.trim()) {
+          throw StateError(
+            'Firestore no confirmó los datos de la oferta guardada.',
+          );
+        }
+        developer.log(
+          'Job save confirmed ($documentId)',
+          name: 'FirebaseRecruitmentRepository',
+        );
+        return documentId;
+      } on Object catch (error, stackTrace) {
+        developer.log(
+          'Job save failed at $stage ($documentId)',
+          name: 'FirebaseRecruitmentRepository',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        if (stage == 'verification' ||
+            error is TimeoutException ||
+            error is FirebaseException &&
+                const {
+                  'unavailable',
+                  'deadline-exceeded',
+                  'network-request-failed',
+                }.contains(error.code)) {
+          throw JobSaveOutcomeUnknownException(documentId, stage);
+        }
+        rethrow;
       }
-      final existing = await transaction.get(reference);
-      if (existing.exists && existing.data()?['ownerUid'] != job.ownerUid) {
-        throw StateError('No tienes permiso para modificar esta oferta.');
-      }
-      transaction.set(reference, {
-        ...job.toMap(),
-        'createdAt':
-            existing.data()?['createdAt'] ?? FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    });
-    return reference.id;
+    }
+
+    try {
+      return await writeAndVerify().timeout(_jobSaveTimeout);
+    } on TimeoutException catch (error, stackTrace) {
+      developer.log(
+        'Job save timed out at $stage ($documentId); write outcome may be unknown',
+        name: 'FirebaseRecruitmentRepository',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      throw JobSaveOutcomeUnknownException(documentId, stage);
+    }
   }
 
   @override
@@ -134,4 +202,11 @@ class FirebaseRecruitmentRepository implements RecruitmentRepository {
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
+}
+
+class JobSaveOutcomeUnknownException implements Exception {
+  const JobSaveOutcomeUnknownException(this.jobId, this.stage);
+
+  final String jobId;
+  final String stage;
 }

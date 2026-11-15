@@ -1132,6 +1132,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
   late bool _salaryConfidential =
       widget.initialJob?.salaryConfidential ?? false;
   bool _saving = false;
+  String? _pendingJobId;
 
   static const _modalities = ['Presencial', 'Híbrida', 'Remota'];
   static const _employmentTypes = [
@@ -1217,7 +1218,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
   }
 
   Future<void> _save({required bool publish}) async {
-    if (!_formKey.currentState!.validate() || _saving) return;
+    if (_saving || !_formKey.currentState!.validate()) return;
     final minimum = _parseSalary(_salaryMinimum.text);
     final maximum = _parseSalary(_salaryMaximum.text);
     if (minimum != null && maximum != null && minimum > maximum) {
@@ -1235,11 +1236,20 @@ class _JobFormScreenState extends State<JobFormScreen> {
       return;
     }
     setState(() => _saving = true);
+    final slowSaveNotice = Timer(const Duration(seconds: 15), () {
+      if (mounted && _saving) {
+        _showMessage(
+          'La publicación sigue en curso. No cierres esta pantalla ni '
+          'vuelvas a enviarla; te avisaremos cuando Firestore confirme '
+          'el resultado.',
+        );
+      }
+    });
     try {
       final previous = widget.initialJob;
       await widget.repository.saveJob(
         JobPosting(
-          id: previous?.id ?? '',
+          id: previous?.id ?? _pendingJobId ?? '',
           companyId: widget.company.id,
           ownerUid: widget.company.ownerUid,
           companyName: widget.company.name,
@@ -1294,18 +1304,47 @@ class _JobFormScreenState extends State<JobFormScreen> {
         ),
       );
       Navigator.of(context).pop();
-    } on Exception catch (error) {
+    } on Object catch (error) {
+      if (error is JobSaveOutcomeUnknownException) {
+        _pendingJobId = error.jobId;
+      }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authErrorMessage(error)),
-            backgroundColor: appSurfaceColor,
-          ),
-        );
+        _showMessage(_jobSaveErrorMessage(error));
       }
     } finally {
+      slowSaveNotice.cancel();
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  String _jobSaveErrorMessage(Object error) {
+    if (error is JobSaveOutcomeUnknownException) {
+      return 'La confirmación tardó demasiado. El empleo podría haberse '
+          'guardado; puedes reintentar sin crear una oferta duplicada.';
+    }
+    if (error is StateError) return error.message.toString();
+    if (error is ArgumentError) {
+      return 'Los datos del empleo no son válidos. Revisa los campos e '
+          'inténtalo nuevamente.';
+    }
+    if (error is FirebaseException) {
+      return switch (error.code) {
+        'permission-denied' =>
+          'Firebase denegó el permiso para publicar. Verifica que la sesión '
+              'pertenezca a esta empresa.',
+        'unauthenticated' =>
+          'Tu sesión expiró. Inicia sesión nuevamente para publicar.',
+        'unavailable' || 'deadline-exceeded' || 'network-request-failed' =>
+          'No se pudo confirmar la publicación por un problema de conexión. '
+              'El empleo podría haberse guardado; revisa el tablero antes '
+              'de reintentar.',
+        'invalid-argument' || 'failed-precondition' =>
+          'Firestore rechazó los datos de la oferta (${error.code}). '
+              'Revisa los campos e inténtalo nuevamente.',
+        _ => authErrorMessage(error),
+      };
+    }
+    return authErrorMessage(error);
   }
 
   void _showMessage(String message) {
@@ -1348,6 +1387,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
               const _FormSection('A. DATOS GENERALES DEL PUESTO'),
               _SectionLabel('Título del Puesto / Vacante'),
               _FormInput(
+                key: const ValueKey('job-title'),
                 controller: _title,
                 hint: 'Ej. Desarrollador Full Stack Senior',
                 validator: (value) {
@@ -1401,6 +1441,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
               const SizedBox(height: 12),
               _SectionLabel('Descripción y Responsabilidades'),
               _FormInput(
+                key: const ValueKey('job-description'),
                 controller: _description,
                 hint: 'Detalla el objetivo principal del puesto, responsabilidades claves, funciones diarias y desafíos del rol...',
                 maxLines: 5,
@@ -2033,6 +2074,7 @@ class _SectionLabel extends StatelessWidget {
 
 class _FormInput extends StatelessWidget {
   const _FormInput({
+    super.key,
     required this.controller,
     required this.hint,
     this.validator,
@@ -2052,6 +2094,7 @@ class _FormInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TextFormField(
+    key: key,
     controller: controller,
     validator: validator,
     keyboardType: keyboardType,

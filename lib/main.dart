@@ -20,6 +20,11 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    try {
+      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+    } on FirebaseException {
+      // Keep the default persistence if the browser blocks IndexedDB.
+    }
     runApp(const MyApp());
   } on FirebaseException catch (error) {
     runApp(_FirebaseStartupError(message: error.message ?? error.code));
@@ -151,17 +156,19 @@ class _AuthenticatedGate extends StatelessWidget {
     return StreamBuilder(
       stream: recruitmentRepository.watchCompany(user.uid),
       builder: (context, companySnapshot) {
-        if (companySnapshot.hasError) {
+        if (companySnapshot.hasError &&
+            !isRecoverableFirebaseAccessError(companySnapshot.error)) {
           return _FirebaseStartupError(
             message:
                 'No se pudo comprobar la cuenta de empresa: '
                 '${companySnapshot.error}',
           );
         }
-        if (companySnapshot.connectionState == ConnectionState.waiting) {
+        if (companySnapshot.connectionState == ConnectionState.waiting &&
+            !companySnapshot.hasError) {
           return const _SessionLoading();
         }
-        final company = companySnapshot.data;
+        final company = companySnapshot.hasError ? null : companySnapshot.data;
         if (company != null) {
           return AppShell(
             authRepository: authRepository,
@@ -175,7 +182,8 @@ class _AuthenticatedGate extends StatelessWidget {
         return StreamBuilder(
           stream: institutionRepository.watchInstitution(user.uid),
           builder: (context, institutionSnapshot) {
-            if (institutionSnapshot.hasError) {
+            if (institutionSnapshot.hasError &&
+                !isRecoverableFirebaseAccessError(institutionSnapshot.error)) {
               return _FirebaseStartupError(
                 message:
                     'No se pudo comprobar la cuenta institucional: '
@@ -183,10 +191,12 @@ class _AuthenticatedGate extends StatelessWidget {
               );
             }
             if (institutionSnapshot.connectionState ==
-                ConnectionState.waiting) {
+                    ConnectionState.waiting &&
+                !institutionSnapshot.hasError) {
               return const _SessionLoading();
             }
-            if (institutionSnapshot.data != null) {
+            if (!institutionSnapshot.hasError &&
+                institutionSnapshot.data != null) {
               return AppShell(
                 authRepository: authRepository,
                 profileRepository: profileRepository,
@@ -303,7 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
         email: _emailController.text,
         password: _passwordController.text,
       );
-    } on Exception catch (error) {
+    } on Object catch (error) {
       if (mounted) _showDemoMessage(authErrorMessage(error));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -315,7 +325,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isSubmitting = true);
     try {
       await widget.authRepository.signInWithGoogle();
-    } on Exception catch (error) {
+    } on Object catch (error) {
       if (mounted) _showDemoMessage(authErrorMessage(error));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

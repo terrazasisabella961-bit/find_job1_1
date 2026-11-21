@@ -1362,6 +1362,7 @@ class _InstitutionCourseFormScreenState
       String? brochureUrl = widget.initialCourse?.brochureUrl;
       if (_brochure != null) {
         final bytes = await _brochure!.readAsBytes();
+        await FirebaseAuth.instance.currentUser?.getIdToken(true);
         final reference = FirebaseStorage.instance.ref().child(
           'institutions/${widget.institution.uid}/courses/$courseId/brochure.pdf',
         );

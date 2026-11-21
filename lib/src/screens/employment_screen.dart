@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../models/job_posting.dart';
+import '../models/job_suggestion.dart';
+import '../models/user_profile.dart';
+import '../services/job_suggestion_service.dart';
 import '../services/recruitment_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
 
@@ -8,11 +11,19 @@ class EmploymentScreen extends StatefulWidget {
   const EmploymentScreen({
     required this.repository,
     required this.onOpenCatalog,
+    this.profile,
+    this.showSuggestions = false,
+    this.onCompleteProfile,
+    this.suggestionService = const LocalJobSuggestionService(),
     super.key,
   });
 
   final RecruitmentRepository repository;
   final VoidCallback onOpenCatalog;
+  final UserProfile? profile;
+  final bool showSuggestions;
+  final VoidCallback? onCompleteProfile;
+  final JobSuggestionService suggestionService;
 
   @override
   State<EmploymentScreen> createState() => _EmploymentScreenState();
@@ -55,22 +66,8 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
 
   List<JobPosting> _filterJobs(List<JobPosting> jobs) {
     final query = _searchController.text.trim().toLowerCase();
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
     return jobs.where((job) {
-      if (job.deadline != null &&
-          DateTime(
-            job.deadline!.year,
-            job.deadline!.month,
-            job.deadline!.day,
-          ).isBefore(todayDate)) {
-        return false;
-      }
-      if (DateTime(
-        job.publicationDate.year,
-        job.publicationDate.month,
-        job.publicationDate.day,
-      ).isAfter(todayDate)) {
+      if (!job.isCurrentlyListed()) {
         return false;
       }
       final searchable = [
@@ -240,6 +237,20 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  if (widget.showSuggestions) ...[
+                    _JobSuggestionsPanel(
+                      profile: widget.profile,
+                      jobs: jobs,
+                      suggestionService: widget.suggestionService,
+                      onCompleteProfile: widget.onCompleteProfile,
+                      onOpenJob: (job) => Navigator.of(context).push<void>(
+                        MaterialPageRoute<void>(
+                          builder: (_) => JobDetailsScreen(job: job),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   if (jobs.isEmpty)
                     const _EmptyJobs()
                   else if (filteredJobs.isEmpty)
@@ -737,6 +748,182 @@ class _JobFilters {
           : onlyWithSalary
           ? 1
           : 0);
+}
+
+class _JobSuggestionsPanel extends StatelessWidget {
+  const _JobSuggestionsPanel({
+    required this.profile,
+    required this.jobs,
+    required this.suggestionService,
+    required this.onOpenJob,
+    this.onCompleteProfile,
+  });
+
+  final UserProfile? profile;
+  final List<JobPosting> jobs;
+  final JobSuggestionService suggestionService;
+  final ValueChanged<JobPosting> onOpenJob;
+  final VoidCallback? onCompleteProfile;
+
+  bool get _hasProfileSignals {
+    final value = profile;
+    if (value == null) return false;
+    return value.city.trim().isNotEmpty ||
+        value.areaOfInterest.trim().isNotEmpty;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasProfileSignals) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: appSurfaceColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: appBorderColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'SUGERIDAS PARA TI',
+              style: TextStyle(
+                color: Color(0xFFB48BF1),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Completa tu ciudad y área profesional para recomendarte empleos de tu registro.',
+              style: TextStyle(color: appMutedColor, fontSize: 12),
+            ),
+            if (onCompleteProfile != null) ...[
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: onCompleteProfile,
+                child: const Text('Completar perfil'),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    final suggestions = suggestionService.suggest(profile: profile, jobs: jobs);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'SUGERIDAS PARA TI',
+          style: TextStyle(
+            color: Color(0xFFB48BF1),
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Según tu perfil, no según el filtro de búsqueda.',
+          style: TextStyle(color: appMutedColor, fontSize: 11),
+        ),
+        const SizedBox(height: 10),
+        if (suggestions.isEmpty)
+          const Text(
+            'Aún no hay ofertas con un encaje claro para tu perfil.',
+            style: TextStyle(color: appMutedColor, fontSize: 12),
+          )
+        else
+          for (final suggestion in suggestions)
+            _SuggestionCard(
+              suggestion: suggestion,
+              onTap: () => onOpenJob(suggestion.job),
+            ),
+      ],
+    );
+  }
+}
+
+class _SuggestionCard extends StatelessWidget {
+  const _SuggestionCard({required this.suggestion, required this.onTap});
+
+  final JobSuggestion suggestion;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final job = suggestion.job;
+    final score = suggestion.score;
+    final reasons = suggestion.reasons;
+    final label = score >= 70
+        ? 'Muy buen encaje'
+        : score >= 50
+        ? 'Buen encaje'
+        : 'Encaje posible';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: appSurfaceColor,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: appPurpleColor.withValues(alpha: 0.45)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        job.title.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: appPurpleColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  job.companyName,
+                  style: const TextStyle(color: appMutedColor, fontSize: 11),
+                ),
+                Text(
+                  '${job.city} · ${job.modality}',
+                  style: const TextStyle(color: appMutedColor, fontSize: 11),
+                ),
+                const SizedBox(height: 6),
+                for (final reason in reasons.take(3))
+                  Text(
+                    '• $reason',
+                    style: const TextStyle(color: Colors.white, fontSize: 11),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _JobsHeader extends StatelessWidget {

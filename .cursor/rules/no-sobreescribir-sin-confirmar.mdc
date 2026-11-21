@@ -1,0 +1,59 @@
+---
+description: No sobreescribir código sin entenderlo; si hay duda, preguntar antes de editar.
+alwaysApply: true
+---
+
+# No sobreescribir sin saber — preguntar primero
+
+Eres un agente en un repo con código de producto (Flutter/Firebase). **No reescribas, no borres y no “limpies” código que no hayas leído y entendido.** Si no estás seguro, **pregunta y espera**. Un cambio especulativo es peor que una pregunta.
+
+## Antes de tocar archivos
+
+1. Lee el código existente (archivo + usos). No asumas el diseño.
+2. Identifica el cambio **mínimo** que cumple lo pedido.
+3. Si hay más de una interpretación razonable, **pregunta**. No elijas en silencio.
+4. Si el usuario no pidió reescribir un módulo, **no lo reescribas**.
+
+## Cuándo debes preguntar (obligatorio)
+
+Pregunta y espera respuesta **antes** de editar cuando:
+
+- No entiendes por qué existe un bloque, test, regla o comentario.
+- El pedido es ambiguo (“arréglalo”, “mejóralo”, “hazlo como IA”).
+- El cambio sustituiría un archivo entero, una pantalla, o un servicio que ya funciona.
+- Habría que cambiar contrato público: modelos, repositorios, rutas, `firestore.rules`, `storage.rules`, Auth, `firebase_options`.
+- Habría que borrar, renombrar o mover APIs/pantallas que otras partes usan.
+- Lo “correcto” choca con tests o con comportamiento actual.
+- Faltan datos (API key, proveedor de IA, campos de perfil, copy de UI).
+- Estás a punto de añadir dependencias, backend, o reestructurar carpetas.
+
+Pregunta concreta: qué archivo, qué comportamiento conservar, y 2–3 opciones si aplica.
+
+## Qué está prohibido
+
+- Regenerar un archivo “más limpio” y perder lógica, comentarios o tests.
+- Aplicar un prompt o feature nueva pisando `EmploymentScreen`, login, reclutamiento o instituciones sin confirmar alcance.
+- “Arreglar” lints/deprecations masivos no pedidos.
+- Inventar campos, APIs o reglas Firebase “por si acaso”.
+- Continuar a ciegas tras un error de análisis: investiga o pregunta; no reescribas para que compile.
+
+```dart
+// ❌ MAL: reemplazar toda la pantalla para añadir un bloque
+// ✅ BIEN: leer EmploymentScreen, insertar una sección, reutilizar filtros/detalle
+```
+
+```text
+❌ MAL: “Reescribí job_posting.dart para que quede más claro”
+✅ BIEN: “¿Solo añado JobSuggestion o también campos nuevos al perfil?”
+```
+
+## Cómo editar cuando sí hay luz verde
+
+- `search_replace` / parches pequeños. Un archivo, un propósito.
+- Conserva nombres, estilo, strings en español y tests existentes.
+- Amplía tests; no los borres para que pasen.
+- Si el usuario dice “no toques X”, X queda fuera aunque “quede mejor”.
+
+## Si descubriste que no sabías
+
+Para, resume qué ibas a cambiar, qué no está claro, y pregunta. **No dejes un refactor a medias “ya lo termino después”.**

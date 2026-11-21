@@ -1,8 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 
 import '../models/user_profile.dart';
+
+class StorageUploadException implements Exception {
+  StorageUploadException(this.cause);
+
+  final Object cause;
+
+  @override
+  String toString() => cause.toString();
+}
 
 abstract interface class UserProfileRepository {
   Future<UserProfile?> getProfile(String uid);
@@ -21,11 +31,14 @@ class FirebaseUserProfileRepository implements UserProfileRepository {
   FirebaseUserProfileRepository({
     FirebaseFirestore? firestore,
     FirebaseStorage? storage,
+    FirebaseAuth? auth,
   }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _storage = storage ?? FirebaseStorage.instance;
+       _storage = storage ?? FirebaseStorage.instance,
+       _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
+  final FirebaseAuth _auth;
 
   @override
   Future<UserProfile?> getProfile(String uid) async {
@@ -80,46 +93,39 @@ class FirebaseUserProfileRepository implements UserProfileRepository {
     required UserProfile profile,
     PlatformFile? cvFile,
   }) async {
-    var cvUrl = profile.cvUrl;
-    var cvFileName = profile.cvFileName;
-    if (cvFile != null) {
-      final bytes = await cvFile.readAsBytes();
+    final profileReference = _firestore.collection('users').doc(profile.uid);
+    await profileReference.set(profile.toMap(), SetOptions(merge: true));
+    if (cvFile == null) return;
 
+    try {
+      await _auth.currentUser?.getIdToken(true);
+      final bytes = await cvFile.readAsBytes();
       final reference = _storage.ref().child(
         'users/${profile.uid}/cv/${DateTime.now().millisecondsSinceEpoch}_${cvFile.name}',
       );
       final task = await reference.putData(
         bytes,
-        SettableMetadata(contentType: _contentTypeFor(cvFile.extension)),
+        SettableMetadata(contentType: _contentTypeFor(cvFile)),
       );
-      cvUrl = await task.ref.getDownloadURL();
-      cvFileName = cvFile.name;
+      await profileReference.set({
+        'cvUrl': await task.ref.getDownloadURL(),
+        'cvFileName': cvFile.name,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      }, SetOptions(merge: true));
+    } catch (error) {
+      throw StorageUploadException(error);
     }
-
-    final updatedProfile = UserProfile(
-      uid: profile.uid,
-      fullName: profile.fullName,
-      email: profile.email,
-      phone: profile.phone,
-      city: profile.city,
-      areaOfInterest: profile.areaOfInterest,
-      acceptedTerms: profile.acceptedTerms,
-      isVisible: profile.isVisible,
-      cvUrl: cvUrl,
-      cvFileName: cvFileName,
-    );
-    await _firestore
-        .collection('users')
-        .doc(profile.uid)
-        .set(updatedProfile.toMap(), SetOptions(merge: true));
   }
 
-  String _contentTypeFor(String? extension) {
-    return switch (extension?.toLowerCase()) {
+  String _contentTypeFor(PlatformFile file) {
+    final extension =
+        (file.extension ?? file.name.split('.').last).toLowerCase();
+    return switch (extension) {
       'pdf' => 'application/pdf',
       'doc' => 'application/msword',
-      'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      _ => 'application/octet-stream',
+      'docx' =>
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      _ => 'application/pdf',
     };
   }
 }

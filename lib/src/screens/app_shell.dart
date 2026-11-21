@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../models/user_profile.dart';
 import '../services/auth_repository.dart';
 import '../services/institution_repository.dart';
 import '../services/recruitment_repository.dart';
@@ -44,15 +46,34 @@ class _AppShellState extends State<AppShell> {
     setState(() => _selectedIndex = 4);
   }
 
+  Widget _employmentTab({required User? user, required String accountType}) {
+    final isStudent = accountType == 'student' && user != null;
+    if (!isStudent) {
+      return EmploymentScreen(
+        repository: _recruitmentRepository,
+        onOpenCatalog: _openCatalog,
+      );
+    }
+    return StreamBuilder<UserProfile?>(
+      stream: widget.profileRepository.watchProfile(user.uid),
+      builder: (context, snapshot) {
+        return EmploymentScreen(
+          repository: _recruitmentRepository,
+          onOpenCatalog: _openCatalog,
+          profile: snapshot.data,
+          showSuggestions: true,
+          onCompleteProfile: () => setState(() => _selectedIndex = 3),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = widget.authRepository.currentUser;
     final accountType = widget.accountType;
     final pages = <Widget>[
-      EmploymentScreen(
-        repository: _recruitmentRepository,
-        onOpenCatalog: _openCatalog,
-      ),
+      _employmentTab(user: user, accountType: accountType),
       accountType == 'company' && user != null
           ? RecruitmentScreen(
               ownerUid: user.uid,

@@ -89,6 +89,7 @@ class _AppShellState extends State<AppShell> {
               ownerUid: user.uid,
               repository: _recruitmentRepository,
               applicationRepository: _applicationRepository,
+              authRepository: widget.authRepository,
             )
           : _AccountTypeNotice(
               title: 'Acceso para empresas',
@@ -115,6 +116,7 @@ class _AppShellState extends State<AppShell> {
           ownerUid: user.uid,
           repository: _recruitmentRepository,
           applicationRepository: _applicationRepository,
+          authRepository: widget.authRepository,
         )
       else if (accountType == 'student')
         AccountScreen(

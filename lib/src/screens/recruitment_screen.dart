@@ -426,12 +426,14 @@ class RecruitmentScreen extends StatefulWidget {
     required this.ownerUid,
     required this.repository,
     this.applicationRepository,
+    this.authRepository,
     super.key,
   });
 
   final String ownerUid;
   final RecruitmentRepository repository;
   final JobApplicationRepository? applicationRepository;
+  final AuthRepository? authRepository;
 
   @override
   State<RecruitmentScreen> createState() => _RecruitmentScreenState();
@@ -477,6 +479,7 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
           company: company,
           repository: widget.repository,
           applicationRepository: widget.applicationRepository,
+          authRepository: widget.authRepository,
         );
       },
     );
@@ -488,11 +491,29 @@ class _CompanyDashboard extends StatelessWidget {
     required this.company,
     required this.repository,
     this.applicationRepository,
+    this.authRepository,
   });
 
   final Company company;
   final RecruitmentRepository repository;
   final JobApplicationRepository? applicationRepository;
+  final AuthRepository? authRepository;
+
+  Future<void> _signOut(BuildContext context) async {
+    final auth = authRepository;
+    if (auth == null) return;
+    try {
+      await auth.signOut();
+    } on Exception catch (error) {
+      if (context.mounted) {
+        showAppMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
+      }
+    }
+  }
 
   Future<void> _editCompany(BuildContext context) async {
     await Navigator.of(context).push<void>(
@@ -550,10 +571,18 @@ class _CompanyDashboard extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
           children: [
-            const _PageHeader(
+            _PageHeader(
               eyebrow: 'CENTRO DE RECLUTAMIENTO',
               title: 'MI EMPRESA',
               onBack: null,
+              action: authRepository == null
+                  ? null
+                  : IconButton(
+                      onPressed: () => _signOut(context),
+                      tooltip: 'Cerrar sesión',
+                      icon: const Icon(Icons.logout),
+                      color: const Color(0xFFFF647C),
+                    ),
             ),
             const SizedBox(height: 18),
             Container(
@@ -656,6 +685,22 @@ class _CompanyDashboard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (authRepository != null) ...[
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _signOut(context),
+                        icon: const Icon(Icons.logout, size: 16),
+                        label: const Text('Cerrar sesión'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFFF647C),
+                          side: const BorderSide(color: appBorderColor),
+                          minimumSize: const Size.fromHeight(44),
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
@@ -1865,11 +1910,13 @@ class _PageHeader extends StatelessWidget {
     required this.eyebrow,
     required this.title,
     required this.onBack,
+    this.action,
   });
 
   final String eyebrow;
   final String title;
   final VoidCallback? onBack;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -1913,7 +1960,7 @@ class _PageHeader extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 40),
+        action ?? const SizedBox(width: 40),
       ],
     );
   }

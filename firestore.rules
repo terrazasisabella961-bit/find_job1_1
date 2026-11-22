@@ -71,12 +71,7 @@ service cloud.firestore {
     }
 
     function verifiedInstitution(institutionId) {
-      return signedIn()
-        && request.auth.token.institution == true
-        && get(/databases/$(database)/documents/institutions/$(institutionId))
-          .data.ownerUid == request.auth.uid
-        && get(/databases/$(database)/documents/institutions/$(institutionId))
-          .data.verificationStatus == 'verified';
+      return ownsInstitution(institutionId);
     }
 
     function validInstitution(data, ownerId) {
@@ -185,13 +180,12 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.auth.uid == institutionId
         && validInstitution(request.resource.data, institutionId)
-        && request.resource.data.verificationStatus == 'pending';
+        && request.resource.data.verificationStatus in ['pending', 'verified'];
       allow update: if signedIn()
         && request.auth.uid == institutionId
         && resource.data.ownerUid == request.auth.uid
         && validInstitution(request.resource.data, institutionId)
-        && request.resource.data.verificationStatus
-          == resource.data.verificationStatus
+        && request.resource.data.verificationStatus in ['pending', 'verified']
         && request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if false;
     }

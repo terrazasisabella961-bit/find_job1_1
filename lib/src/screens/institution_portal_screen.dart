@@ -104,6 +104,7 @@ class _InstitutionPortalScreenState extends State<InstitutionPortalScreen> {
             repository: widget.repository,
             onSignIn: () {},
             onSaved: () => setState(() => _editingInstitution = null),
+            onCancel: () => setState(() => _editingInstitution = null),
             existingUser: user,
             initialInstitution: _editingInstitution,
           );
@@ -312,6 +313,7 @@ class InstitutionRegistrationScreen extends StatefulWidget {
     this.existingUser,
     this.initialInstitution,
     this.onSaved,
+    this.onCancel,
     this.onRegistrationStarted,
     super.key,
   });
@@ -322,6 +324,7 @@ class InstitutionRegistrationScreen extends StatefulWidget {
   final User? existingUser;
   final Institution? initialInstitution;
   final VoidCallback? onSaved;
+  final VoidCallback? onCancel;
   final VoidCallback? onRegistrationStarted;
 
   @override
@@ -514,8 +517,9 @@ class _InstitutionRegistrationScreenState
         phone: _phone.text.trim(),
         contactEmail: _contactEmail.text.trim().toLowerCase(),
         adminEmail: adminEmail,
-        verificationStatus:
-            widget.initialInstitution?.verificationStatus ?? 'pending',
+        verificationStatus: simulateInstitutionVerification
+            ? 'verified'
+            : (widget.initialInstitution?.verificationStatus ?? 'pending'),
         twoFactorRequested: _twoFactor,
         createdAt: widget.initialInstitution?.createdAt,
       );
@@ -524,7 +528,7 @@ class _InstitutionRegistrationScreenState
         _showMessage(
           context,
           widget.initialInstitution == null
-              ? 'Solicitud institucional guardada. La verificación del dominio está pendiente.'
+              ? 'Institución guardada. Ya puedes publicar cursos.'
               : 'Los datos de la institución se actualizaron.',
         );
         widget.onSaved?.call();
@@ -543,6 +547,17 @@ class _InstitutionRegistrationScreenState
     final hasExistingUser =
         widget.existingUser != null ||
         widget.authRepository.currentUser != null;
+    final editing = widget.initialInstitution != null;
+    VoidCallback? onBack;
+    if (editing) {
+      onBack = widget.onCancel ?? widget.onSaved;
+    } else if (widget.onCancel != null) {
+      onBack = widget.onCancel;
+    } else if (Navigator.of(context).canPop()) {
+      onBack = () => Navigator.of(context).pop();
+    } else if (!hasExistingUser) {
+      onBack = widget.onSignIn;
+    }
     return Form(
       key: _formKey,
       child: ListView(
@@ -551,16 +566,10 @@ class _InstitutionRegistrationScreenState
         padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
         children: [
           _InstitutionHeader(
-            title: 'REGISTRO DE INSTITUCIÓN',
-            onBack: hasExistingUser
-                ? null
-                : () {
-                    if (Navigator.of(context).canPop()) {
-                      Navigator.of(context).pop();
-                    } else {
-                      widget.onSignIn();
-                    }
-                  },
+            title: editing
+                ? 'ACTUALIZAR INSTITUCIÓN'
+                : 'REGISTRO DE INSTITUCIÓN',
+            onBack: onBack,
           ),
           const SizedBox(height: 18),
           Text(
@@ -902,6 +911,12 @@ class _InstitutionRegistrationScreenState
                 label: const Text('Volver al inicio de sesión'),
               ),
           ],
+          if (editing && onBack != null)
+            TextButton.icon(
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: const Text('Volver al tablero'),
+            ),
         ],
       ),
     );
@@ -1024,6 +1039,47 @@ class InstitutionDashboardScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _publishCourse(
+    BuildContext context,
+    InstitutionCourse course,
+  ) async {
+    final shouldPublish = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: appSurfaceColor,
+        title: const Text('Publicar curso'),
+        content: Text(
+          'El borrador "${course.title}" pasará al catálogo público de CochaConecta.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: appOrangeColor),
+            child: const Text('Publicar ahora'),
+          ),
+        ],
+      ),
+    );
+    if (shouldPublish != true || !context.mounted) return;
+    try {
+      await repository.publishCourse(
+        courseId: course.id,
+        ownerUid: institution.uid,
+      );
+      if (context.mounted) {
+        _showMessage(context, 'El curso se publicó en el catálogo.');
+      }
+    } on StateError catch (error) {
+      if (context.mounted) _showMessage(context, error.message);
+    } on Exception catch (error) {
+      if (context.mounted) _showMessage(context, authErrorMessage(error));
+    }
+  }
+
   Future<void> _signOut(BuildContext context) async {
     try {
       await authRepository.signOut();
@@ -1039,9 +1095,16 @@ class InstitutionDashboardScreen extends StatelessWidget {
       stream: repository.watchInstitutionCourses(institution.uid),
       builder: (context, snapshot) {
         final courses = snapshot.data ?? const <InstitutionCourse>[];
-        final published = courses
+        final drafts = courses
+            .where((course) => course.status == 'draft')
+            .toList();
+        final publishedCourses = courses
             .where((course) => course.status == 'published')
-            .length;
+            .toList();
+        final retiredCourses = courses
+            .where((course) => course.status == 'retired')
+            .toList();
+        final published = publishedCourses.length;
         return ListView(
           padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
           children: [
@@ -1204,13 +1267,67 @@ class InstitutionDashboardScreen extends StatelessWidget {
               const _InlineNotice(
                 'Aún no hay programas. Crea un curso para comenzar.',
               )
-            else
-              for (final course in courses)
-                _InstitutionCourseCard(
-                  course: course,
-                  onEdit: () => onEditCourse(course),
-                  onRetire: () => _retireCourse(context, course),
+            else ...[
+              if (drafts.isNotEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.only(top: 4, bottom: 8),
+                  child: Text(
+                    'BORRADORES',
+                    style: TextStyle(
+                      color: appOrangeColor,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.4,
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
+                for (final course in drafts)
+                  _InstitutionCourseCard(
+                    course: course,
+                    onEdit: () => onEditCourse(course),
+                    onPublish: () => _publishCourse(context, course),
+                  ),
+              ],
+              if (publishedCourses.isNotEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.only(top: 8, bottom: 8),
+                  child: Text(
+                    'PUBLICADOS EN EL CATÁLOGO',
+                    style: TextStyle(
+                      color: Color(0xFF4BD6A0),
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.4,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+                for (final course in publishedCourses)
+                  _InstitutionCourseCard(
+                    course: course,
+                    onEdit: () => onEditCourse(course),
+                    onRetire: () => _retireCourse(context, course),
+                  ),
+              ],
+              if (retiredCourses.isNotEmpty) ...[
+                const Padding(
+                  padding: EdgeInsets.only(top: 8, bottom: 8),
+                  child: Text(
+                    'RETIRADOS',
+                    style: TextStyle(
+                      color: appMutedColor,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.4,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+                for (final course in retiredCourses)
+                  _InstitutionCourseCard(
+                    course: course,
+                    onEdit: () => onEditCourse(course),
+                  ),
+              ],
+            ],
             const SizedBox(height: 14),
             OutlinedButton.icon(
               onPressed: () => _signOut(context),
@@ -1411,7 +1528,7 @@ class _InstitutionCourseFormScreenState
     }
     setState(() => _busy = true);
     try {
-      if (publish) {
+      if (publish && !simulateInstitutionVerification) {
         final user = FirebaseAuth.instance.currentUser;
         final claims = await user?.getIdTokenResult(true);
         if (!mounted) return;
@@ -1784,7 +1901,7 @@ class _InstitutionCourseFormScreenState
         const SizedBox(height: 16),
         const _Notice(
           title: 'PUBLICACIÓN',
-          text: 'Solo las instituciones verificadas pueden publicar convocatorias. Los borradores permanecen privados hasta su aprobación.',
+          text: 'Los borradores quedan privados en tu tablero. Al publicar, el curso aparece en el catálogo de CochaConecta.',
         ),
         const SizedBox(height: 16),
         _PrimaryAction(
@@ -1808,6 +1925,11 @@ class _InstitutionCourseFormScreenState
             minimumSize: const Size.fromHeight(44),
             side: const BorderSide(color: appBorderColor),
           ),
+        ),
+        TextButton.icon(
+          onPressed: widget.onBack,
+          icon: const Icon(Icons.arrow_back, size: 16),
+          label: const Text('Volver al tablero'),
         ),
       ],
     ),
@@ -1871,24 +1993,38 @@ class _InstitutionCourseCard extends StatelessWidget {
   const _InstitutionCourseCard({
     required this.course,
     required this.onEdit,
-    required this.onRetire,
+    this.onRetire,
+    this.onPublish,
   });
 
   final InstitutionCourse course;
   final VoidCallback onEdit;
-  final VoidCallback onRetire;
+  final VoidCallback? onRetire;
+  final VoidCallback? onPublish;
 
   @override
   Widget build(BuildContext context) {
+    final isDraft = course.status == 'draft';
     final status = switch (course.status) {
       'published' => 'Publicado',
       'retired' => 'Retirado',
       _ => 'Borrador',
     };
+    final statusColor = switch (course.status) {
+      'published' => const Color(0xFF4BD6A0),
+      'retired' => appMutedColor,
+      _ => appOrangeColor,
+    };
     return Container(
       margin: const EdgeInsets.only(bottom: 9),
       padding: const EdgeInsets.all(13),
-      decoration: _panelDecoration(),
+      decoration: BoxDecoration(
+        color: appSurfaceColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDraft ? appOrangeColor.withValues(alpha: 0.55) : appBorderColor,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1904,13 +2040,16 @@ class _InstitutionCourseCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                status,
-                style: TextStyle(
-                  color: course.status == 'published'
-                      ? const Color(0xFF4BD6A0)
-                      : appMutedColor,
-                  fontSize: 10,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(color: statusColor, fontSize: 10),
                 ),
               ),
             ],
@@ -1929,6 +2068,19 @@ class _InstitutionCourseCard extends StatelessWidget {
             '${course.modality} · ${course.totalSeats} cupos · ${course.currency} ${_decimal(course.totalCost)}',
             style: const TextStyle(color: appMutedColor, fontSize: 10),
           ),
+          if (course.description.trim().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              course.description.trim(),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: appMutedColor,
+                fontSize: 10,
+                height: 1.35,
+              ),
+            ),
+          ],
           Wrap(
             alignment: WrapAlignment.end,
             spacing: 6,
@@ -1938,7 +2090,14 @@ class _InstitutionCourseCard extends StatelessWidget {
                 icon: const Icon(Icons.edit_outlined, size: 15),
                 label: const Text('Editar'),
               ),
-              if (course.status == 'published')
+              if (onPublish != null)
+                TextButton.icon(
+                  onPressed: onPublish,
+                  icon: const Icon(Icons.publish_outlined, size: 15),
+                  label: const Text('Publicar'),
+                  style: TextButton.styleFrom(foregroundColor: appOrangeColor),
+                ),
+              if (onRetire != null)
                 TextButton.icon(
                   onPressed: onRetire,
                   icon: const Icon(Icons.remove_circle_outline, size: 15),
@@ -2019,7 +2178,7 @@ class _InstitutionHeader extends StatelessWidget {
       if (onBack != null)
         IconButton(
           onPressed: onBack,
-          tooltip: 'Volver al inicio de sesión',
+          tooltip: 'Volver',
           icon: const Icon(Icons.arrow_back),
           color: Colors.white,
           style: IconButton.styleFrom(

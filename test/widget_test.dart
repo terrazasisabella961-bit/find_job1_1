@@ -60,7 +60,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('REGISTRO DE INSTITUCIÓN'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Volver al inicio de sesión'));
+      await tester.tap(find.byTooltip('Volver'));
       await tester.pumpAndSettle();
       expect(find.text('Empleo y formación en Cochabamba'), findsOneWidget);
     },
@@ -170,6 +170,13 @@ void main() {
 
     expect(find.text('MI INSTITUCIÓN'), findsOneWidget);
     expect(find.text('Institución de prueba'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Editar perfil institucional'));
+    await tester.pumpAndSettle();
+    expect(find.text('ACTUALIZAR INSTITUCIÓN'), findsOneWidget);
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.text('MI INSTITUCIÓN'), findsOneWidget);
   });
 
   testWidgets(
@@ -624,6 +631,12 @@ class _FakeInstitutionRepository implements InstitutionRepository {
 
   @override
   Future<void> retireCourse({
+    required String courseId,
+    required String ownerUid,
+  }) async {}
+
+  @override
+  Future<void> publishCourse({
     required String courseId,
     required String ownerUid,
   }) async {}

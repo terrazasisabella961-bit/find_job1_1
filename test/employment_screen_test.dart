@@ -425,4 +425,10 @@ class _EmptyInstitutionRepository implements InstitutionRepository {
     required String courseId,
     required String ownerUid,
   }) async {}
+
+  @override
+  Future<void> publishCourse({
+    required String courseId,
+    required String ownerUid,
+  }) async {}
 }

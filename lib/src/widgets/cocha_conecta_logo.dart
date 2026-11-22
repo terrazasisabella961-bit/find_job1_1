@@ -8,7 +8,7 @@ class CochaConectaLogo extends StatelessWidget {
     super.key,
   });
 
-  static const assetPath = 'assets/branding/cochaconecta_logo.jpg';
+  static const assetPath = 'assets/branding/cochaconecta_logo.png';
 
   final double height;
 

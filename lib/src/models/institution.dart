@@ -1,3 +1,5 @@
+import '../config/file_upload_mode.dart';
+
 class Institution {
   const Institution({
     required this.uid,
@@ -43,7 +45,8 @@ class Institution {
   final bool twoFactorRequested;
   final DateTime? createdAt;
 
-  bool get isVerified => verificationStatus == 'verified';
+  bool get isVerified =>
+      verificationStatus == 'verified' || simulateInstitutionVerification;
 
   factory Institution.fromMap(String uid, Map<String, dynamic> data) {
     return Institution(

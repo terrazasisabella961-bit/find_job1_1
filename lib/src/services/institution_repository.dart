@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../config/file_upload_mode.dart';
 import '../models/institution.dart';
 import '../models/institution_course.dart';
 
@@ -15,6 +16,11 @@ abstract interface class InstitutionRepository {
   Future<String> saveCourse(InstitutionCourse course);
 
   Future<void> retireCourse({
+    required String courseId,
+    required String ownerUid,
+  });
+
+  Future<void> publishCourse({
     required String courseId,
     required String ownerUid,
   });
@@ -50,7 +56,10 @@ class FirebaseInstitutionRepository implements InstitutionRepository {
       }
       transaction.set(reference, {
         ...institution.toMap(),
-        'verificationStatus': data?['verificationStatus'] ?? 'pending',
+        'verificationStatus': simulateInstitutionVerification
+            ? 'verified'
+            : (data?['verificationStatus'] ??
+                institution.verificationStatus),
         'createdAt': data?['createdAt'] ?? FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -148,6 +157,30 @@ class FirebaseInstitutionRepository implements InstitutionRepository {
       }
       transaction.update(reference, {
         'status': 'retired',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  @override
+  Future<void> publishCourse({
+    required String courseId,
+    required String ownerUid,
+  }) async {
+    final reference = _firestore.collection('courses').doc(courseId);
+    await _firestore.runTransaction((transaction) async {
+      final course = await transaction.get(reference);
+      if (!course.exists || course.data()?['ownerUid'] != ownerUid) {
+        throw StateError('No tienes permiso para publicar este curso.');
+      }
+      final institution = await transaction.get(
+        _firestore.collection('institutions').doc(ownerUid),
+      );
+      if (!institution.exists || institution.data()?['ownerUid'] != ownerUid) {
+        throw StateError('No se encontró la institución de esta cuenta.');
+      }
+      transaction.update(reference, {
+        'status': 'published',
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });

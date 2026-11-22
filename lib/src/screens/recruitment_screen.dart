@@ -1060,6 +1060,18 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
                 onPressed: widget.onCancel,
                 child: const Text('¿Ya registraste tu empresa? Iniciar sesión'),
               ),
+            )
+          else if (editing)
+            TextButton.icon(
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: const Text('Volver al tablero'),
+            )
+          else if (widget.onCancel != null)
+            TextButton.icon(
+              onPressed: widget.onCancel,
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: const Text('Volver'),
             ),
         ],
       ),

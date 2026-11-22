@@ -200,7 +200,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('SUGERIDAS PARA TI'), findsNothing);
-    expect(find.text('ANUNCIOS DE EMPLEOS ACTIVOS'), findsOneWidget);
+    expect(find.text('Anuncios de empleo activos'), findsOneWidget);
   });
 }
 

@@ -6,6 +6,7 @@ import '../models/user_profile.dart';
 import '../services/job_suggestion_service.dart';
 import '../services/recruitment_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/cocha_conecta_logo.dart';
 
 class EmploymentScreen extends StatefulWidget {
   const EmploymentScreen({
@@ -930,33 +931,18 @@ class _JobsHeader extends StatelessWidget {
   const _JobsHeader();
 
   @override
-  Widget build(BuildContext context) => const Row(
+  Widget build(BuildContext context) => const Column(
     children: [
-      SizedBox(width: 40),
-      Expanded(
-        child: Column(
-          children: [
-            Text(
-              'OPORTUNIDADES PROFESIONALES',
-              style: TextStyle(
-                color: Color(0xFFB48BF1),
-                fontSize: 9,
-                letterSpacing: 0.7,
-              ),
-            ),
-            SizedBox(height: 3),
-            Text(
-              'ANUNCIOS DE EMPLEOS ACTIVOS',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+      CochaConectaLogo(height: 72),
+      SizedBox(height: 8),
+      Text(
+        'Anuncios de empleo activos',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
         ),
       ),
-      SizedBox(width: 40),
     ],
   );
 }

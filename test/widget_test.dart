@@ -28,10 +28,11 @@ void main() {
       await tester.pumpWidget(_testApp());
       await tester.pump();
 
-      expect(find.text('INICIAR SESIÓN'), findsOneWidget);
+      expect(find.text('Empleo y formación en Cochabamba'), findsOneWidget);
+      expect(find.text('Iniciar sesión'), findsOneWidget);
       await tester.tap(find.text('Cuenta'));
       await tester.pump();
-      expect(find.text('INICIAR SESIÓN'), findsOneWidget);
+      expect(find.text('Iniciar sesión'), findsOneWidget);
       expect(
         find.text('Inicia sesión para acceder a esta sección.'),
         findsOneWidget,
@@ -65,7 +66,7 @@ void main() {
       await tester.tap(find.text('Iniciar sesión'));
       await tester.pumpAndSettle();
 
-      expect(find.text('ANUNCIOS DE EMPLEOS ACTIVOS'), findsOneWidget);
+      expect(find.text('Anuncios de empleo activos'), findsOneWidget);
       expect(find.text('REGISTRO DE USUARIO'), findsNothing);
 
       await tester.tap(find.text('Cuenta'));
@@ -76,27 +77,27 @@ void main() {
       await tester.tap(find.text('Reclutar'));
       await tester.pumpAndSettle();
       expect(find.text('Acceso para empresas'), findsOneWidget);
-      expect(find.text('INICIAR SESIÓN'), findsNothing);
+      expect(find.text('Iniciar sesión'), findsNothing);
 
       await tester.tap(find.text('Instituciones'));
       await tester.pumpAndSettle();
       expect(find.text('Acceso institucional'), findsOneWidget);
-      expect(find.text('INICIAR SESIÓN'), findsNothing);
+      expect(find.text('Iniciar sesión'), findsNothing);
 
       await tester.tap(find.text('Extras'));
       await tester.pumpAndSettle();
       expect(find.text('EXTRAS'), findsOneWidget);
-      expect(find.text('INICIAR SESIÓN'), findsNothing);
+      expect(find.text('Iniciar sesión'), findsNothing);
 
       await tester.tap(find.text('Cursos'));
       await tester.pumpAndSettle();
       expect(find.text('CURSOS Y POSGRADOS'), findsOneWidget);
       expect(find.text('0 programas encontrados'), findsOneWidget);
-      expect(find.text('INICIAR SESIÓN'), findsNothing);
+      expect(find.text('Iniciar sesión'), findsNothing);
 
       await tester.tap(find.text('Empleo'));
       await tester.pumpAndSettle();
-      expect(find.text('ANUNCIOS DE EMPLEOS ACTIVOS'), findsOneWidget);
+      expect(find.text('Anuncios de empleo activos'), findsOneWidget);
 
       await tester.tap(find.text('Cuenta'));
       await tester.pumpAndSettle();
@@ -107,7 +108,7 @@ void main() {
       );
       await tester.tap(find.text('Cerrar sesión'));
       await tester.pumpAndSettle();
-      expect(find.text('INICIAR SESIÓN'), findsOneWidget);
+      expect(find.text('Iniciar sesión'), findsOneWidget);
     },
   );
 
@@ -305,7 +306,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('ANUNCIOS DE EMPLEOS ACTIVOS'), findsOneWidget);
+      expect(find.text('Anuncios de empleo activos'), findsOneWidget);
       expect(find.text('REGISTRO DE USUARIO'), findsNothing);
       await tester.tap(find.text('Cuenta'));
       await tester.pumpAndSettle();
@@ -427,6 +428,11 @@ void main() {
     await tester.pumpWidget(_testApp());
     await tester.pump();
 
+    await tester.scrollUntilVisible(
+      find.text('¿No tienes cuenta? Regístrate'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('¿No tienes cuenta? Regístrate'));
     await tester.pumpAndSettle();
 

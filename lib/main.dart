@@ -13,6 +13,7 @@ import 'src/services/institution_repository.dart';
 import 'src/services/recruitment_repository.dart';
 import 'src/services/user_profile_repository.dart';
 import 'src/widgets/app_bottom_navigation.dart';
+import 'src/widgets/cocha_conecta_logo.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -408,44 +409,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: () => _showDemoMessage(
-                              'Estás en la pantalla de cuenta.',
-                            ),
-                            icon: const Icon(Icons.arrow_back),
-                            color: _purpleColor,
-                            style: IconButton.styleFrom(
-                              backgroundColor: _surfaceColor,
-                              side: const BorderSide(color: _borderColor),
-                              fixedSize: const Size(36, 36),
-                            ),
-                            tooltip: 'Volver',
-                          ),
-                          const Expanded(
-                            child: Text(
-                              'INICIAR SESIÓN',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _purpleColor,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.4,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 36),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+                      const CochaConectaLogo(height: 120),
+                      const SizedBox(height: 8),
                       const Text(
-                        'Utilice los campos de correo electrónico y '
-                        'contraseña a continuación para iniciar sesión.',
+                        'Empleo y formación en Cochabamba',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
+                          color: _mutedColor,
+                          fontSize: 13,
                           height: 1.45,
                         ),
                       ),

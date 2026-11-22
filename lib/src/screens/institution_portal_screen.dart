@@ -12,6 +12,7 @@ import '../services/auth_repository.dart';
 import '../services/institution_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
 import '../widgets/app_feedback.dart';
+import '../widgets/form_field_label.dart';
 
 class InstitutionPortalScreen extends StatefulWidget {
   const InstitutionPortalScreen({
@@ -267,7 +268,7 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _FormLabel('Correo electrónico institucional'),
+            const _FormLabel('Correo electrónico institucional', required: true),
             _InstitutionInput(
               controller: _email,
               hint: 'admin@institucion.edu.bo',
@@ -275,7 +276,7 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
               validator: _emailValidator,
             ),
             const SizedBox(height: 14),
-            const _FormLabel('Contraseña'),
+            const _FormLabel('Contraseña', required: true),
             _InstitutionInput(
               controller: _password,
               hint: 'Contraseña de acceso',
@@ -659,7 +660,7 @@ class _InstitutionRegistrationScreenState
           const _FieldHint(
             'Nombre abreviado o público tal como se mostrará en la app.',
           ),
-          const _FormLabel('Tipo de institución *'),
+          const _FormLabel('Tipo de institución', required: true),
           _dropdown(_type, _types, (value) => setState(() => _type = value)),
           const _FieldHint(
             'Define la categoría principal para tus programas de estudio.',
@@ -684,14 +685,14 @@ class _InstitutionRegistrationScreenState
           const _FieldHint(
             'Acreditación oficial ante el Ministerio de Educación.',
           ),
-          const _FormLabel('País *'),
+          const _FormLabel('País', required: true),
           _dropdown(
             _country,
             _countries,
             (value) => setState(() => _country = value),
           ),
           const _FieldHint('País sede o de constitución principal.'),
-          const _FormLabel('Ciudad / Departamento *'),
+          const _FormLabel('Ciudad / Departamento', required: true),
           _dropdown(
             _city,
             _cities,
@@ -733,7 +734,7 @@ class _InstitutionRegistrationScreenState
             'Dominio corporativo/educativo principal (ej. umss.edu.bo).',
           ),
           _textField(
-            'Dominios secundarios autorizados (opcional)',
+            'Dominios secundarios autorizados',
             _secondaryDomains,
             hint: 'posgrado.umss.edu.bo, fc y t.umss.edu.bo',
           ),
@@ -976,7 +977,7 @@ class _InstitutionRegistrationScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FormLabel('$label${required ? ' *' : ''}'),
+        _FormLabel(label, required: required),
         _InstitutionInput(
           controller: controller,
           hint: hint,
@@ -1848,7 +1849,10 @@ class _InstitutionCourseFormScreenState
             ),
           ],
         ),
-        const _FormLabel('Documentos requeridos al postulante:'),
+        const _FormLabel(
+          'Documentos requeridos al postulante',
+          required: false,
+        ),
         Wrap(
           spacing: 7,
           runSpacing: 7,
@@ -1916,7 +1920,7 @@ class _InstitutionCourseFormScreenState
           children: [
             Expanded(
               child: _courseField(
-                'Planes de Pago (opcional)',
+                'Planes de Pago',
                 _paymentPlan,
                 hint: 'Ej. Cuota inicial + 3 pagos',
               ),
@@ -1924,7 +1928,7 @@ class _InstitutionCourseFormScreenState
             const SizedBox(width: 8),
             Expanded(
               child: _courseField(
-                'Descuento Pronto Pago (opcional)',
+                'Descuento Pronto Pago',
                 _discount,
                 hint: 'Ej. 10% hasta fin de mes',
               ),
@@ -2011,7 +2015,10 @@ class _InstitutionCourseFormScreenState
             ),
           ],
         ),
-        const _FormLabel('Brochure o Programa Académico (PDF opcional)'),
+        const _FormLabel(
+          'Brochure o Programa Académico (PDF)',
+          required: false,
+        ),
         OutlinedButton.icon(
           onPressed: _selectBrochure,
           icon: const Icon(Icons.cloud_upload_outlined, color: appOrangeColor),
@@ -2074,7 +2081,7 @@ class _InstitutionCourseFormScreenState
   }) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      _FormLabel('$label${required ? ' *' : ''}'),
+      _FormLabel(label, required: required),
       _InstitutionInput(
         controller: controller,
         hint: hint,
@@ -2098,7 +2105,7 @@ class _InstitutionCourseFormScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FormLabel('$label *'),
+        _FormLabel(label, required: true),
         DropdownButtonFormField<String>(
           initialValue: safeValue,
           dropdownColor: appSurfaceColor,
@@ -2474,21 +2481,21 @@ class _SectionHeading extends StatelessWidget {
 }
 
 class _FormLabel extends StatelessWidget {
-  const _FormLabel(this.label);
+  const _FormLabel(this.label, {this.required = false});
 
   final String label;
+  final bool required;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 10, bottom: 5),
-    child: Text(
-      label,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-      ),
+  Widget build(BuildContext context) => FormFieldLabel(
+    label,
+    required: required,
+    style: const TextStyle(
+      color: Colors.white,
+      fontSize: 10,
+      fontWeight: FontWeight.w600,
     ),
+    padding: const EdgeInsets.only(top: 10, bottom: 5),
   );
 }
 
@@ -2559,7 +2566,7 @@ class _DateField extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      _FormLabel('$label *'),
+      _FormLabel(label, required: true),
       OutlinedButton.icon(
         onPressed: onTap,
         icon: const Icon(Icons.calendar_month_outlined, size: 15),

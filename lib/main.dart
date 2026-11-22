@@ -15,6 +15,7 @@ import 'src/services/recruitment_repository.dart';
 import 'src/services/user_profile_repository.dart';
 import 'src/widgets/app_feedback.dart';
 import 'src/widgets/cocha_conecta_logo.dart';
+import 'src/widgets/form_field_label.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -698,7 +699,19 @@ class LoginTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FormFieldLabel(
+          hintText,
+          required: true,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(
       height: 52,
       child: TextFormField(
         controller: controller,
@@ -737,6 +750,8 @@ class LoginTextField extends StatelessWidget {
           ),
         ),
       ),
+        ),
+      ],
     );
   }
 }

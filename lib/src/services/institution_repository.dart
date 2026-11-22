@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../config/file_upload_mode.dart';
+import '../data/demo_catalog.dart';
 import '../models/institution.dart';
 import '../models/institution_course.dart';
 
@@ -95,18 +96,14 @@ class FirebaseInstitutionRepository implements InstitutionRepository {
         .where('status', isEqualTo: 'published')
         .snapshots()
         .map(
-          (snapshot) =>
-              snapshot.docs
-                  .map(
-                    (document) =>
-                        InstitutionCourse.fromMap(document.id, document.data()),
-                  )
-                  .toList()
-                ..sort((a, b) {
-                  final aDate = a.createdAt ?? DateTime(1970);
-                  final bDate = b.createdAt ?? DateTime(1970);
-                  return bDate.compareTo(aDate);
-                }),
+          (snapshot) => withDemoCourses(
+            snapshot.docs
+                .map(
+                  (document) =>
+                      InstitutionCourse.fromMap(document.id, document.data()),
+                )
+                .toList(),
+          ),
         );
   }
 

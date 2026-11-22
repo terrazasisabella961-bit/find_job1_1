@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../data/demo_catalog.dart';
 import '../models/company.dart';
 import '../models/job_posting.dart';
 
@@ -83,10 +84,14 @@ class FirebaseRecruitmentRepository implements RecruitmentRepository {
         .where('status', isEqualTo: 'published')
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs
-              .map((document) => JobPosting.fromMap(document.id, document.data()))
-              .toList()
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+          (snapshot) => withDemoJobs(
+            snapshot.docs
+                .map(
+                  (document) =>
+                      JobPosting.fromMap(document.id, document.data()),
+                )
+                .toList(),
+          ),
         );
   }
 

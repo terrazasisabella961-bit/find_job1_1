@@ -9,6 +9,7 @@ import '../services/auth_error_message.dart';
 import '../services/job_application_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
 import '../widgets/app_feedback.dart';
+import '../widgets/form_field_label.dart';
 
 class JobApplicationFormScreen extends StatefulWidget {
   const JobApplicationFormScreen({
@@ -208,9 +209,9 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              const FormFieldLabel(
                 'Teléfono de contacto',
-                style: TextStyle(color: appMutedColor, fontSize: 12),
+                required: true,
               ),
               const SizedBox(height: 6),
               TextFormField(
@@ -223,9 +224,9 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
                     : null,
               ),
               const SizedBox(height: 12),
-              const Text(
+              const FormFieldLabel(
                 'Disponibilidad',
-                style: TextStyle(color: appMutedColor, fontSize: 12),
+                required: true,
               ),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
@@ -242,9 +243,9 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              const Text(
+              const FormFieldLabel(
                 'Mensaje para la empresa',
-                style: TextStyle(color: appMutedColor, fontSize: 12),
+                required: true,
               ),
               const SizedBox(height: 6),
               TextFormField(

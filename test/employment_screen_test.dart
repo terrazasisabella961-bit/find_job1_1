@@ -145,7 +145,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('SUGERIDAS PARA TI'), findsOneWidget);
-    expect(find.text('Según tu perfil, no según el filtro de búsqueda.'), findsOneWidget);
+    expect(
+      find.text(
+        'Según tu área, carrera y habilidades, no según el filtro de búsqueda.',
+      ),
+      findsOneWidget,
+    );
     expect(find.text('ANALISTA DE EXPERIENCIAS'), findsWidgets);
     expect(find.textContaining('Coincide tu área Tecnología'), findsOneWidget);
 

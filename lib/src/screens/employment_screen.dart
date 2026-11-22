@@ -233,17 +233,6 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${filteredJobs.length} anuncios encontrados'
-                    '${_activeFilterCount > 0 ? ' · $_activeFilterCount filtros' : ''}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                   const SizedBox(height: 12),
                   if (widget.showSuggestions) ...[
                     _JobSuggestionsPanel(
@@ -263,8 +252,20 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 18),
                   ],
+                  const _JobsCatalogHeading(),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${filteredJobs.length} anuncios encontrados'
+                    '${_activeFilterCount > 0 ? ' · $_activeFilterCount filtros' : ''}',
+                    style: const TextStyle(
+                      color: appMutedColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   if (jobs.isEmpty)
                     const _EmptyJobs()
                   else if (filteredJobs.isEmpty)
@@ -885,109 +886,151 @@ class _JobSuggestionsPanel extends StatelessWidget {
   bool get _hasProfileSignals {
     final value = profile;
     if (value == null) return false;
-    return value.city.trim().isNotEmpty ||
-        value.areaOfInterest.trim().isNotEmpty ||
+    return value.areaOfInterest.trim().isNotEmpty ||
         value.careerTitle.trim().isNotEmpty ||
         value.skills.isNotEmpty;
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget body;
     if (loading) {
-      return Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: appSurfaceColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: appBorderColor),
-        ),
-        child: const Row(
-          children: [
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: appPurpleColor,
-              ),
+      body = const Row(
+        children: [
+          SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: appOrangeColor,
             ),
-            SizedBox(width: 10),
-            Text(
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
               'Buscando empleos según tu perfil...',
               style: TextStyle(color: appMutedColor, fontSize: 12),
             ),
-          ],
-        ),
+          ),
+        ],
       );
-    }
-    if (!_hasProfileSignals) {
-      return Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: appSurfaceColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: appBorderColor),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'SUGERIDAS PARA TI',
-              style: TextStyle(
-                color: Color(0xFFB48BF1),
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-                fontSize: 12,
-              ),
+    } else if (!_hasProfileSignals) {
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Completa tu área profesional, carrera o habilidades para recomendarte empleos de tu registro.',
+            style: TextStyle(color: appMutedColor, fontSize: 12),
+          ),
+          if (onCompleteProfile != null) ...[
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: onCompleteProfile,
+              child: const Text('Completar perfil'),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Completa tu ciudad y área profesional para recomendarte empleos de tu registro.',
+          ],
+        ],
+      );
+    } else {
+      final suggestions = suggestionService.suggest(
+        profile: profile,
+        jobs: jobs,
+      );
+      body = suggestions.isEmpty
+          ? const Text(
+              'Aún no hay ofertas publicadas en tu área. Revisa el catálogo de abajo.',
               style: TextStyle(color: appMutedColor, fontSize: 12),
-            ),
-            if (onCompleteProfile != null) ...[
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: onCompleteProfile,
-                child: const Text('Completar perfil'),
+            )
+          : Column(
+              children: [
+                for (final suggestion in suggestions)
+                  _SuggestionCard(
+                    suggestion: suggestion,
+                    onTap: () => onOpenJob(suggestion.job),
+                  ),
+              ],
+            );
+    }
+    return _SuggestionsTray(child: body);
+  }
+}
+
+class _SuggestionsTray extends StatelessWidget {
+  const _SuggestionsTray({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF24183C),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: appPurpleColor.withValues(alpha: 0.55)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: appOrangeColor.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: appOrangeColor,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SUGERIDAS PARA TI',
+                      style: TextStyle(
+                        color: Color(0xFFB48BF1),
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        fontSize: 12,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Según tu área, carrera y habilidades, no según el filtro de búsqueda.',
+                      style: TextStyle(color: appMutedColor, fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: appOrangeColor.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Tu perfil',
+                  style: TextStyle(
+                    color: appOrangeColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ],
-          ],
-        ),
-      );
-    }
-
-    final suggestions = suggestionService.suggest(profile: profile, jobs: jobs);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'SUGERIDAS PARA TI',
-          style: TextStyle(
-            color: Color(0xFFB48BF1),
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-            fontSize: 12,
           ),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Según tu perfil, no según el filtro de búsqueda.',
-          style: TextStyle(color: appMutedColor, fontSize: 11),
-        ),
-        const SizedBox(height: 10),
-        if (suggestions.isEmpty)
-          const Text(
-            'Aún no hay ofertas con un encaje claro para tu perfil.',
-            style: TextStyle(color: appMutedColor, fontSize: 12),
-          )
-        else
-          for (final suggestion in suggestions)
-            _SuggestionCard(
-              suggestion: suggestion,
-              onTap: () => onOpenJob(suggestion.job),
-            ),
-      ],
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
     );
   }
 }
@@ -1001,8 +1044,8 @@ class _SuggestionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final job = suggestion.job;
-    final score = suggestion.score;
     final reasons = suggestion.reasons;
+    final score = suggestion.score;
     final label = score >= 70
         ? 'Muy buen encaje'
         : score >= 50
@@ -1011,17 +1054,17 @@ class _SuggestionCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: appSurfaceColor,
+        color: const Color(0xFF1A172F),
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: appPurpleColor.withValues(alpha: 0.45)),
+              border: Border.all(color: appOrangeColor.withValues(alpha: 0.35)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1038,25 +1081,23 @@ class _SuggestionCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          label,
-                          style: const TextStyle(
-                            color: appPurpleColor,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: appPurpleColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        label,
+                        style: const TextStyle(
+                          color: Color(0xFFD7C4FF),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
                         ),
-                        Text(
-                          '$score',
-                          style: const TextStyle(
-                            color: appMutedColor,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -1102,6 +1143,41 @@ class _JobsHeader extends StatelessWidget {
       ),
     ],
   );
+}
+
+class _JobsCatalogHeading extends StatelessWidget {
+  const _JobsCatalogHeading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        Icon(Icons.work_outline, color: appMutedColor, size: 18),
+        SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'TODOS LOS EMPLEOS',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                  fontSize: 12,
+                ),
+              ),
+              SizedBox(height: 2),
+              Text(
+                'Catálogo completo. Usa el buscador y los filtros.',
+                style: TextStyle(color: appMutedColor, fontSize: 10),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _PublicJobCard extends StatelessWidget {

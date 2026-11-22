@@ -47,6 +47,66 @@ void main() {
     expect(suggestions.any((item) => item.job.id == 'other'), isFalse);
   });
 
+  test('same city is not enough if the area is unrelated', () {
+    const profile = UserProfile(
+      uid: 'user-1',
+      fullName: 'Ana',
+      email: 'ana@example.com',
+      phone: '',
+      city: 'Cochabamba',
+      areaOfInterest: 'Tecnología',
+    );
+    final tech = _job(
+      id: 'tech',
+      title: 'Desarrollador Backend Junior',
+      area: 'Tecnología y Software',
+      city: 'Cochabamba',
+    );
+    final ambiental = _job(
+      id: 'ambiental',
+      title: 'Ingeniero/a Ambiental',
+      area: 'Ingeniería',
+      city: 'Cochabamba',
+      sector: 'Consultoría ambiental',
+    );
+
+    final suggestions = service.suggest(
+      profile: profile,
+      jobs: [ambiental, tech],
+      now: now,
+    );
+
+    expect(suggestions.map((item) => item.job.id), ['tech']);
+  });
+
+  test('career title can match a related job even if area labels differ', () {
+    const profile = UserProfile(
+      uid: 'user-1',
+      fullName: 'Ana',
+      email: 'ana@example.com',
+      phone: '',
+      city: 'Cochabamba',
+      areaOfInterest: 'Ciencias Ambientales',
+      careerTitle: 'Ingeniería Ambiental',
+    );
+    final ambiental = _job(
+      id: 'ambiental',
+      title: 'Ingeniero/a Ambiental',
+      area: 'Ingeniería',
+      city: 'Cochabamba',
+      sector: 'Consultoría ambiental',
+    );
+
+    final suggestions = service.suggest(
+      profile: profile,
+      jobs: [ambiental],
+      now: now,
+    );
+
+    expect(suggestions, hasLength(1));
+    expect(suggestions.single.job.id, 'ambiental');
+  });
+
   test('empty or missing profile does not invent suggestions', () {
     final jobs = [
       _job(id: 'job-1', title: 'Analista', area: 'Tecnología', city: 'La Paz'),
@@ -164,6 +224,25 @@ void main() {
       suggestions.first.reasons,
       contains('Coincide una habilidad de tu perfil'),
     );
+  });
+
+  test('city-only profiles do not invent area matches', () {
+    const profile = UserProfile(
+      uid: 'user-1',
+      fullName: 'Ana',
+      email: 'ana@example.com',
+      phone: '',
+      city: 'Cochabamba',
+      areaOfInterest: '',
+    );
+    final local = _job(
+      id: 'local',
+      title: 'Asistente Administrativo',
+      area: 'Administración y Negocios',
+      city: 'Cochabamba',
+    );
+
+    expect(service.suggest(profile: profile, jobs: [local], now: now), isEmpty);
   });
 }
 

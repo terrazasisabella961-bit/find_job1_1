@@ -8,6 +8,7 @@ import '../services/auth_repository.dart';
 import '../services/user_profile_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
 import '../widgets/app_feedback.dart';
+import '../widgets/form_field_label.dart';
 import '../widgets/cocha_conecta_logo.dart';
 
 class UserRegistrationScreen extends StatefulWidget {
@@ -433,17 +434,18 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         onChanged: (value) =>
                             setState(() => _educationLevel = value),
                       ),
-                      const _FieldHint('Opcional. Nivel de estudios alcanzado.'),
+                      const _FieldHint('Nivel de estudios alcanzado.'),
                       _RegistrationField(
                         label: 'Carrera o título',
                         hint: 'Ej. Ingeniería Ambiental, Administración...',
                         controller: _careerController,
                         textCapitalization: TextCapitalization.sentences,
+                        isRequired: false,
                       ),
-                      const _FieldHint('Opcional. Nombre de tu carrera o título.'),
+                      const _FieldHint('Nombre de tu carrera o título.'),
                       _TagSection(
                         label: 'Habilidades',
-                        hint: 'Opcional. Elige las que te describen.',
+                        hint: 'Elige las que te describen.',
                         options: profileSkillTags,
                         selected: _skills,
                         onToggle: _toggleSkill,
@@ -460,19 +462,22 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         textCapitalization: TextCapitalization.sentences,
                         maxLines: 3,
                         maxLength: 240,
+                        isRequired: false,
                       ),
-                      const _FieldHint('Opcional. No es obligatorio para registrarte.'),
+                      const _FieldHint('No es obligatorio para registrarte.'),
                       const SizedBox(height: 12),
                       Row(
                         children: [
                           const Expanded(
-                            child: Text(
+                            child: FormFieldLabel(
                               'Currículum Vitae (CV)',
+                              required: false,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,
                               ),
+                              padding: EdgeInsets.zero,
                             ),
                           ),
                           TextButton(
@@ -689,6 +694,7 @@ class _RegistrationField extends StatelessWidget {
     required this.hint,
     required this.controller,
     this.validator,
+    this.isRequired = true,
     this.keyboardType,
     this.textCapitalization = TextCapitalization.none,
     this.readOnly = false,
@@ -700,6 +706,7 @@ class _RegistrationField extends StatelessWidget {
   final String hint;
   final TextEditingController controller;
   final FormFieldValidator<String>? validator;
+  final bool isRequired;
   final TextInputType? keyboardType;
   final TextCapitalization textCapitalization;
   final bool readOnly;
@@ -713,13 +720,15 @@ class _RegistrationField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          FormFieldLabel(
             label,
+            required: isRequired,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 5),
           TextFormField(
@@ -757,13 +766,15 @@ class _EducationField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          const FormFieldLabel(
             'Nivel de estudios',
+            required: false,
             style: TextStyle(
               color: Colors.white,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 5),
           DropdownButtonFormField<String?>(
@@ -772,7 +783,7 @@ class _EducationField extends StatelessWidget {
             dropdownColor: appSurfaceColor,
             iconEnabledColor: appMutedColor,
             style: const TextStyle(color: Colors.white, fontSize: 9),
-            decoration: _fieldDecoration('Opcional'),
+            decoration: _fieldDecoration('Selecciona un nivel'),
             items: [
               const DropdownMenuItem<String?>(
                 value: null,
@@ -810,13 +821,15 @@ class _TagSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          FormFieldLabel(
             label,
+            required: false,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 4),
           Text(hint, style: const TextStyle(color: appMutedColor, fontSize: 7)),
@@ -869,17 +882,19 @@ class _LanguageSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          const FormFieldLabel(
             'Idiomas',
+            required: false,
             style: TextStyle(
               color: Colors.white,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 4),
           const Text(
-            'Opcional. En Cochabamba, el quechua puede marcar diferencia.',
+            'En Cochabamba, el quechua puede marcar diferencia.',
             style: TextStyle(color: appMutedColor, fontSize: 7),
           ),
           const SizedBox(height: 8),
@@ -959,13 +974,15 @@ class _CityField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          const FormFieldLabel(
             'Ciudad de residencia',
+            required: true,
             style: TextStyle(
               color: Colors.white,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 5),
           DropdownButtonFormField<String>(
@@ -1102,13 +1119,15 @@ class _PasswordField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          FormFieldLabel(
             label,
+            required: true,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
+            padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 5),
           TextFormField(

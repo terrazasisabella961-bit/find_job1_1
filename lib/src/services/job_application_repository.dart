@@ -65,6 +65,10 @@ class FirebaseJobApplicationRepository implements JobApplicationRepository {
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final _demoApplications = <JobApplication>[];
+  final _demoChanges = StreamController<void>.broadcast();
+
+  bool _isDemoJob(String jobId) => jobId.startsWith('demo-');
 
   @override
   Future<void> submitApplication(JobApplication application) async {
@@ -74,6 +78,13 @@ class FirebaseJobApplicationRepository implements JobApplicationRepository {
     }
     if (user.uid != application.applicantUid) {
       throw StateError('La postulación debe enviarse con tu propia cuenta.');
+    }
+    if (_isDemoJob(application.jobId)) {
+      _demoApplications
+        ..removeWhere((item) => item.id == application.id)
+        ..add(application);
+      _demoChanges.add(null);
+      return;
     }
     final reference = _firestore
         .collection('applications')
@@ -121,6 +132,19 @@ class FirebaseJobApplicationRepository implements JobApplicationRepository {
     final user = _auth.currentUser;
     if (user == null || user.uid != applicantUid) {
       return Stream.value(false);
+    }
+    if (_isDemoJob(jobId)) {
+      bool applied() => _demoApplications.any(
+        (item) => item.jobId == jobId && item.applicantUid == applicantUid,
+      );
+      return Stream<bool>.multi((listener) {
+        listener.add(applied());
+        final sub = _demoChanges.stream.listen((_) => listener.add(applied()));
+        listener
+          ..onPause = sub.pause
+          ..onResume = sub.resume
+          ..onCancel = sub.cancel;
+      });
     }
     return _firestore
         .collection('applications')

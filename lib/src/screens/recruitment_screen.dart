@@ -12,6 +12,7 @@ import '../services/job_application_repository.dart';
 import '../services/recruitment_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
 import '../widgets/app_feedback.dart';
+import '../widgets/form_field_label.dart';
 import 'company_applications_screen.dart';
 
 class CompanyPortalScreen extends StatefulWidget {
@@ -282,7 +283,10 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
               },
             ),
             const SizedBox(height: 13),
-            _SectionLabel('NIT o N° de Identificación Tributaria (Opcional)'),
+            _SectionLabel(
+              'NIT o N° de Identificación Tributaria',
+              required: false,
+            ),
             _FormInput(controller: _taxId, hint: 'Ej. 1023456028'),
             const SizedBox(height: 13),
             _SectionLabel('Contraseña corporativa'),
@@ -1052,7 +1056,10 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
             validator: (value) => _required(value, 'El nombre de empresa'),
           ),
           const SizedBox(height: 12),
-          _SectionLabel('Enlace del sitio web de empresa o entidad (Opcional)'),
+          _SectionLabel(
+            'Enlace del sitio web de empresa o entidad',
+            required: false,
+          ),
           _FormInput(
             controller: _website,
             hint: 'https://...',
@@ -1085,7 +1092,7 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
             'Selecciona la ciudad donde reside la empresa.',
           ),
           const SizedBox(height: 12),
-          _SectionLabel('Zona de la empresa'),
+          _SectionLabel('Zona de la empresa', required: false),
           _DropdownField(
             value: _zones.contains(_zone) ? _zone : _zones.first,
             options: _zones,
@@ -1559,7 +1566,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                     : null,
               ),
               const SizedBox(height: 12),
-              _SectionLabel('Zona o Dirección'),
+              _SectionLabel('Zona o Dirección', required: false),
               _FormInput(
                 controller: _zone,
                 hint: 'Ej. Equipetrol Norte, 4to anillo',
@@ -1598,7 +1605,10 @@ class _JobFormScreenState extends State<JobFormScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              const _SectionLabel('Requisitos Obligatorios al Postular'),
+              const _SectionLabel(
+                'Requisitos Obligatorios al Postular',
+                required: false,
+              ),
               for (final option in _documentOptions)
                 _CheckOption(
                   label: option,
@@ -1612,14 +1622,14 @@ class _JobFormScreenState extends State<JobFormScreen> {
                   }),
                 ),
               const SizedBox(height: 12),
-              _SectionLabel('Habilidades / Skills Clave'),
+              _SectionLabel('Habilidades / Skills Clave', required: false),
               _FormInput(
                 controller: _skills,
                 hint: 'React.js, Node.js, TypeScript, PostgreSQL',
               ),
               const SizedBox(height: 16),
               const _FormSection('C. SALARIO Y BENEFICIOS'),
-              const _SectionLabel('Rango Salarial Ofrecido'),
+              const _SectionLabel('Rango Salarial Ofrecido', required: false),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -1661,7 +1671,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                   style: TextStyle(color: appMutedColor, fontSize: 10),
                 ),
               ),
-              const _SectionLabel('Beneficios Adicionales'),
+              const _SectionLabel('Beneficios Adicionales', required: false),
               for (final option in _benefitOptions)
                 _CheckOption(
                   label: option,
@@ -1683,7 +1693,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                 label: Text(_formatDate(_publicationDate)),
               ),
               const SizedBox(height: 12),
-              const _SectionLabel('Cierre de Postulaciones'),
+              const _SectionLabel('Cierre de Postulaciones', required: false),
               OutlinedButton.icon(
                 onPressed: _chooseDeadline,
                 icon: const Icon(Icons.calendar_month_outlined),
@@ -1741,7 +1751,10 @@ class _JobFormScreenState extends State<JobFormScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              _SectionLabel('WhatsApp para consultas rápidas (Opcional)'),
+              _SectionLabel(
+                'WhatsApp para consultas rápidas',
+                required: false,
+              ),
               _FormInput(
                 controller: _whatsApp,
                 hint: '+591 77012345',
@@ -2198,22 +2211,13 @@ class _RadioOption extends StatelessWidget {
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+  const _SectionLabel(this.text, {this.required = true});
 
   final String text;
+  final bool required;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 6),
-    child: Text(
-      text,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-  );
+  Widget build(BuildContext context) => FormFieldLabel(text, required: required);
 }
 
 class _FormInput extends StatelessWidget {

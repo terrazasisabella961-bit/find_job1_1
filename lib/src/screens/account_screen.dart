@@ -9,6 +9,7 @@ import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
 import '../services/user_profile_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/app_feedback.dart';
 import 'user_registration_screen.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -83,7 +84,9 @@ class _AccountScreenState extends State<AccountScreen> {
       );
       if (mounted) setState(_loadProfile);
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     } finally {
       if (mounted) setState(() => _isUpdatingVisibility = false);
     }
@@ -128,7 +131,9 @@ class _AccountScreenState extends State<AccountScreen> {
       if (mounted) _showMessage('Se envió el correo de verificación.');
       if (mounted) setState(() {});
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     }
   }
 
@@ -144,7 +149,9 @@ class _AccountScreenState extends State<AccountScreen> {
         _showMessage('Se enviaron instrucciones para cambiar la contraseña.');
       }
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     }
   }
 
@@ -223,7 +230,9 @@ class _AccountScreenState extends State<AccountScreen> {
         setState(_loadProfile);
       }
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     } finally {
       emailController.dispose();
       passwordController.dispose();
@@ -236,18 +245,16 @@ class _AccountScreenState extends State<AccountScreen> {
     try {
       await widget.authRepository.signOut();
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     } finally {
       if (mounted) setState(() => _isSigningOut = false);
     }
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: appSurfaceColor),
-      );
+  void _showMessage(String message, {AppMessageKind kind = AppMessageKind.info}) {
+    showAppMessage(context, message, kind: kind);
   }
 
   @override
@@ -711,46 +718,59 @@ class _StatusMetric extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: appBackgroundColor.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: appBorderColor),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   title,
                   style: const TextStyle(color: appMutedColor, fontSize: 6),
                 ),
-              ),
-              SizedBox(
-                width: 26,
-                height: 18,
-                child: isUpdating
-                    ? const Padding(
-                        padding: EdgeInsets.all(4),
-                        child: CircularProgressIndicator(strokeWidth: 1.5),
-                      )
-                    : Switch(
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: isVisible ? const Color(0xFF4BD6A0) : appMutedColor,
+                    fontSize: 7,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: 44,
+            height: 28,
+            child: Center(
+              child: isUpdating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 1.5),
+                    )
+                  : FittedBox(
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                      child: Switch(
                         value: isVisible,
                         onChanged: onChanged,
                         activeThumbColor: const Color(0xFF4BD6A0),
+                        activeTrackColor: const Color(
+                          0xFF4BD6A0,
+                        ).withValues(alpha: 0.38),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-              ),
-            ],
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: isVisible ? const Color(0xFF4BD6A0) : appMutedColor,
-              fontSize: 7,
-              fontWeight: FontWeight.w600,
+                    ),
             ),
           ),
         ],

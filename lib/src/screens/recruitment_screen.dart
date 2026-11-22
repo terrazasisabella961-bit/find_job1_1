@@ -4,11 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../models/company.dart';
+import '../models/job_application.dart';
 import '../models/job_posting.dart';
 import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
+import '../services/job_application_repository.dart';
 import '../services/recruitment_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/app_feedback.dart';
+import 'company_applications_screen.dart';
 
 class CompanyPortalScreen extends StatefulWidget {
   const CompanyPortalScreen({
@@ -181,7 +185,7 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
   }
 
   Future<void> _signIn() async {
-    if (!_formKey.currentState!.validate() || _busy) return;
+    if (_busy || !ensureFormValid(context, _formKey)) return;
     setState(() => _busy = true);
     try {
       await widget.authRepository.signIn(
@@ -190,8 +194,11 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
       );
     } on Exception catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+        showAppMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -201,26 +208,28 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
   Future<void> _resetPassword() async {
     final email = _email.text.trim();
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Escribe primero un correo válido.')),
+      showAppMessage(
+        context,
+        'Escribe primero un correo válido.',
+        kind: AppMessageKind.error,
       );
       return;
     }
     try {
       await widget.authRepository.sendPasswordResetEmail(email);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Si existe una cuenta con ese correo, recibirás instrucciones para restablecer la contraseña.',
-            ),
-          ),
+        showAppMessage(
+          context,
+          'Si existe una cuenta con ese correo, recibirás instrucciones para restablecer la contraseña.',
         );
       }
     } on Exception catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+        showAppMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
       }
     }
   }
@@ -396,8 +405,10 @@ class _CompanyAccountMessage extends StatelessWidget {
                 await authRepository.signOut();
               } on Exception catch (error) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(authErrorMessage(error))),
+                  showAppMessage(
+                    context,
+                    authErrorMessage(error),
+                    kind: AppMessageKind.error,
                   );
                 }
               }
@@ -414,11 +425,13 @@ class RecruitmentScreen extends StatefulWidget {
   const RecruitmentScreen({
     required this.ownerUid,
     required this.repository,
+    this.applicationRepository,
     super.key,
   });
 
   final String ownerUid;
   final RecruitmentRepository repository;
+  final JobApplicationRepository? applicationRepository;
 
   @override
   State<RecruitmentScreen> createState() => _RecruitmentScreenState();
@@ -463,6 +476,7 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
         return _CompanyDashboard(
           company: company,
           repository: widget.repository,
+          applicationRepository: widget.applicationRepository,
         );
       },
     );
@@ -470,10 +484,15 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
 }
 
 class _CompanyDashboard extends StatelessWidget {
-  const _CompanyDashboard({required this.company, required this.repository});
+  const _CompanyDashboard({
+    required this.company,
+    required this.repository,
+    this.applicationRepository,
+  });
 
   final Company company;
   final RecruitmentRepository repository;
+  final JobApplicationRepository? applicationRepository;
 
   Future<void> _editCompany(BuildContext context) async {
     await Navigator.of(context).push<void>(
@@ -501,11 +520,10 @@ class _CompanyDashboard extends StatelessWidget {
       await repository.updateJobStatus(jobId, status);
     } on Exception catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authErrorMessage(error)),
-            backgroundColor: appSurfaceColor,
-          ),
+        showAppMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
         );
       }
     }
@@ -694,13 +712,44 @@ class _CompanyDashboard extends StatelessWidget {
                 onAction: () => _openJobForm(context),
               )
             else
-              for (final job in jobs)
-                _CompanyJobCard(
-                  job: job,
-                  onEdit: () => _openJobForm(context, job: job),
-                  onStatusChanged: (status) =>
-                      _changeStatus(context, job.id, status),
-                ),
+              StreamBuilder<List<JobApplication>>(
+                stream:
+                    applicationRepository?.watchCompanyApplications(
+                      company.id,
+                    ) ??
+                    Stream.value(const <JobApplication>[]),
+                builder: (context, applicationSnapshot) {
+                  final applications =
+                      applicationSnapshot.data ?? const <JobApplication>[];
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final job in jobs)
+                        _CompanyJobCard(
+                          job: job,
+                          applicationCount: applications
+                              .where((item) => item.jobId == job.id)
+                              .length,
+                          onEdit: () => _openJobForm(context, job: job),
+                          onStatusChanged: (status) =>
+                              _changeStatus(context, job.id, status),
+                          onViewApplications: applicationRepository == null
+                              ? null
+                              : () => Navigator.of(context).push<void>(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => CompanyApplicationsScreen(
+                                      job: job,
+                                      applications: applications
+                                          .where((item) => item.jobId == job.id)
+                                          .toList(),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                    ],
+                  );
+                },
+              ),
           ],
         );
       },
@@ -796,7 +845,7 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
       value == null || value.trim().isEmpty ? '$label es obligatorio.' : null;
 
   Future<void> _save() async {
-    if (_saving || !_formKey.currentState!.validate()) return;
+    if (_saving || !ensureFormValid(context, _formKey)) return;
     setState(() => _saving = true);
     try {
       final auth = widget.authRepository;
@@ -844,11 +893,10 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
       );
       await widget.repository.saveCompany(company);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('La empresa se guardó correctamente.'),
-            backgroundColor: appSurfaceColor,
-          ),
+        showAppMessage(
+          context,
+          'La empresa se guardó correctamente.',
+          kind: AppMessageKind.success,
         );
         if (widget.initialCompany == null) {
           widget.onSaved?.call(company);
@@ -859,19 +907,17 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
         widget.onRegistrationFailed?.call(error.message);
       }
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.message)));
+        showAppMessage(context, error.message, kind: AppMessageKind.error);
       }
     } on Exception catch (error) {
       if (widget.ownerUid == null) {
         widget.onRegistrationFailed?.call(_companySaveErrorMessage(error));
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_companySaveErrorMessage(error)),
-            backgroundColor: appSurfaceColor,
-          ),
+        showAppMessage(
+          context,
+          _companySaveErrorMessage(error),
+          kind: AppMessageKind.error,
         );
       }
     } catch (error, stackTrace) {
@@ -881,9 +927,7 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
         widget.onRegistrationFailed?.call(message);
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: appSurfaceColor),
-        );
+        showAppMessage(context, message, kind: AppMessageKind.error);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -906,9 +950,11 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
     final editing = widget.initialCompany != null;
     return Form(
       key: _formKey,
-      child: ListView(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           _PageHeader(
             eyebrow: 'CENTRO DE RECLUTAMIENTO',
             title: editing ? 'EDITAR EMPRESA' : 'REGISTRO DE EMPRESA',
@@ -1074,6 +1120,7 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
               label: const Text('Volver'),
             ),
         ],
+        ),
       ),
     );
   }
@@ -1240,21 +1287,30 @@ class _JobFormScreenState extends State<JobFormScreen> {
   }
 
   Future<void> _save({required bool publish}) async {
-    if (_saving || !_formKey.currentState!.validate()) return;
+    if (_saving || !ensureFormValid(context, _formKey)) return;
     final minimum = _parseSalary(_salaryMinimum.text);
     final maximum = _parseSalary(_salaryMaximum.text);
     if (minimum != null && maximum != null && minimum > maximum) {
-      _showMessage('El salario mínimo no puede superar al máximo.');
+      _showMessage(
+        'El salario mínimo no puede superar al máximo.',
+        kind: AppMessageKind.error,
+      );
       return;
     }
     if (_deadline != null &&
         _dateOnly(_deadline!).isBefore(_dateOnly(_publicationDate))) {
-      _showMessage('La fecha límite debe ser posterior a la publicación.');
+      _showMessage(
+        'La fecha límite debe ser posterior a la publicación.',
+        kind: AppMessageKind.error,
+      );
       return;
     }
     final vacancies = int.tryParse(_vacancies.text.trim());
     if (vacancies == null || vacancies < 1) {
-      _showMessage('Indica una cantidad válida de vacantes.');
+      _showMessage(
+        'Indica una cantidad válida de vacantes.',
+        kind: AppMessageKind.error,
+      );
       return;
     }
     setState(() => _saving = true);
@@ -1313,17 +1369,13 @@ class _JobFormScreenState extends State<JobFormScreen> {
         ),
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            publish
-                ? previous == null
-                      ? 'La oferta se publicó correctamente.'
-                      : 'La oferta se actualizó correctamente.'
-                : 'Borrador guardado correctamente.',
-          ),
-          backgroundColor: appSurfaceColor,
-        ),
+      _showMessage(
+        publish
+            ? previous == null
+                  ? 'La oferta se publicó correctamente.'
+                  : 'La oferta se actualizó correctamente.'
+            : 'Borrador guardado correctamente.',
+        kind: AppMessageKind.success,
       );
       Navigator.of(context).pop();
     } on Object catch (error) {
@@ -1331,7 +1383,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
         _pendingJobId = error.jobId;
       }
       if (mounted) {
-        _showMessage(_jobSaveErrorMessage(error));
+        _showMessage(_jobSaveErrorMessage(error), kind: AppMessageKind.error);
       }
     } finally {
       slowSaveNotice.cancel();
@@ -1369,12 +1421,8 @@ class _JobFormScreenState extends State<JobFormScreen> {
     return authErrorMessage(error);
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: appSurfaceColor),
-      );
+  void _showMessage(String message, {AppMessageKind kind = AppMessageKind.info}) {
+    showAppMessage(context, message, kind: kind);
   }
 
   @override
@@ -1385,9 +1433,11 @@ class _JobFormScreenState extends State<JobFormScreen> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
-            children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               _PageHeader(
                 eyebrow: widget.company.name,
                 title: editing
@@ -1673,6 +1723,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                 label: const Text('Guardar como Borrador'),
               ),
             ],
+            ),
           ),
         ),
       ),
@@ -1703,11 +1754,15 @@ class _CompanyJobCard extends StatelessWidget {
     required this.job,
     required this.onEdit,
     required this.onStatusChanged,
+    this.onViewApplications,
+    this.applicationCount = 0,
   });
 
   final JobPosting job;
   final VoidCallback onEdit;
   final ValueChanged<String> onStatusChanged;
+  final VoidCallback? onViewApplications;
+  final int applicationCount;
 
   @override
   Widget build(BuildContext context) {
@@ -1760,6 +1815,16 @@ class _CompanyJobCard extends StatelessWidget {
           Wrap(
             spacing: 8,
             children: [
+              if (onViewApplications != null)
+                TextButton.icon(
+                  onPressed: onViewApplications,
+                  icon: const Icon(Icons.people_outline, size: 16),
+                  label: Text(
+                    applicationCount == 0
+                        ? 'Postulantes'
+                        : 'Postulantes ($applicationCount)',
+                  ),
+                ),
               TextButton.icon(
                 onPressed: onEdit,
                 icon: const Icon(Icons.edit_outlined, size: 16),

@@ -10,8 +10,10 @@ import 'src/screens/user_registration_screen.dart';
 import 'src/services/auth_error_message.dart';
 import 'src/services/auth_repository.dart';
 import 'src/services/institution_repository.dart';
+import 'src/services/job_application_repository.dart';
 import 'src/services/recruitment_repository.dart';
 import 'src/services/user_profile_repository.dart';
+import 'src/widgets/app_feedback.dart';
 import 'src/widgets/cocha_conecta_logo.dart';
 
 Future<void> main() async {
@@ -47,6 +49,7 @@ class MyApp extends StatelessWidget {
     this.profileRepository,
     this.recruitmentRepository,
     this.institutionRepository,
+    this.applicationRepository,
     super.key,
   });
 
@@ -54,6 +57,7 @@ class MyApp extends StatelessWidget {
   final UserProfileRepository? profileRepository;
   final RecruitmentRepository? recruitmentRepository;
   final InstitutionRepository? institutionRepository;
+  final JobApplicationRepository? applicationRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +67,8 @@ class MyApp extends StatelessWidget {
         recruitmentRepository ?? FirebaseRecruitmentRepository();
     final institutions =
         institutionRepository ?? FirebaseInstitutionRepository();
+    final applications =
+        applicationRepository ?? FirebaseJobApplicationRepository();
     return MaterialApp(
       title: 'CochaConecta',
       debugShowCheckedModeBanner: false,
@@ -74,12 +80,22 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
         fontFamily: 'Roboto',
+        snackBarTheme: const SnackBarThemeData(
+          backgroundColor: Color(0xFF3D2E6B),
+          contentTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       ),
       home: _AuthGate(
         authRepository: auth,
         profileRepository: profiles,
         recruitmentRepository: recruitment,
         institutionRepository: institutions,
+        applicationRepository: applications,
       ),
     );
   }
@@ -91,12 +107,14 @@ class _AuthGate extends StatelessWidget {
     required this.profileRepository,
     required this.recruitmentRepository,
     required this.institutionRepository,
+    required this.applicationRepository,
   });
 
   final AuthRepository authRepository;
   final UserProfileRepository profileRepository;
   final RecruitmentRepository recruitmentRepository;
   final InstitutionRepository institutionRepository;
+  final JobApplicationRepository applicationRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -130,6 +148,7 @@ class _AuthGate extends StatelessWidget {
           profileRepository: profileRepository,
           recruitmentRepository: recruitmentRepository,
           institutionRepository: institutionRepository,
+          applicationRepository: applicationRepository,
         );
       },
     );
@@ -143,6 +162,7 @@ class _AuthenticatedGate extends StatelessWidget {
     required this.profileRepository,
     required this.recruitmentRepository,
     required this.institutionRepository,
+    required this.applicationRepository,
   });
 
   final User user;
@@ -150,6 +170,7 @@ class _AuthenticatedGate extends StatelessWidget {
   final UserProfileRepository profileRepository;
   final RecruitmentRepository recruitmentRepository;
   final InstitutionRepository institutionRepository;
+  final JobApplicationRepository applicationRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +196,7 @@ class _AuthenticatedGate extends StatelessWidget {
             profileRepository: profileRepository,
             recruitmentRepository: recruitmentRepository,
             institutionRepository: institutionRepository,
+            applicationRepository: applicationRepository,
             initialSelectedIndex: 3,
             accountType: 'company',
           );
@@ -202,6 +224,7 @@ class _AuthenticatedGate extends StatelessWidget {
                 profileRepository: profileRepository,
                 recruitmentRepository: recruitmentRepository,
                 institutionRepository: institutionRepository,
+                applicationRepository: applicationRepository,
                 initialSelectedIndex: 2,
                 accountType: 'institution',
               );
@@ -211,6 +234,7 @@ class _AuthenticatedGate extends StatelessWidget {
               profileRepository: profileRepository,
               recruitmentRepository: recruitmentRepository,
               institutionRepository: institutionRepository,
+              applicationRepository: applicationRepository,
               initialSelectedIndex: 0,
               accountType: 'student',
             );
@@ -287,12 +311,12 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _showDemoMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: _surfaceColor),
-      );
+  void _showDemoMessage(String message, {bool isError = false}) {
+    showAppMessage(
+      context,
+      message,
+      kind: isError ? AppMessageKind.error : AppMessageKind.info,
+    );
   }
 
   String? _validateEmail(String? value) {
@@ -306,7 +330,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signIn() async {
-    if (!_formKey.currentState!.validate() || _isSubmitting) return;
+    if (_isSubmitting || !ensureFormValid(context, _formKey)) return;
     setState(() => _isSubmitting = true);
     try {
       await widget.authRepository.signIn(
@@ -314,7 +338,9 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
     } on Object catch (error) {
-      if (mounted) _showDemoMessage(authErrorMessage(error));
+      if (mounted) {
+        _showDemoMessage(authErrorMessage(error), isError: true);
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -326,7 +352,9 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await widget.authRepository.signInWithGoogle();
     } on Object catch (error) {
-      if (mounted) _showDemoMessage(authErrorMessage(error));
+      if (mounted) {
+        _showDemoMessage(authErrorMessage(error), isError: true);
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -336,6 +364,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_validateEmail(_emailController.text) != null) {
       _showDemoMessage(
         'Escribe un correo válido para recuperar tu contraseña.',
+        isError: true,
       );
       return;
     }
@@ -349,7 +378,9 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } on Exception catch (error) {
-      if (mounted) _showDemoMessage(authErrorMessage(error));
+      if (mounted) {
+        _showDemoMessage(authErrorMessage(error), isError: true);
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

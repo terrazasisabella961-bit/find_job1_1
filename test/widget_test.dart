@@ -15,6 +15,7 @@ import 'package:find_job1_1/src/screens/recruitment_screen.dart';
 import 'package:find_job1_1/src/screens/user_registration_screen.dart';
 import 'package:find_job1_1/src/services/auth_repository.dart';
 import 'package:find_job1_1/src/services/institution_repository.dart';
+import 'package:find_job1_1/src/services/job_application_repository.dart';
 import 'package:find_job1_1/src/widgets/app_bottom_navigation.dart';
 import 'package:find_job1_1/src/models/company.dart';
 import 'package:find_job1_1/src/models/job_posting.dart';
@@ -77,6 +78,7 @@ void main() {
           profileRepository: _FakeUserProfileRepository(),
           recruitmentRepository: _FakeRecruitmentRepository(),
           institutionRepository: _FakeInstitutionRepository(),
+          applicationRepository: InMemoryJobApplicationRepository(),
         ),
       );
       await tester.pumpAndSettle();
@@ -218,6 +220,7 @@ void main() {
           profileRepository: _FakeUserProfileRepository(),
           recruitmentRepository: repository,
           institutionRepository: _FakeInstitutionRepository(),
+          applicationRepository: InMemoryJobApplicationRepository(),
         ),
       );
       await tester.pumpAndSettle();
@@ -280,6 +283,7 @@ void main() {
         profileRepository: _FakeUserProfileRepository(),
         recruitmentRepository: repository,
         institutionRepository: _FakeInstitutionRepository(),
+        applicationRepository: InMemoryJobApplicationRepository(),
       ),
     );
     await tester.pumpAndSettle();
@@ -334,6 +338,7 @@ void main() {
           profileRepository: _FakeUserProfileRepository(),
           recruitmentRepository: _FakeRecruitmentRepository(),
           institutionRepository: _FakeInstitutionRepository(),
+          applicationRepository: InMemoryJobApplicationRepository(),
         ),
       );
       await tester.pumpAndSettle();
@@ -599,6 +604,7 @@ MyApp _testApp() {
     profileRepository: _FakeUserProfileRepository(),
     recruitmentRepository: _FakeRecruitmentRepository(),
     institutionRepository: _FakeInstitutionRepository(),
+    applicationRepository: InMemoryJobApplicationRepository(),
   );
 }
 

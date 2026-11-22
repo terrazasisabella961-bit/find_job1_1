@@ -124,14 +124,11 @@ class FirebaseInstitutionRepository implements InstitutionRepository {
           institution.data()?['ownerUid'] != course.ownerUid) {
         throw StateError('No se encontró la institución de esta cuenta.');
       }
-      final existing = await transaction.get(reference);
-      if (existing.exists && existing.data()?['ownerUid'] != course.ownerUid) {
-        throw StateError('No tienes permiso para editar este curso.');
-      }
       transaction.set(reference, {
         ...course.toMap(),
-        'createdAt':
-            existing.data()?['createdAt'] ?? FieldValue.serverTimestamp(),
+        'createdAt': course.createdAt == null
+            ? FieldValue.serverTimestamp()
+            : Timestamp.fromDate(course.createdAt!),
         'updatedAt': FieldValue.serverTimestamp(),
       });
     });

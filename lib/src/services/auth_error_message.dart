@@ -29,11 +29,16 @@ String authErrorMessage(Object error) {
   if (error is FirebaseException && error is! FirebaseAuthException) {
     return switch (error.code) {
       'permission-denied' || 'storage/unauthorized' =>
-        'Firebase rechazó la operación. Revisa las reglas de acceso desplegadas.',
+        'Firebase rechazó guardar los datos. Comprueba la sesión institucional e inténtalo de nuevo.',
       'storage/unknown' || 'unavailable' =>
         'El servicio de Firebase no está disponible. Inténtalo más tarde.',
       _ => 'Firebase no pudo completar la solicitud (${error.code}).',
     };
+  }
+  final text = error.toString().toLowerCase();
+  if (text.contains('permission-denied') ||
+      text.contains('insufficient permissions')) {
+    return 'Firebase rechazó guardar los datos. Comprueba la sesión institucional e inténtalo de nuevo.';
   }
   if (error is! FirebaseAuthException) {
     return 'No se pudo completar la solicitud. Inténtalo nuevamente.';

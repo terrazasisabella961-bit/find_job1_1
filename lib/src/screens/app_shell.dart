@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
 import '../services/auth_repository.dart';
 import '../services/institution_repository.dart';
+import '../services/job_application_repository.dart';
 import '../services/recruitment_repository.dart';
 import '../services/user_profile_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/app_feedback.dart';
 import 'account_screen.dart';
 import 'course_catalog_screen.dart';
 import 'employment_screen.dart';
@@ -21,6 +23,7 @@ class AppShell extends StatefulWidget {
     this.accountType = 'student',
     this.recruitmentRepository,
     this.institutionRepository,
+    this.applicationRepository,
     super.key,
   });
 
@@ -30,6 +33,7 @@ class AppShell extends StatefulWidget {
   final String accountType;
   final RecruitmentRepository? recruitmentRepository;
   final InstitutionRepository? institutionRepository;
+  final JobApplicationRepository? applicationRepository;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -41,6 +45,8 @@ class _AppShellState extends State<AppShell> {
       widget.recruitmentRepository ?? FirebaseRecruitmentRepository();
   late final InstitutionRepository _institutionRepository =
       widget.institutionRepository ?? FirebaseInstitutionRepository();
+  late final JobApplicationRepository _applicationRepository =
+      widget.applicationRepository ?? FirebaseJobApplicationRepository();
 
   void _openCatalog() {
     setState(() => _selectedIndex = 4);
@@ -62,7 +68,11 @@ class _AppShellState extends State<AppShell> {
           onOpenCatalog: _openCatalog,
           profile: snapshot.data,
           showSuggestions: true,
+          suggestionsLoading:
+              snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData,
           onCompleteProfile: () => setState(() => _selectedIndex = 3),
+          applicationRepository: _applicationRepository,
         );
       },
     );
@@ -78,6 +88,7 @@ class _AppShellState extends State<AppShell> {
           ? RecruitmentScreen(
               ownerUid: user.uid,
               repository: _recruitmentRepository,
+              applicationRepository: _applicationRepository,
             )
           : _AccountTypeNotice(
               title: 'Acceso para empresas',
@@ -103,6 +114,7 @@ class _AppShellState extends State<AppShell> {
         RecruitmentScreen(
           ownerUid: user.uid,
           repository: _recruitmentRepository,
+          applicationRepository: _applicationRepository,
         )
       else if (accountType == 'student')
         AccountScreen(
@@ -118,6 +130,7 @@ class _AppShellState extends State<AppShell> {
           message: accountType == 'company'
               ? 'Administra tu perfil y tus vacantes desde Reclutar.'
               : 'Administra el perfil institucional y los cursos en Instituciones.',
+          actionLabel: 'Cerrar sesión',
           onSignOut: widget.authRepository.signOut,
         ),
       CourseCatalogScreen(
@@ -153,9 +166,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _showAccountNotice(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    showAppMessage(context, message);
   }
 }
 
@@ -164,11 +175,13 @@ class _AccountTypeNotice extends StatelessWidget {
     required this.title,
     required this.message,
     required this.onSignOut,
+    this.actionLabel = 'Cambiar de cuenta',
   });
 
   final String title;
   final String message;
   final Future<void> Function() onSignOut;
+  final String actionLabel;
 
   @override
   Widget build(BuildContext context) => Center(
@@ -200,13 +213,15 @@ class _AccountTypeNotice extends StatelessWidget {
                 await onSignOut();
               } on Exception catch (error) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('No se pudo cerrar sesión: $error')),
+                  showAppMessage(
+                    context,
+                    'No se pudo cerrar sesión: $error',
+                    kind: AppMessageKind.error,
                   );
                 }
               }
             },
-            child: const Text('Cambiar de cuenta'),
+            child: Text(actionLabel),
           ),
         ],
       ),

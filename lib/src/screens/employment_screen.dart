@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../config/file_upload_mode.dart';
-import '../config/simulated_cv.dart';
 import '../models/job_posting.dart';
 import '../models/job_suggestion.dart';
 import '../models/user_profile.dart';
+import '../services/job_application_repository.dart';
 import '../services/job_suggestion_service.dart';
 import '../services/recruitment_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/app_feedback.dart';
 import '../widgets/cocha_conecta_logo.dart';
+import 'job_application_form.dart';
 
 class EmploymentScreen extends StatefulWidget {
   const EmploymentScreen({
@@ -16,7 +17,9 @@ class EmploymentScreen extends StatefulWidget {
     required this.onOpenCatalog,
     this.profile,
     this.showSuggestions = false,
+    this.suggestionsLoading = false,
     this.onCompleteProfile,
+    this.applicationRepository,
     this.suggestionService = const LocalJobSuggestionService(),
     super.key,
   });
@@ -25,7 +28,9 @@ class EmploymentScreen extends StatefulWidget {
   final VoidCallback onOpenCatalog;
   final UserProfile? profile;
   final bool showSuggestions;
+  final bool suggestionsLoading;
   final VoidCallback? onCompleteProfile;
+  final JobApplicationRepository? applicationRepository;
   final JobSuggestionService suggestionService;
 
   @override
@@ -245,10 +250,16 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                       profile: widget.profile,
                       jobs: jobs,
                       suggestionService: widget.suggestionService,
+                      loading: widget.suggestionsLoading,
                       onCompleteProfile: widget.onCompleteProfile,
                       onOpenJob: (job) => Navigator.of(context).push<void>(
                         MaterialPageRoute<void>(
-                          builder: (_) => JobDetailsScreen(job: job),
+                          builder: (_) => JobDetailsScreen(
+                            job: job,
+                            profile: widget.profile,
+                            applicationRepository: widget.applicationRepository,
+                            onCompleteProfile: widget.onCompleteProfile,
+                          ),
                         ),
                       ),
                     ),
@@ -269,7 +280,12 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                         job: job,
                         onTap: () => Navigator.of(context).push<void>(
                           MaterialPageRoute<void>(
-                            builder: (_) => JobDetailsScreen(job: job),
+                            builder: (_) => JobDetailsScreen(
+                            job: job,
+                            profile: widget.profile,
+                            applicationRepository: widget.applicationRepository,
+                            onCompleteProfile: widget.onCompleteProfile,
+                          ),
                           ),
                         ),
                       ),
@@ -308,9 +324,51 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
 }
 
 class JobDetailsScreen extends StatelessWidget {
-  const JobDetailsScreen({required this.job, super.key});
+  const JobDetailsScreen({
+    required this.job,
+    this.profile,
+    this.applicationRepository,
+    this.onCompleteProfile,
+    super.key,
+  });
 
   final JobPosting job;
+  final UserProfile? profile;
+  final JobApplicationRepository? applicationRepository;
+  final VoidCallback? onCompleteProfile;
+
+  void _startApplication(BuildContext context) {
+    final repository = applicationRepository;
+    final userProfile = profile;
+    if (repository == null || userProfile == null) {
+      showAppMessage(
+        context,
+        'Inicia sesión como postulante y completa tu registro para postular.',
+        kind: AppMessageKind.error,
+      );
+      onCompleteProfile?.call();
+      return;
+    }
+    if (userProfile.fullName.trim().isEmpty ||
+        userProfile.city.trim().isEmpty) {
+      showAppMessage(
+        context,
+        'Completa tu perfil (nombre y ciudad) antes de postular.',
+        kind: AppMessageKind.error,
+      );
+      onCompleteProfile?.call();
+      return;
+    }
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => JobApplicationFormScreen(
+          job: job,
+          profile: userProfile,
+          repository: repository,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -453,27 +511,9 @@ class JobDetailsScreen extends StatelessWidget {
               _DetailText(title: 'Sitio web', value: job.companyWebsite),
             const SizedBox(height: 18),
             FilledButton.icon(
-              onPressed: () {
-                if (simulateFileUploads) {
-                  showSimulatedCvScreen(
-                    context,
-                    heading: 'Postulación enviada',
-                    detail:
-                        'Se adjuntó este currículum de demostración a '
-                        '"${job.title}" en ${job.companyName}.',
-                  );
-                  return;
-                }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'La postulación con CV real estará disponible cuando Storage esté activo.',
-                    ),
-                  ),
-                );
-              },
+              onPressed: () => _startApplication(context),
               icon: const Icon(Icons.send_outlined),
-              label: const Text('Postular con mi CV'),
+              label: const Text('Postular'),
               style: FilledButton.styleFrom(
                 backgroundColor: appOrangeColor,
                 foregroundColor: const Color(0xFF171323),
@@ -789,6 +829,7 @@ class _JobSuggestionsPanel extends StatelessWidget {
     required this.suggestionService,
     required this.onOpenJob,
     this.onCompleteProfile,
+    this.loading = false,
   });
 
   final UserProfile? profile;
@@ -796,16 +837,46 @@ class _JobSuggestionsPanel extends StatelessWidget {
   final JobSuggestionService suggestionService;
   final ValueChanged<JobPosting> onOpenJob;
   final VoidCallback? onCompleteProfile;
+  final bool loading;
 
   bool get _hasProfileSignals {
     final value = profile;
     if (value == null) return false;
     return value.city.trim().isNotEmpty ||
-        value.areaOfInterest.trim().isNotEmpty;
+        value.areaOfInterest.trim().isNotEmpty ||
+        value.careerTitle.trim().isNotEmpty ||
+        value.skills.isNotEmpty;
   }
 
   @override
   Widget build(BuildContext context) {
+    if (loading) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: appSurfaceColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: appBorderColor),
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: appPurpleColor,
+              ),
+            ),
+            SizedBox(width: 10),
+            Text(
+              'Buscando empleos según tu perfil...',
+              style: TextStyle(color: appMutedColor, fontSize: 12),
+            ),
+          ],
+        ),
+      );
+    }
     if (!_hasProfileSignals) {
       return Container(
         padding: const EdgeInsets.all(14),
@@ -924,13 +995,25 @@ class _SuggestionCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        color: appPurpleColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            color: appPurpleColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          '$score',
+                          style: const TextStyle(
+                            color: appMutedColor,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

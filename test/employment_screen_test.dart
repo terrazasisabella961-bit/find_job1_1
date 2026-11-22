@@ -4,10 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:find_job1_1/src/models/company.dart';
 import 'package:find_job1_1/src/models/institution.dart';
 import 'package:find_job1_1/src/models/institution_course.dart';
+import 'package:find_job1_1/src/models/job_application.dart';
 import 'package:find_job1_1/src/models/job_posting.dart';
 import 'package:find_job1_1/src/models/user_profile.dart';
 import 'package:find_job1_1/src/screens/app_shell.dart';
+import 'package:find_job1_1/src/screens/company_applications_screen.dart';
 import 'package:find_job1_1/src/screens/employment_screen.dart';
+import 'package:find_job1_1/src/services/job_application_repository.dart';
 import 'package:find_job1_1/src/services/auth_repository.dart';
 import 'package:find_job1_1/src/services/institution_repository.dart';
 import 'package:find_job1_1/src/services/recruitment_repository.dart';
@@ -193,6 +196,7 @@ void main() {
           profileRepository: _EmptyProfileRepository(),
           recruitmentRepository: _FakeRecruitmentRepository(_sampleJobs),
           institutionRepository: _EmptyInstitutionRepository(),
+          applicationRepository: InMemoryJobApplicationRepository(),
           accountType: 'company',
         ),
       ),
@@ -203,29 +207,96 @@ void main() {
     expect(find.text('Anuncios de empleo activos'), findsOneWidget);
   });
 
-  testWidgets('applying to a job opens the simulated CV flow', (tester) async {
+  testWidgets('applying to a job sends a profile form the company can read', (
+    tester,
+  ) async {
+    final applications = InMemoryJobApplicationRepository();
     await tester.pumpWidget(
       MaterialApp(
-        home: JobDetailsScreen(job: _sampleJobs.first),
+        home: JobDetailsScreen(
+          job: _sampleJobs.first,
+          profile: _applicant,
+          applicationRepository: applications,
+        ),
       ),
     );
     await tester.pump();
     await tester.scrollUntilVisible(
-      find.text('Postular con mi CV'),
+      find.text('Postular'),
       400,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.text('Postular con mi CV'));
+    await tester.tap(find.text('Postular'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Postulación enviada'), findsOneWidget);
-    expect(
-      find.text('CV_ficticio_Ingeniero_Ambiental_CochaConecta.pdf'),
-      findsOneWidget,
+    expect(find.text('DATOS DE TU REGISTRO'), findsOneWidget);
+    expect(find.textContaining('Aylen Postulante'), findsWidgets);
+
+    await tester.enterText(
+      find.byType(TextFormField).last,
+      'Me interesa el puesto por mi experiencia en el área.',
     );
-    expect(find.text('Abrir CV'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Enviar postulación'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Enviar postulación'));
+    await tester.pumpAndSettle();
+
+    expect(applications.applications, hasLength(1));
+    expect(applications.applications.single.fullName, 'Aylen Postulante');
+    expect(find.text('Postulación enviada'), findsOneWidget);
+  });
+
+  testWidgets('company can open received applicant profiles', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompanyApplicationsScreen(
+          job: _sampleJobs.first,
+          applications: [
+            JobApplication(
+              id: 'job-1_user-1',
+              jobId: 'job-1',
+              companyId: 'company-1',
+              applicantUid: 'user-1',
+              jobTitle: _sampleJobs.first.title,
+              companyName: _sampleJobs.first.companyName,
+              fullName: 'Aylen Postulante',
+              email: 'aylen@example.com',
+              phone: '+591 70000000',
+              city: 'Cochabamba',
+              areaOfInterest: 'Tecnología',
+              educationLevel: 'Licenciatura',
+              careerTitle: 'Ingeniería Ambiental',
+              skills: const ['Informática'],
+              languages: const ['Español (Nativo)'],
+              aboutMe: 'Perfil de prueba',
+              message: 'Quiero postular a esta vacante.',
+              availability: 'Inmediata',
+              status: 'received',
+              cvFileName: 'CV_ficticio_Ingeniero_Ambiental_CochaConecta.pdf',
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Aylen Postulante'), findsOneWidget);
+    expect(find.text('Quiero postular a esta vacante.'), findsOneWidget);
+    expect(find.text('aylen@example.com'), findsOneWidget);
   });
 }
+
+const _applicant = UserProfile(
+  uid: 'user-1',
+  fullName: 'Aylen Postulante',
+  email: 'aylen@example.com',
+  phone: '+591 70000000',
+  city: 'Cochabamba',
+  areaOfInterest: 'Tecnología',
+);
 
 final _sampleJobs = [
   JobPosting(

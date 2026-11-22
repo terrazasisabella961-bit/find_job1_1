@@ -11,6 +11,7 @@ import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
 import '../services/institution_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/app_feedback.dart';
 
 class InstitutionPortalScreen extends StatefulWidget {
   const InstitutionPortalScreen({
@@ -184,7 +185,7 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
   }
 
   Future<void> _signIn() async {
-    if (!_formKey.currentState!.validate() || _busy) return;
+    if (_busy || !ensureFormValid(context, _formKey)) return;
     setState(() => _busy = true);
     try {
       await widget.authRepository.signIn(
@@ -192,7 +193,13 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
         password: _password.text,
       );
     } on Exception catch (error) {
-      if (mounted) _showMessage(context, authErrorMessage(error));
+      if (mounted) {
+        _showMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -201,7 +208,11 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
   Future<void> _resetPassword() async {
     final error = _emailValidator(_email.text);
     if (error != null) {
-      _showMessage(context, 'Escribe primero un correo institucional válido.');
+      _showMessage(
+        context,
+        'Escribe primero un correo institucional válido.',
+        kind: AppMessageKind.error,
+      );
       return;
     }
     try {
@@ -213,7 +224,13 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
         );
       }
     } on Exception catch (error) {
-      if (mounted) _showMessage(context, authErrorMessage(error));
+      if (mounted) {
+        _showMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
+      }
     }
   }
 
@@ -463,13 +480,21 @@ class _InstitutionRegistrationScreenState
   }
 
   Future<void> _save() async {
-    if (!_formKey.currentState!.validate() || _busy) return;
+    if (_busy || !ensureFormValid(context, _formKey)) return;
     if (_city == null) {
-      _showMessage(context, 'Selecciona la ciudad de la institución.');
+      _showMessage(
+        context,
+        'Selecciona la ciudad de la institución.',
+        kind: AppMessageKind.error,
+      );
       return;
     }
     if (!_termsAccepted && widget.initialInstitution == null) {
-      _showMessage(context, 'Acepta los términos para continuar.');
+      _showMessage(
+        context,
+        'Acepta los términos para continuar.',
+        kind: AppMessageKind.error,
+      );
       return;
     }
 
@@ -530,13 +555,22 @@ class _InstitutionRegistrationScreenState
           widget.initialInstitution == null
               ? 'Institución guardada. Ya puedes publicar cursos.'
               : 'Los datos de la institución se actualizaron.',
+          kind: AppMessageKind.success,
         );
         widget.onSaved?.call();
       }
     } on StateError catch (error) {
-      if (mounted) _showMessage(context, error.message);
+      if (mounted) {
+        _showMessage(context, error.message, kind: AppMessageKind.error);
+      }
     } on Exception catch (error) {
-      if (mounted) _showMessage(context, authErrorMessage(error));
+      if (mounted) {
+        _showMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -560,11 +594,13 @@ class _InstitutionRegistrationScreenState
     }
     return Form(
       key: _formKey,
-      child: ListView(
+      child: SingleChildScrollView(
         controller: _scroll,
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.fromLTRB(22, 10, 22, 24),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           _InstitutionHeader(
             title: editing
                 ? 'ACTUALIZAR INSTITUCIÓN'
@@ -918,6 +954,7 @@ class _InstitutionRegistrationScreenState
               label: const Text('Volver al tablero'),
             ),
         ],
+        ),
       ),
     );
   }
@@ -1030,12 +1067,24 @@ class InstitutionDashboardScreen extends StatelessWidget {
         ownerUid: institution.uid,
       );
       if (context.mounted) {
-        _showMessage(context, 'El curso fue retirado del catálogo.');
+        _showMessage(
+          context,
+          'El curso fue retirado del catálogo.',
+          kind: AppMessageKind.success,
+        );
       }
     } on StateError catch (error) {
-      if (context.mounted) _showMessage(context, error.message);
+      if (context.mounted) {
+        _showMessage(context, error.message, kind: AppMessageKind.error);
+      }
     } on Exception catch (error) {
-      if (context.mounted) _showMessage(context, authErrorMessage(error));
+      if (context.mounted) {
+        _showMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
+      }
     }
   }
 
@@ -1071,12 +1120,24 @@ class InstitutionDashboardScreen extends StatelessWidget {
         ownerUid: institution.uid,
       );
       if (context.mounted) {
-        _showMessage(context, 'El curso se publicó en el catálogo.');
+        _showMessage(
+          context,
+          'El curso se publicó en el catálogo.',
+          kind: AppMessageKind.success,
+        );
       }
     } on StateError catch (error) {
-      if (context.mounted) _showMessage(context, error.message);
-    } on Exception catch (error) {
-      if (context.mounted) _showMessage(context, authErrorMessage(error));
+      if (context.mounted) {
+        _showMessage(context, error.message, kind: AppMessageKind.error);
+      }
+    } catch (error) {
+      if (context.mounted) {
+        _showMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
+      }
     }
   }
 
@@ -1084,7 +1145,13 @@ class InstitutionDashboardScreen extends StatelessWidget {
     try {
       await authRepository.signOut();
     } on Exception catch (error) {
-      if (context.mounted) _showMessage(context, authErrorMessage(error));
+      if (context.mounted) {
+        _showMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
+      }
     }
   }
 
@@ -1111,11 +1178,22 @@ class InstitutionDashboardScreen extends StatelessWidget {
             _InstitutionHeader(
               title: 'MI INSTITUCIÓN',
               onBack: null,
-              action: IconButton(
-                onPressed: onEditInstitution,
-                icon: const Icon(Icons.settings_outlined),
-                color: appMutedColor,
-                tooltip: 'Editar perfil institucional',
+              action: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: onEditInstitution,
+                    icon: const Icon(Icons.settings_outlined),
+                    color: appMutedColor,
+                    tooltip: 'Editar perfil institucional',
+                  ),
+                  IconButton(
+                    onPressed: () => _signOut(context),
+                    icon: const Icon(Icons.logout),
+                    color: Color(0xFFFF647C),
+                    tooltip: 'Cerrar sesión',
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 14),
@@ -1179,6 +1257,20 @@ class InstitutionDashboardScreen extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _signOut(context),
+                      icon: const Icon(Icons.logout, size: 16),
+                      label: const Text('Cerrar sesión'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFFF647C),
+                        side: const BorderSide(color: appBorderColor),
+                        minimumSize: const Size.fromHeight(44),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1328,17 +1420,6 @@ class InstitutionDashboardScreen extends StatelessWidget {
                   ),
               ],
             ],
-            const SizedBox(height: 14),
-            OutlinedButton.icon(
-              onPressed: () => _signOut(context),
-              icon: const Icon(Icons.logout),
-              label: const Text('Cerrar sesión institucional'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFFF647C),
-                side: const BorderSide(color: appBorderColor),
-                minimumSize: const Size.fromHeight(46),
-              ),
-            ),
           ],
         );
       },
@@ -1492,13 +1573,21 @@ class _InstitutionCourseFormScreenState
       final fileSize = await file.length();
       if (!mounted) return;
       if (fileSize != null && fileSize > 15 * 1024 * 1024) {
-        _showMessage(context, 'El PDF supera el límite de 15 MB.');
+        _showMessage(
+          context,
+          'El PDF supera el límite de 15 MB.',
+          kind: AppMessageKind.error,
+        );
         return;
       }
       setState(() => _brochure = file);
     } on Exception catch (error) {
       if (mounted) {
-        _showMessage(context, 'No se pudo seleccionar el PDF: $error');
+        _showMessage(
+          context,
+          'No se pudo seleccionar el PDF. Inténtalo otra vez.',
+          kind: AppMessageKind.error,
+        );
       }
     }
   }
@@ -1511,11 +1600,12 @@ class _InstitutionCourseFormScreenState
   );
 
   Future<void> _save({required bool publish}) async {
-    if (!_formKey.currentState!.validate() || _busy) return;
+    if (_busy || !ensureFormValid(context, _formKey)) return;
     if (_deadline.isBefore(_publicationDate)) {
       _showMessage(
         context,
         'La fecha límite debe ser posterior a la publicación.',
+        kind: AppMessageKind.error,
       );
       return;
     }
@@ -1523,6 +1613,7 @@ class _InstitutionCourseFormScreenState
       _showMessage(
         context,
         'El inicio de clases debe ser posterior a la publicación.',
+        kind: AppMessageKind.error,
       );
       return;
     }
@@ -1537,6 +1628,7 @@ class _InstitutionCourseFormScreenState
           _showMessage(
             context,
             'La institución debe verificar su dominio antes de publicar. Puedes guardar este curso como borrador.',
+            kind: AppMessageKind.error,
           );
           return;
         }
@@ -1558,7 +1650,24 @@ class _InstitutionCourseFormScreenState
         );
         brochureUrl = await task.ref.getDownloadURL();
       }
-      final amount = double.tryParse(_totalCost.text.trim());
+      final amount = double.tryParse(_totalCost.text.trim().replaceAll(',', '.'));
+      final seats = int.tryParse(_seats.text.trim());
+      if (amount == null || amount < 0) {
+        _showMessage(
+          context,
+          'Indica un costo total numérico válido.',
+          kind: AppMessageKind.error,
+        );
+        return;
+      }
+      if (seats == null || seats < 1) {
+        _showMessage(
+          context,
+          'Indica una cantidad válida de cupos.',
+          kind: AppMessageKind.error,
+        );
+        return;
+      }
       final course = InstitutionCourse(
         id: courseId,
         ownerUid: widget.institution.uid,
@@ -1571,11 +1680,11 @@ class _InstitutionCourseFormScreenState
         modality: _modality,
         duration: _duration.text.trim(),
         description: _description.text.trim(),
-        totalSeats: int.parse(_seats.text.trim()),
+        totalSeats: seats,
         minimumLevel: _minimumLevel,
         requiredDocuments: _documents.toList(),
         currency: _currency,
-        totalCost: amount!,
+        totalCost: amount,
         paymentPlan: _paymentPlan.text.trim(),
         earlyDiscount: _discount.text.trim(),
         includesCertification: _certification,
@@ -1600,12 +1709,21 @@ class _InstitutionCourseFormScreenState
           if (_brochure != null && simulateFileUploads)
             'El folleto se simuló y no se subió a Storage.',
         ].join(' '),
+        kind: AppMessageKind.success,
       );
       widget.onBack();
     } on StateError catch (error) {
-      if (mounted) _showMessage(context, error.message);
-    } on Exception catch (error) {
-      if (mounted) _showMessage(context, authErrorMessage(error));
+      if (mounted) {
+        _showMessage(context, error.message, kind: AppMessageKind.error);
+      }
+    } catch (error) {
+      if (mounted) {
+        _showMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -1614,10 +1732,12 @@ class _InstitutionCourseFormScreenState
   @override
   Widget build(BuildContext context) => Form(
     key: _formKey,
-    child: ListView(
+    child: SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
-      children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
         _InstitutionHeader(
           title: 'PUBLICAR CURSO O PROGRAMA',
           onBack: widget.onBack,
@@ -1931,7 +2051,8 @@ class _InstitutionCourseFormScreenState
           icon: const Icon(Icons.arrow_back, size: 16),
           label: const Text('Volver al tablero'),
         ),
-      ],
+        ],
+      ),
     ),
   );
 
@@ -2527,7 +2648,11 @@ class _InstitutionAccountMismatch extends StatelessWidget {
                 await onSignOut();
               } on Exception catch (error) {
                 if (context.mounted) {
-                  _showMessage(context, authErrorMessage(error));
+                  _showMessage(
+                    context,
+                    authErrorMessage(error),
+                    kind: AppMessageKind.error,
+                  );
                 }
               }
             },
@@ -2657,10 +2782,10 @@ String _decimal(num value) => value == value.roundToDouble()
     ? value.toInt().toString()
     : value.toStringAsFixed(2);
 
-void _showMessage(BuildContext context, String message) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: appSurfaceColor),
-    );
+void _showMessage(
+  BuildContext context,
+  String message, {
+  AppMessageKind kind = AppMessageKind.info,
+}) {
+  showAppMessage(context, message, kind: kind);
 }

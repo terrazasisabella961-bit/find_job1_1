@@ -41,7 +41,7 @@ void main() {
 
     final loadingButton = find.text('Publicando...');
     await tester.ensureVisible(loadingButton);
-    await tester.tap(loadingButton);
+    await tester.tap(loadingButton, warnIfMissed: false);
     await tester.pump();
     expect(repository.saveCalls, 1);
 

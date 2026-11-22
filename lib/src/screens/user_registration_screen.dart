@@ -7,6 +7,7 @@ import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
 import '../services/user_profile_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/app_feedback.dart';
 import '../widgets/cocha_conecta_logo.dart';
 
 class UserRegistrationScreen extends StatefulWidget {
@@ -140,23 +141,32 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       final fileSize = await selected.length();
       if (!mounted) return;
       if (fileSize != null && fileSize > 10 * 1024 * 1024) {
-        _showMessage('El archivo supera el límite de 10 MB.');
+        _showMessage(
+          'El archivo supera el límite de 10 MB.',
+          kind: AppMessageKind.error,
+        );
         return;
       }
       setState(() => _cvFile = selected);
     } on Exception catch (error) {
-      if (mounted) _showMessage('No se pudo seleccionar el CV: $error');
+      if (mounted) {
+        _showMessage(
+          'No se pudo seleccionar el CV. Inténtalo otra vez.',
+          kind: AppMessageKind.error,
+        );
+      }
     }
   }
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) return;
+    if (!ensureFormValid(context, _formKey)) return;
     final requiresConsent =
         !widget.isEditing || widget.initialProfile?.acceptedTerms != true;
     if (requiresConsent && !_acceptedTerms) {
       _showMessage(
         'Debes aceptar los Términos y Condiciones y la Política de Privacidad.',
+        kind: AppMessageKind.error,
       );
       return;
     }
@@ -204,6 +214,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
         _cvFile == null
             ? 'Tu perfil se guardó correctamente.'
             : 'Tu perfil se guardó. El CV quedó adjunto en la app (simulación; no se sube a Storage).',
+        kind: AppMessageKind.success,
       );
       if (widget.onProfileSaved != null) {
         widget.onProfileSaved!(profile);
@@ -214,6 +225,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       if (!mounted) return;
       _showMessage(
         'La cuenta quedó creada, pero el CV no se subió. ${authErrorMessage(error)}',
+        kind: AppMessageKind.error,
       );
       if (widget.onProfileSaved != null) {
         widget.onProfileSaved!(
@@ -227,7 +239,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
         Navigator.of(context).pop();
       }
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -294,12 +308,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     });
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: appSurfaceColor),
-      );
+  void _showMessage(String message, {AppMessageKind kind = AppMessageKind.info}) {
+    showAppMessage(context, message, kind: kind);
   }
 
   @override

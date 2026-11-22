@@ -126,6 +126,45 @@ void main() {
     expect(suggestions, hasLength(1));
     expect(suggestions.single.reasons, contains('Modalidad remota, no exige tu ciudad'));
   });
+
+  test('matching skills rank a job above an otherwise similar listing', () {
+    const profile = UserProfile(
+      uid: 'user-1',
+      fullName: 'Ana',
+      email: 'ana@example.com',
+      phone: '',
+      city: 'La Paz',
+      areaOfInterest: 'Tecnología',
+      skills: ['Informática', 'Ofimática'],
+    );
+    final match = _job(
+      id: 'skills-match',
+      title: 'Soporte técnico',
+      area: 'Tecnología',
+      city: 'La Paz',
+      skills: const ['Informática', 'Atención al cliente'],
+    );
+    final miss = _job(
+      id: 'skills-miss',
+      title: 'Analista junior',
+      area: 'Tecnología',
+      city: 'La Paz',
+      skills: const ['Ventas'],
+    );
+
+    final suggestions = service.suggest(
+      profile: profile,
+      jobs: [miss, match],
+      now: now,
+    );
+
+    expect(suggestions, isNotEmpty);
+    expect(suggestions.first.job.id, 'skills-match');
+    expect(
+      suggestions.first.reasons,
+      contains('Coincide una habilidad de tu perfil'),
+    );
+  });
 }
 
 JobPosting _job({
@@ -136,6 +175,7 @@ JobPosting _job({
   String status = 'published',
   String modality = 'Presencial',
   String sector = 'Consultoría',
+  List<String> skills = const [],
   DateTime? deadline,
 }) {
   return JobPosting(
@@ -160,6 +200,7 @@ JobPosting _job({
     education: '',
     salaryMinimum: null,
     salaryMaximum: null,
+    skills: skills,
     currency: 'BOB',
     createdAt: DateTime(2026, 11, 1),
     deadline: deadline,

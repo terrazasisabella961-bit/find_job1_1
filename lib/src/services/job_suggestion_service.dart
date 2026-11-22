@@ -44,7 +44,13 @@ class LocalJobSuggestionService implements JobSuggestionService {
     if (profile == null) return const [];
     final city = profile.city.trim();
     final area = profile.areaOfInterest.trim();
-    if (city.isEmpty && area.isEmpty) return const [];
+    final career = profile.careerTitle.trim();
+    if (city.isEmpty &&
+        area.isEmpty &&
+        career.isEmpty &&
+        profile.skills.isEmpty) {
+      return const [];
+    }
 
     final ranked = <JobSuggestion>[];
     for (final job in jobs) {
@@ -107,7 +113,22 @@ class LocalJobSuggestionService implements JobSuggestionService {
       reasons.add('Modalidad remota, no exige tu ciudad');
     }
 
-    final tokens = _tokens(profile.areaOfInterest);
+    final education = _fold(profile.educationLevel);
+    if (education.isNotEmpty) {
+      final jobEducation = _fold(job.education);
+      if (jobEducation.contains(education) ||
+          (jobEducation.isNotEmpty && education.contains(jobEducation))) {
+        score += 8;
+        if (reasons.length < 3) {
+          reasons.add('Tu nivel ${profile.educationLevel.trim()} encaja');
+        }
+      }
+    }
+
+    final tokens = {
+      ..._tokens(profile.areaOfInterest),
+      ..._tokens(profile.careerTitle),
+    };
     if (tokens.isNotEmpty) {
       var tokenHits = 0;
       for (final token in tokens) {

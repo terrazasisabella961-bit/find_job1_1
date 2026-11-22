@@ -2,18 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:find_job1_1/src/models/company.dart';
-import 'package:find_job1_1/src/models/institution.dart';
-import 'package:find_job1_1/src/models/institution_course.dart';
 import 'package:find_job1_1/src/models/job_posting.dart';
-import 'package:find_job1_1/src/models/user_profile.dart';
-import 'package:find_job1_1/src/screens/app_shell.dart';
 import 'package:find_job1_1/src/screens/employment_screen.dart';
-import 'package:find_job1_1/src/services/auth_repository.dart';
-import 'package:find_job1_1/src/services/institution_repository.dart';
 import 'package:find_job1_1/src/services/recruitment_repository.dart';
-import 'package:find_job1_1/src/services/user_profile_repository.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 void main() {
   testWidgets('employment screen shows a useful empty state without samples', (
@@ -114,93 +105,6 @@ void main() {
     );
     expect(find.text('empleos@ejemplo.bo'), findsOneWidget);
     expect(find.text('Funciones y responsabilidades'), findsOneWidget);
-  });
-
-  testWidgets('student profile suggestions appear above the catalog', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: EmploymentScreen(
-            repository: _FakeRecruitmentRepository(_sampleJobs),
-            onOpenCatalog: () {},
-            showSuggestions: true,
-            profile: const UserProfile(
-              uid: 'user-1',
-              fullName: 'Ana',
-              email: 'ana@example.com',
-              phone: '',
-              city: 'La Paz',
-              areaOfInterest: 'Tecnología',
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('SUGERIDAS PARA TI'), findsOneWidget);
-    expect(find.text('Según tu perfil, no según el filtro de búsqueda.'), findsOneWidget);
-    expect(find.text('ANALISTA DE EXPERIENCIAS'), findsWidgets);
-    expect(find.textContaining('Coincide tu área Tecnología'), findsOneWidget);
-
-    await tester.enterText(find.byType(TextField).first, 'cocina');
-    await tester.pump();
-    expect(find.text('SUGERIDAS PARA TI'), findsOneWidget);
-    expect(find.text('AYUDANTE DE COCINA'), findsOneWidget);
-    expect(find.textContaining('Coincide tu área Tecnología'), findsOneWidget);
-  });
-
-  testWidgets('incomplete profile shows complete-profile call to action', (
-    tester,
-  ) async {
-    var openedAccount = false;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: EmploymentScreen(
-            repository: _FakeRecruitmentRepository(_sampleJobs),
-            onOpenCatalog: () {},
-            showSuggestions: true,
-            profile: const UserProfile(
-              uid: 'user-1',
-              fullName: 'Ana',
-              email: 'ana@example.com',
-              phone: '',
-              city: '',
-              areaOfInterest: '',
-            ),
-            onCompleteProfile: () => openedAccount = true,
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Completar perfil'), findsOneWidget);
-    await tester.tap(find.text('Completar perfil'));
-    expect(openedAccount, isTrue);
-  });
-
-  testWidgets('company accounts do not see the suggestions block', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: AppShell(
-          authRepository: _SignedInAuthRepository(),
-          profileRepository: _EmptyProfileRepository(),
-          recruitmentRepository: _FakeRecruitmentRepository(_sampleJobs),
-          institutionRepository: _EmptyInstitutionRepository(),
-          accountType: 'company',
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('SUGERIDAS PARA TI'), findsNothing);
-    expect(find.text('ANUNCIOS DE EMPLEOS ACTIVOS'), findsOneWidget);
   });
 }
 
@@ -311,95 +215,4 @@ class _FakeRecruitmentRepository implements RecruitmentRepository {
 
   @override
   Future<void> updateJobStatus(String jobId, String status) async {}
-}
-
-class _SignedInAuthRepository implements AuthRepository {
-  @override
-  Stream<User?> get authStateChanges => Stream.value(currentUser);
-
-  @override
-  User? get currentUser => _FakeUser();
-
-  @override
-  Future<UserCredential> signIn({
-    required String email,
-    required String password,
-  }) => throw UnimplementedError();
-
-  @override
-  Future<UserCredential> register({
-    required String email,
-    required String password,
-  }) => throw UnimplementedError();
-
-  @override
-  Future<UserCredential> signInWithGoogle() => throw UnimplementedError();
-
-  @override
-  Future<void> sendPasswordResetEmail(String email) async {}
-
-  @override
-  Future<void> updateEmail({
-    required String currentPassword,
-    required String newEmail,
-  }) async {}
-
-  @override
-  Future<void> signOut() async {}
-}
-
-class _FakeUser implements User {
-  @override
-  String get uid => 'authenticated-user';
-
-  @override
-  String? get email => 'user@example.com';
-
-  @override
-  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _EmptyProfileRepository implements UserProfileRepository {
-  @override
-  Future<UserProfile?> getProfile(String uid) async => null;
-
-  @override
-  Stream<UserProfile?> watchProfile(String uid) => Stream.value(null);
-
-  @override
-  Future<void> updateVisibility({
-    required String uid,
-    required bool isVisible,
-  }) async {}
-
-  @override
-  Future<void> saveProfile({
-    required UserProfile profile,
-    PlatformFile? cvFile,
-  }) async {}
-}
-
-class _EmptyInstitutionRepository implements InstitutionRepository {
-  @override
-  Stream<Institution?> watchInstitution(String uid) => Stream.value(null);
-
-  @override
-  Future<void> saveInstitutionRequest(Institution institution) async {}
-
-  @override
-  Stream<List<InstitutionCourse>> watchInstitutionCourses(String uid) =>
-      Stream.value(const []);
-
-  @override
-  Stream<List<InstitutionCourse>> watchPublishedCourses() =>
-      Stream.value(const []);
-
-  @override
-  Future<String> saveCourse(InstitutionCourse course) async => course.id;
-
-  @override
-  Future<void> retireCourse({
-    required String courseId,
-    required String ownerUid,
-  }) async {}
 }

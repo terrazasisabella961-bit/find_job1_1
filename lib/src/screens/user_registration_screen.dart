@@ -192,26 +192,6 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       } else {
         Navigator.of(context).pop();
       }
-    } on StorageUploadException catch (error) {
-      if (!mounted) return;
-      _showMessage(
-        'La cuenta quedó creada, pero el CV no se subió. ${authErrorMessage(error)}',
-      );
-      if (widget.onProfileSaved != null) {
-        widget.onProfileSaved!(
-          UserProfile(
-            uid: widget.authRepository.currentUser?.uid ?? '',
-            fullName: _nameController.text.trim(),
-            email: _emailController.text.trim(),
-            phone: _phoneController.text.trim(),
-            city: _city ?? '',
-            areaOfInterest: _areaController.text.trim(),
-            acceptedTerms: true,
-          ),
-        );
-      } else {
-        Navigator.of(context).pop();
-      }
     } on Exception catch (error) {
       if (mounted) _showMessage(authErrorMessage(error));
     } finally {

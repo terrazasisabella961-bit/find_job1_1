@@ -77,31 +77,6 @@ class JobPosting {
 
   bool get hasSalary => salaryMinimum != null || salaryMaximum != null;
 
-  bool get isRemote {
-    final value = modality.toLowerCase();
-    return value.contains('remot') || value.contains('virtual');
-  }
-
-  /// Same listing window used by the Employment tab.
-  bool isCurrentlyListed([DateTime? now]) {
-    final today = now ?? DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
-    if (deadline != null) {
-      final deadlineDate = DateTime(
-        deadline!.year,
-        deadline!.month,
-        deadline!.day,
-      );
-      if (deadlineDate.isBefore(todayDate)) return false;
-    }
-    final published = DateTime(
-      publicationDate.year,
-      publicationDate.month,
-      publicationDate.day,
-    );
-    return !published.isAfter(todayDate);
-  }
-
   factory JobPosting.fromMap(String id, Map<String, dynamic> data) {
     return JobPosting(
       id: id,

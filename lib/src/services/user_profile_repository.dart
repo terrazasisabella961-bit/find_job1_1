@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 
+import '../config/file_upload_mode.dart';
 import '../models/user_profile.dart';
 
 class StorageUploadException implements Exception {
@@ -97,6 +98,16 @@ class FirebaseUserProfileRepository implements UserProfileRepository {
     await profileReference.set(profile.toMap(), SetOptions(merge: true));
     if (cvFile == null) return;
 
+    if (simulateFileUploads) {
+      await profileReference.set({
+        'cvFileName': cvFile.name,
+        'cvUrl': null,
+        'cvSimulated': true,
+        'updatedAt': DateTime.now().toUtc().toIso8601String(),
+      }, SetOptions(merge: true));
+      return;
+    }
+
     try {
       await _auth.currentUser?.getIdToken(true);
       final bytes = await cvFile.readAsBytes();
@@ -110,6 +121,7 @@ class FirebaseUserProfileRepository implements UserProfileRepository {
       await profileReference.set({
         'cvUrl': await task.ref.getDownloadURL(),
         'cvFileName': cvFile.name,
+        'cvSimulated': false,
         'updatedAt': DateTime.now().toUtc().toIso8601String(),
       }, SetOptions(merge: true));
     } catch (error) {

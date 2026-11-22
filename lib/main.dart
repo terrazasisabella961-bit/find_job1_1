@@ -64,7 +64,7 @@ class MyApp extends StatelessWidget {
     final institutions =
         institutionRepository ?? FirebaseInstitutionRepository();
     return MaterialApp(
-      title: 'Find Job',
+      title: 'CochaConecta',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

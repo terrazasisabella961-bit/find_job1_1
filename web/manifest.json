@@ -1,11 +1,11 @@
 {
-    "name": "find_job1_1",
-    "short_name": "find_job1_1",
+    "name": "CochaConecta",
+    "short_name": "CochaConecta",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "CochaConecta — empleos, empresas y cursos.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

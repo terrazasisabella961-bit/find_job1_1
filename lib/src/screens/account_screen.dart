@@ -90,7 +90,11 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _openCv(UserProfile profile) async {
     final url = profile.cvUrl;
     if (url == null || url.isEmpty) {
-      _showMessage('Todavía no has cargado un currículum vitae.');
+      _showMessage(
+        (profile.cvFileName ?? '').isEmpty
+            ? 'Todavía no has cargado un currículum vitae.'
+            : 'El CV "${profile.cvFileName}" está simulado: no se guardó en Storage, así que no se puede abrir un enlace.',
+      );
       return;
     }
     try {

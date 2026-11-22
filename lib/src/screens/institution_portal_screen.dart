@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import '../config/file_upload_mode.dart';
 import '../models/institution.dart';
 import '../models/institution_course.dart';
 import '../services/auth_error_message.dart';
@@ -1360,7 +1361,7 @@ class _InstitutionCourseFormScreenState
           widget.initialCourse?.id ??
           FirebaseFirestore.instance.collection('courses').doc().id;
       String? brochureUrl = widget.initialCourse?.brochureUrl;
-      if (_brochure != null) {
+      if (_brochure != null && !simulateFileUploads) {
         final bytes = await _brochure!.readAsBytes();
         await FirebaseAuth.instance.currentUser?.getIdToken(true);
         final reference = FirebaseStorage.instance.ref().child(
@@ -1406,9 +1407,14 @@ class _InstitutionCourseFormScreenState
       if (!mounted) return;
       _showMessage(
         context,
-        publish
-            ? 'Curso publicado correctamente.'
-            : 'Borrador guardado correctamente.',
+        [
+          if (publish)
+            'Curso publicado correctamente.'
+          else
+            'Borrador guardado correctamente.',
+          if (_brochure != null && simulateFileUploads)
+            'El folleto se simuló y no se subió a Storage.',
+        ].join(' '),
       );
       widget.onBack();
     } on StateError catch (error) {

@@ -174,7 +174,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
             requiresConsent || widget.initialProfile?.acceptedTerms == true,
         isVisible: widget.initialProfile?.isVisible ?? false,
         cvUrl: widget.initialProfile?.cvUrl,
-        cvFileName: widget.initialProfile?.cvFileName,
+        cvFileName: _cvFile?.name ?? widget.initialProfile?.cvFileName,
       );
       final saveOperations = <Future<void>>[
         widget.profileRepository.saveProfile(
@@ -186,7 +186,11 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       await Future.wait(saveOperations);
 
       if (!mounted) return;
-      _showMessage('Tu perfil se guardó correctamente.');
+      _showMessage(
+        _cvFile == null
+            ? 'Tu perfil se guardó correctamente.'
+            : 'Tu perfil se guardó. El CV quedó adjunto en la app (simulación; no se sube a Storage).',
+      );
       if (widget.onProfileSaved != null) {
         widget.onProfileSaved!(profile);
       } else {
@@ -694,7 +698,7 @@ class _CvPicker extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Formatos admitidos: PDF, DOCX (Máx. 10 MB)',
+            'PDF o DOCX, máx. 10 MB. El archivo se simula y no se sube a la nube.',
             textAlign: TextAlign.center,
             style: TextStyle(color: appMutedColor, fontSize: 7),
           ),

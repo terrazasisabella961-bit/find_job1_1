@@ -7,6 +7,7 @@ import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
 import '../services/user_profile_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/cocha_conecta_logo.dart';
 
 class UserRegistrationScreen extends StatefulWidget {
   const UserRegistrationScreen({
@@ -433,8 +434,15 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                           value: _acceptedTerms,
                           onChanged: (value) =>
                               setState(() => _acceptedTerms = value ?? false),
-                          onOpenTerms: () => _showMessage(
-                            'Los documentos legales aún no están configurados.',
+                          onOpenTerms: () => showSimulatedLegalDialog(
+                            context,
+                            title: 'Términos y Condiciones',
+                            body: simulatedTermsBody,
+                          ),
+                          onOpenPrivacy: () => showSimulatedLegalDialog(
+                            context,
+                            title: 'Política de Privacidad',
+                            body: simulatedPrivacyBody,
                           ),
                         ),
                       ],
@@ -443,6 +451,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                 ),
               ),
             ),
+            const DevelopedByCredit(),
             _RegistrationActions(
               isSubmitting: _isSubmitting,
               isEditing: widget.isEditing,
@@ -469,7 +478,11 @@ class _RegistrationHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      children: [
+        const CochaConectaLogo(height: 88),
+        const SizedBox(height: 8),
+        Row(
       children: [
         IconButton(
           onPressed: onBack,
@@ -489,7 +502,7 @@ class _RegistrationHeader extends StatelessWidget {
                 'MI CUENTA',
                 style: const TextStyle(
                   color: appMutedColor,
-                  fontSize: 7,
+                  fontSize: 11,
                   letterSpacing: 0.7,
                 ),
               ),
@@ -497,7 +510,7 @@ class _RegistrationHeader extends StatelessWidget {
                 isEditing ? 'ACTUALIZAR PERFIL' : 'REGISTRO DE USUARIO',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 8,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -517,6 +530,8 @@ class _RegistrationHeader extends StatelessWidget {
             color: appPurpleColor,
             size: 16,
           ),
+        ),
+      ],
         ),
       ],
     );
@@ -815,11 +830,13 @@ class _TermsCheckbox extends StatelessWidget {
     required this.value,
     required this.onChanged,
     required this.onOpenTerms,
+    required this.onOpenPrivacy,
   });
 
   final bool value;
   final ValueChanged<bool?> onChanged;
   final VoidCallback onOpenTerms;
+  final VoidCallback onOpenPrivacy;
 
   @override
   Widget build(BuildContext context) {
@@ -851,7 +868,10 @@ class _TermsCheckbox extends StatelessWidget {
                   ' y la ',
                   style: TextStyle(color: appMutedColor, fontSize: 8),
                 ),
-                _TermsLink(text: 'Política de Privacidad', onTap: onOpenTerms),
+                _TermsLink(
+                  text: 'Política de Privacidad',
+                  onTap: onOpenPrivacy,
+                ),
                 const Text(
                   '.',
                   style: TextStyle(color: appMutedColor, fontSize: 8),

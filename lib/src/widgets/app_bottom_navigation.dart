@@ -98,3 +98,49 @@ class _NavigationItem extends StatelessWidget {
     );
   }
 }
+
+Future<void> showSimulatedLegalDialog(
+  BuildContext context, {
+  required String title,
+  required String body,
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        backgroundColor: appSurfaceColor,
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          body,
+          style: const TextStyle(
+            color: appMutedColor,
+            fontSize: 13,
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Entendido'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+const simulatedTermsBody =
+    'Simulación: CochaConecta conecta empleo y formación en Cochabamba. '
+    'Al registrarte aceptas usar datos verídicos y no publicar contenido ilegal. '
+    'Este aviso es una vista previa; el documento legal final se publicará más adelante.';
+
+const simulatedPrivacyBody =
+    'Simulación: usamos tu correo y datos de perfil para crear tu cuenta y mostrarte ofertas. '
+    'No vendemos tu información. Esta es una vista previa de la política de privacidad.';

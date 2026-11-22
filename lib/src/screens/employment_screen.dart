@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../config/file_upload_mode.dart';
+import '../config/simulated_cv.dart';
 import '../models/job_posting.dart';
 import '../models/job_suggestion.dart';
 import '../models/user_profile.dart';
@@ -449,6 +451,35 @@ class JobDetailsScreen extends StatelessWidget {
               _DetailText(title: 'Teléfono', value: job.companyPhone),
             if (job.companyWebsite.isNotEmpty)
               _DetailText(title: 'Sitio web', value: job.companyWebsite),
+            const SizedBox(height: 18),
+            FilledButton.icon(
+              onPressed: () {
+                if (simulateFileUploads) {
+                  showSimulatedCvScreen(
+                    context,
+                    heading: 'Postulación enviada',
+                    detail:
+                        'Se adjuntó este currículum de demostración a '
+                        '"${job.title}" en ${job.companyName}.',
+                  );
+                  return;
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'La postulación con CV real estará disponible cuando Storage esté activo.',
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.send_outlined),
+              label: const Text('Postular con mi CV'),
+              style: FilledButton.styleFrom(
+                backgroundColor: appOrangeColor,
+                foregroundColor: const Color(0xFF171323),
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
           ],
         ),
       ),

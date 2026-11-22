@@ -202,6 +202,29 @@ void main() {
     expect(find.text('SUGERIDAS PARA TI'), findsNothing);
     expect(find.text('Anuncios de empleo activos'), findsOneWidget);
   });
+
+  testWidgets('applying to a job opens the simulated CV flow', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: JobDetailsScreen(job: _sampleJobs.first),
+      ),
+    );
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('Postular con mi CV'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Postular con mi CV'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Postulación enviada'), findsOneWidget);
+    expect(
+      find.text('CV_ficticio_Ingeniero_Ambiental_CochaConecta.pdf'),
+      findsOneWidget,
+    );
+    expect(find.text('Abrir CV'), findsOneWidget);
+  });
 }
 
 final _sampleJobs = [

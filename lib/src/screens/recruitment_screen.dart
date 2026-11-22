@@ -232,7 +232,9 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
       _PageHeader(
         eyebrow: 'CENTRO DE RECLUTAMIENTO',
         title: 'INICIAR SESIÓN EMPRESA',
-        onBack: () => Navigator.of(context).maybePop(),
+        onBack: Navigator.of(context).canPop()
+            ? () => Navigator.of(context).pop()
+            : null,
       ),
       if (widget.errorMessage != null) ...[
         const SizedBox(height: 12),
@@ -344,6 +346,14 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
                 child: const Text('Registrar nueva empresa  ›'),
               ),
             ),
+            if (Navigator.of(context).canPop())
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back, size: 16),
+                  label: const Text('Volver al inicio de sesión'),
+                ),
+              ),
           ],
         ),
       ),
@@ -1791,6 +1801,7 @@ class _PageHeader extends StatelessWidget {
         if (onBack != null)
           IconButton(
             onPressed: onBack,
+            tooltip: 'Volver al inicio de sesión',
             icon: const Icon(Icons.arrow_back),
             color: Colors.white,
             style: IconButton.styleFrom(

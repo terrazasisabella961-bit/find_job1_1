@@ -12,7 +12,6 @@ import 'src/services/auth_repository.dart';
 import 'src/services/institution_repository.dart';
 import 'src/services/recruitment_repository.dart';
 import 'src/services/user_profile_repository.dart';
-import 'src/widgets/app_bottom_navigation.dart';
 import 'src/widgets/cocha_conecta_logo.dart';
 
 Future<void> main() async {
@@ -398,174 +397,247 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        bottom: false,
         child: Column(
           children: [
             Expanded(
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const CochaConectaLogo(height: 120),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Empleo y formación en Cochabamba',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: _mutedColor,
-                          fontSize: 13,
-                          height: 1.45,
-                        ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight - 8,
                       ),
-                      const SizedBox(height: 22),
-                      LoginTextField(
-                        controller: _emailController,
-                        hintText: 'Correo electrónico',
-                        icon: Icons.mail,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: _validateEmail,
-                      ),
-                      const SizedBox(height: 10),
-                      LoginTextField(
-                        controller: _passwordController,
-                        hintText: 'Contraseña',
-                        icon: Icons.lock,
-                        obscureText: _obscurePassword,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Ingresa tu contraseña.'
-                            : null,
-                        onToggleVisibility: () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
-                      ),
-                      const SizedBox(height: 22),
-                      Center(
-                        child: SizedBox(
-                          width: 180,
-                          height: 42,
-                          child: FilledButton(
-                            onPressed: _isSubmitting ? null : _signIn,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFFFF7845),
-                              foregroundColor: const Color(0xFF171323),
-                              shape: const StadiumBorder(),
-                              textStyle: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            child: _isSubmitting
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Color(0xFF171323),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 320),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const HoverScale(
+                                  scale: 1.04,
+                                  child: CochaConectaLogo(height: 132),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Empleo y formación en Cochabamba',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: _mutedColor,
+                                    fontSize: 14,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 22),
+                                SizedBox(
+                                  width: 268,
+                                  child: LoginTextField(
+                                    controller: _emailController,
+                                    hintText: 'Correo electrónico',
+                                    icon: Icons.mail_outline,
+                                    keyboardType: TextInputType.emailAddress,
+                                    validator: _validateEmail,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  width: 268,
+                                  child: LoginTextField(
+                                    controller: _passwordController,
+                                    hintText: 'Contraseña',
+                                    icon: Icons.lock_outline,
+                                    obscureText: _obscurePassword,
+                                    validator: (value) =>
+                                        value == null || value.isEmpty
+                                        ? 'Ingresa tu contraseña.'
+                                        : null,
+                                    onToggleVisibility: () {
+                                      setState(
+                                        () => _obscurePassword =
+                                            !_obscurePassword,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: _isSubmitting
+                                      ? null
+                                      : _resetPassword,
+                                  child: const Text(
+                                    '¿Olvidaste tu contraseña?',
+                                    style: TextStyle(
+                                      color: _mutedColor,
+                                      fontSize: 13,
                                     ),
-                                  )
-                                : const Text('Iniciar sesión'),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            color: _mutedColor,
-                            fontSize: 9,
-                            height: 1.55,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: 'Consejos: ',
-                              style: TextStyle(
-                                color: Color(0xFFFF7845),
-                                fontWeight: FontWeight.w700,
-                              ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                HoverScale(
+                                  child: SizedBox(
+                                    width: 220,
+                                    height: 46,
+                                    child: FilledButton(
+                                      onPressed: _isSubmitting
+                                          ? null
+                                          : _signIn,
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFFFF7845,
+                                        ),
+                                        foregroundColor: const Color(
+                                          0xFF171323,
+                                        ),
+                                        shape: const StadiumBorder(),
+                                        textStyle: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      child: _isSubmitting
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Color(0xFF171323),
+                                              ),
+                                            )
+                                          : const Text('Iniciar sesión'),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                const Row(
+                                  children: [
+                                    Expanded(
+                                      child: Divider(color: _borderColor),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                      child: Text(
+                                        'o',
+                                        style: TextStyle(
+                                          color: _mutedColor,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Divider(color: _borderColor),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                HoverScale(
+                                  child: SizedBox(
+                                    width: 240,
+                                    height: 46,
+                                    child: OutlinedButton.icon(
+                                      onPressed: _isSubmitting
+                                          ? null
+                                          : _signInWithGoogle,
+                                      icon: const Icon(
+                                        Icons.g_mobiledata,
+                                        size: 26,
+                                      ),
+                                      label: const Text(
+                                        'Continuar con Google',
+                                      ),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: Colors.white,
+                                        side: const BorderSide(
+                                          color: _borderColor,
+                                        ),
+                                        shape: const StadiumBorder(),
+                                        textStyle: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                HoverScale(
+                                  child: TextButton(
+                                    onPressed: _isSubmitting
+                                        ? null
+                                        : _openRegistration,
+                                    child: const Text(
+                                      '¿No tienes cuenta? Regístrate',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Wrap(
+                                  alignment: WrapAlignment.center,
+                                  spacing: 4,
+                                  runSpacing: 0,
+                                  children: [
+                                    TextButton(
+                                      onPressed: _isSubmitting
+                                          ? null
+                                          : _openCompanyPortal,
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: _mutedColor,
+                                        visualDensity: VisualDensity.compact,
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        minimumSize: Size.zero,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Acceso para empresas',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: _isSubmitting
+                                          ? null
+                                          : _openInstitutions,
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: _mutedColor,
+                                        visualDensity: VisualDensity.compact,
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        minimumSize: Size.zero,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Acceso para instituciones',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            TextSpan(
-                              text:
-                                  'El correo electrónico debe ser una '
-                                  'dirección de correo electrónico válida. '
-                                  'El campo de contraseña no puede estar vacío.',
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      const Divider(color: _borderColor, height: 1),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'O utilice las siguientes opciones para iniciar sesión o '
-                        'registrarte con correo electrónico o restablecer la '
-                        'contraseña de tu cuenta actual.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: _mutedColor,
-                          fontSize: 9,
-                          height: 1.55,
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _isSubmitting ? null : _resetPassword,
-                          child: const Text(
-                            '¿Olvidaste tu contraseña?',
-                            style: TextStyle(color: _mutedColor, fontSize: 9),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 44,
-                        child: FilledButton.icon(
-                          onPressed: _isSubmitting ? null : _signInWithGoogle,
-                          icon: const Icon(Icons.android, size: 16),
-                          label: const Text('Iniciar sesión con Android'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _purpleColor,
-                            foregroundColor: Colors.white,
-                            shape: const StadiumBorder(),
-                            textStyle: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _isSubmitting ? null : _openRegistration,
-                        child: const Text(
-                          '¿No tienes cuenta? Regístrate',
-                          style: TextStyle(color: _mutedColor, fontSize: 9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
             ),
-            AppBottomNavigation(
-              selectedIndex: 3,
-              onSelected: (index) {
-                if (index == 1) {
-                  _openCompanyPortal();
-                  return;
-                }
-                if (index == 2) {
-                  _openInstitutions();
-                } else {
-                  _showDemoMessage(
-                    'Inicia sesión para acceder a esta sección.',
-                  );
-                }
-              },
-            ),
+            const DevelopedByCredit(),
           ],
         ),
       ),
@@ -596,17 +668,17 @@ class LoginTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 44,
+      height: 52,
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
         obscureText: obscureText,
         validator: validator,
-        style: const TextStyle(color: Colors.white, fontSize: 11),
+        style: const TextStyle(color: Colors.white, fontSize: 15),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(color: _mutedColor, fontSize: 10),
-          prefixIcon: Icon(icon, color: _purpleColor, size: 16),
+          hintStyle: const TextStyle(color: _mutedColor, fontSize: 14),
+          prefixIcon: Icon(icon, color: _purpleColor, size: 20),
           suffixIcon: onToggleVisibility == null
               ? null
               : IconButton(
@@ -614,7 +686,7 @@ class LoginTextField extends StatelessWidget {
                   icon: Icon(
                     obscureText ? Icons.visibility : Icons.visibility_off,
                     color: _purpleColor,
-                    size: 16,
+                    size: 20,
                   ),
                   tooltip: obscureText
                       ? 'Mostrar contraseña'
@@ -623,7 +695,7 @@ class LoginTextField extends StatelessWidget {
           filled: true,
           fillColor: _surfaceColor,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
-          errorStyle: const TextStyle(fontSize: 8, height: 1.1),
+          errorStyle: const TextStyle(fontSize: 11, height: 1.1),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
             borderSide: const BorderSide(color: _borderColor),

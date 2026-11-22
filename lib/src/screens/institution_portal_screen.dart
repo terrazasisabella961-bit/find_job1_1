@@ -220,7 +220,12 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.fromLTRB(22, 14, 22, 24),
     children: [
-      const _InstitutionHeader(title: 'ACCESO INSTITUCIONAL', onBack: null),
+      _InstitutionHeader(
+        title: 'ACCESO INSTITUCIONAL',
+        onBack: Navigator.of(context).canPop()
+            ? () => Navigator.of(context).pop()
+            : null,
+      ),
       const SizedBox(height: 24),
       const Text(
         'Iniciar sesión',
@@ -289,6 +294,12 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
         onPressed: widget.onRegister,
         child: const Text('¿Tu institución aún no tiene cuenta? Regístrala'),
       ),
+      if (Navigator.of(context).canPop())
+        TextButton.icon(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back, size: 16),
+          label: const Text('Volver al inicio de sesión'),
+        ),
     ],
   );
 }
@@ -541,7 +552,15 @@ class _InstitutionRegistrationScreenState
         children: [
           _InstitutionHeader(
             title: 'REGISTRO DE INSTITUCIÓN',
-            onBack: hasExistingUser ? null : widget.onSignIn,
+            onBack: hasExistingUser
+                ? null
+                : () {
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).pop();
+                    } else {
+                      widget.onSignIn();
+                    }
+                  },
           ),
           const SizedBox(height: 18),
           Text(
@@ -811,9 +830,51 @@ class _InstitutionRegistrationScreenState
                   setState(() => _termsAccepted = value ?? false),
               contentPadding: EdgeInsets.zero,
               activeColor: appOrangeColor,
-              title: const Text(
-                'Acepto los Términos y Condiciones para Instituciones y la Política de Privacidad de Datos Institucionales.',
-                style: TextStyle(color: appMutedColor, fontSize: 9),
+              title: Wrap(
+                children: [
+                  const Text(
+                    'Acepto los ',
+                    style: TextStyle(color: appMutedColor, fontSize: 9),
+                  ),
+                  InkWell(
+                    onTap: () => showSimulatedLegalDialog(
+                      context,
+                      title: 'Términos y Condiciones',
+                      body: simulatedTermsBody,
+                    ),
+                    child: const Text(
+                      'Términos y Condiciones para Instituciones',
+                      style: TextStyle(
+                        color: appPurpleColor,
+                        fontSize: 9,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    ' y la ',
+                    style: TextStyle(color: appMutedColor, fontSize: 9),
+                  ),
+                  InkWell(
+                    onTap: () => showSimulatedLegalDialog(
+                      context,
+                      title: 'Política de Privacidad',
+                      body: simulatedPrivacyBody,
+                    ),
+                    child: const Text(
+                      'Política de Privacidad de Datos Institucionales',
+                      style: TextStyle(
+                        color: appPurpleColor,
+                        fontSize: 9,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    '.',
+                    style: TextStyle(color: appMutedColor, fontSize: 9),
+                  ),
+                ],
               ),
             ),
           const SizedBox(height: 12),
@@ -827,13 +888,20 @@ class _InstitutionRegistrationScreenState
             busy: _busy,
             onPressed: _busy ? null : _save,
           ),
-          if (!hasExistingUser && widget.initialInstitution == null)
+          if (!hasExistingUser && widget.initialInstitution == null) ...[
             TextButton(
               onPressed: widget.onSignIn,
               child: const Text(
                 '¿Ya tienes una cuenta institucional? Iniciar sesión',
               ),
             ),
+            if (Navigator.of(context).canPop())
+              TextButton.icon(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back, size: 16),
+                label: const Text('Volver al inicio de sesión'),
+              ),
+          ],
         ],
       ),
     );
@@ -1951,6 +2019,7 @@ class _InstitutionHeader extends StatelessWidget {
       if (onBack != null)
         IconButton(
           onPressed: onBack,
+          tooltip: 'Volver al inicio de sesión',
           icon: const Icon(Icons.arrow_back),
           color: Colors.white,
           style: IconButton.styleFrom(

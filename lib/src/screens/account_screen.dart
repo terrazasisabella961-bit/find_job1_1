@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../config/file_upload_mode.dart';
+import '../config/simulated_cv.dart';
 import '../models/user_profile.dart';
 import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
@@ -87,13 +89,22 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  Future<void> _openCv(UserProfile profile) async {
-    final url = profile.cvUrl;
+  Future<void> _openCv([UserProfile? profile]) async {
+    if (simulateFileUploads) {
+      await showSimulatedCvScreen(
+        context,
+        heading: 'Mi currículum',
+        detail:
+            'Como Storage no guarda archivos, se abre este CV de demostración.',
+      );
+      return;
+    }
+    final url = profile?.cvUrl;
     if (url == null || url.isEmpty) {
       _showMessage(
-        (profile.cvFileName ?? '').isEmpty
+        (profile?.cvFileName ?? '').isEmpty
             ? 'Todavía no has cargado un currículum vitae.'
-            : 'El CV "${profile.cvFileName}" está simulado: no se guardó en Storage, así que no se puede abrir un enlace.',
+            : 'El CV "${profile?.cvFileName}" está simulado: no se guardó en Storage, así que no se puede abrir un enlace.',
       );
       return;
     }
@@ -278,12 +289,16 @@ class _AccountScreenState extends State<AccountScreen> {
             _AccountStatusCard(
               isVisible: profile?.isVisible ?? false,
               isUpdating: _isUpdatingVisibility,
-              cvFileName: profile?.cvFileName,
+              cvFileName: simulateFileUploads
+                  ? simulatedCvDisplayName
+                  : profile?.cvFileName,
               onVisibilityChanged: profile == null
                   ? null
                   : (value) => _updateVisibility(profile, value),
               onEditCv: () => _editProfile(profile),
-              onOpenCv: profile == null ? null : () => _openCv(profile),
+              onOpenCv: simulateFileUploads || profile != null
+                  ? () => _openCv(profile)
+                  : null,
             ),
             const SizedBox(height: 12),
             Row(

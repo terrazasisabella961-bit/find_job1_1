@@ -23,23 +23,46 @@ import 'package:find_job1_1/src/services/user_profile_repository.dart';
 
 void main() {
   testWidgets(
-    'unauthenticated users start at login and cannot open private tabs',
+    'unauthenticated users start at login without navigation tabs',
     (WidgetTester tester) async {
       await tester.pumpWidget(_testApp());
       await tester.pump();
 
       expect(find.text('Empleo y formación en Cochabamba'), findsOneWidget);
       expect(find.text('Iniciar sesión'), findsOneWidget);
-      await tester.tap(find.text('Cuenta'));
-      await tester.pump();
-      expect(find.text('Iniciar sesión'), findsOneWidget);
-      expect(
-        find.text('Inicia sesión para acceder a esta sección.'),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('Instituciones'));
+      expect(find.byType(AppBottomNavigation), findsNothing);
+      expect(find.text('Empleo'), findsNothing);
+      expect(find.text('Reclutar'), findsNothing);
+      expect(find.text('Instituciones'), findsNothing);
+      expect(find.text('Cuenta'), findsNothing);
+      expect(find.text('Cursos'), findsNothing);
+      expect(find.text('Extras'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'company and institution access can return to general login',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(_testApp());
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Acceso para empresas'));
+      await tester.tap(find.text('Acceso para empresas'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Iniciar Sesión Corporativa'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Volver al inicio de sesión'));
+      await tester.pumpAndSettle();
+      expect(find.text('Empleo y formación en Cochabamba'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Acceso para instituciones'));
+      await tester.tap(find.text('Acceso para instituciones'));
       await tester.pumpAndSettle();
       expect(find.text('REGISTRO DE INSTITUCIÓN'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Volver al inicio de sesión'));
+      await tester.pumpAndSettle();
+      expect(find.text('Empleo y formación en Cochabamba'), findsOneWidget);
     },
   );
 
@@ -192,7 +215,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Reclutar'));
+      await tester.ensureVisible(find.text('Acceso para empresas'));
+      await tester.tap(find.text('Acceso para empresas'));
       await tester.pumpAndSettle();
       final loginFields = find.byType(TextField);
       await tester.enterText(loginFields.at(0), 'user@example.com');
@@ -253,7 +277,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Reclutar'));
+    await tester.ensureVisible(find.text('Acceso para empresas'));
+    await tester.tap(find.text('Acceso para empresas'));
     await tester.pumpAndSettle();
     final loginFields = find.byType(TextField);
     await tester.enterText(loginFields.at(0), 'user@example.com');
@@ -460,6 +485,11 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Acepto los '), findsOneWidget);
+    await tester.tap(find.text('Términos y Condiciones'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Simulación: CochaConecta'), findsOneWidget);
+    await tester.tap(find.text('Entendido'));
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Registrarme'));
     await tester.tap(find.text('Registrarme'));

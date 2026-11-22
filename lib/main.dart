@@ -197,7 +197,7 @@ class _AuthenticatedGate extends StatelessWidget {
             recruitmentRepository: recruitmentRepository,
             institutionRepository: institutionRepository,
             applicationRepository: applicationRepository,
-            initialSelectedIndex: 3,
+            initialSelectedIndex: 0,
             accountType: 'company',
           );
         }
@@ -225,7 +225,7 @@ class _AuthenticatedGate extends StatelessWidget {
                 recruitmentRepository: recruitmentRepository,
                 institutionRepository: institutionRepository,
                 applicationRepository: applicationRepository,
-                initialSelectedIndex: 2,
+                initialSelectedIndex: 0,
                 accountType: 'institution',
               );
             }

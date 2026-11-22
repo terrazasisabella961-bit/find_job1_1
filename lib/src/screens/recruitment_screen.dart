@@ -427,6 +427,7 @@ class RecruitmentScreen extends StatefulWidget {
     required this.repository,
     this.applicationRepository,
     this.authRepository,
+    this.accountTab = false,
     super.key,
   });
 
@@ -434,6 +435,7 @@ class RecruitmentScreen extends StatefulWidget {
   final RecruitmentRepository repository;
   final JobApplicationRepository? applicationRepository;
   final AuthRepository? authRepository;
+  final bool accountTab;
 
   @override
   State<RecruitmentScreen> createState() => _RecruitmentScreenState();
@@ -480,6 +482,7 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
           repository: widget.repository,
           applicationRepository: widget.applicationRepository,
           authRepository: widget.authRepository,
+          accountTab: widget.accountTab,
         );
       },
     );
@@ -492,12 +495,14 @@ class _CompanyDashboard extends StatelessWidget {
     required this.repository,
     this.applicationRepository,
     this.authRepository,
+    this.accountTab = false,
   });
 
   final Company company;
   final RecruitmentRepository repository;
   final JobApplicationRepository? applicationRepository;
   final AuthRepository? authRepository;
+  final bool accountTab;
 
   Future<void> _signOut(BuildContext context) async {
     final auth = authRepository;
@@ -572,19 +577,22 @@ class _CompanyDashboard extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
           children: [
             _PageHeader(
-              eyebrow: 'CENTRO DE RECLUTAMIENTO',
-              title: 'MI EMPRESA',
+              eyebrow: accountTab
+                  ? 'CUENTA DE EMPRESA'
+                  : 'CENTRO DE RECLUTAMIENTO',
+              title: accountTab ? 'MI CUENTA' : 'MI EMPRESA',
               onBack: null,
-              action: authRepository == null
-                  ? null
-                  : IconButton(
+              action: accountTab && authRepository != null
+                  ? IconButton(
                       onPressed: () => _signOut(context),
                       tooltip: 'Cerrar sesión',
                       icon: const Icon(Icons.logout),
                       color: const Color(0xFFFF647C),
-                    ),
+                    )
+                  : null,
             ),
             const SizedBox(height: 18),
+            if (accountTab)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -701,21 +709,21 @@ class _CompanyDashboard extends StatelessWidget {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () => _openJobForm(context),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Publicar nuevo empleo o vacante'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: appOrangeColor,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                    ),
-                  ),
                 ],
+              ),
+            ),
+            if (!accountTab) ...[
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _openJobForm(context),
+                icon: const Icon(Icons.add),
+                label: const Text('Publicar nuevo empleo o vacante'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: appOrangeColor,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -795,6 +803,7 @@ class _CompanyDashboard extends StatelessWidget {
                   );
                 },
               ),
+            ],
           ],
         );
       },

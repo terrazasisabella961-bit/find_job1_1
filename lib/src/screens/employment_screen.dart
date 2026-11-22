@@ -510,18 +510,61 @@ class JobDetailsScreen extends StatelessWidget {
             if (job.companyWebsite.isNotEmpty)
               _DetailText(title: 'Sitio web', value: job.companyWebsite),
             const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: () => _startApplication(context),
-              icon: const Icon(Icons.send_outlined),
-              label: const Text('Postular'),
-              style: FilledButton.styleFrom(
-                backgroundColor: appOrangeColor,
-                foregroundColor: const Color(0xFF171323),
-                minimumSize: const Size.fromHeight(48),
-              ),
+            _ApplyButton(
+              job: job,
+              profile: profile,
+              applicationRepository: applicationRepository,
+              onApply: () => _startApplication(context),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ApplyButton extends StatelessWidget {
+  const _ApplyButton({
+    required this.job,
+    required this.onApply,
+    this.profile,
+    this.applicationRepository,
+  });
+
+  final JobPosting job;
+  final UserProfile? profile;
+  final JobApplicationRepository? applicationRepository;
+  final VoidCallback onApply;
+
+  @override
+  Widget build(BuildContext context) {
+    final repository = applicationRepository;
+    final applicantUid = profile?.uid;
+    if (repository == null || applicantUid == null || applicantUid.isEmpty) {
+      return _button(applied: false);
+    }
+    return StreamBuilder<bool>(
+      stream: repository.watchHasApplied(
+        jobId: job.id,
+        applicantUid: applicantUid,
+      ),
+      builder: (context, snapshot) {
+        return _button(applied: snapshot.data ?? false);
+      },
+    );
+  }
+
+  Widget _button({required bool applied}) {
+    return FilledButton.icon(
+      onPressed: applied ? null : onApply,
+      icon: Icon(applied ? Icons.check_circle_outline : Icons.send_outlined),
+      label: Text(applied ? 'Postulación enviada' : 'Postular'),
+      style: FilledButton.styleFrom(
+        backgroundColor: appOrangeColor,
+        foregroundColor: const Color(0xFF171323),
+        disabledBackgroundColor: const Color(0xFF3A3454),
+        disabledForegroundColor: const Color(0xFFD7D3E8),
+        minimumSize: const Size.fromHeight(48),
       ),
     );
   }

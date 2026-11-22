@@ -8,6 +8,7 @@ import 'package:find_job1_1/src/models/job_application.dart';
 import 'package:find_job1_1/src/models/job_posting.dart';
 import 'package:find_job1_1/src/models/user_profile.dart';
 import 'package:find_job1_1/src/screens/app_shell.dart';
+import 'package:find_job1_1/src/widgets/app_bottom_navigation.dart';
 import 'package:find_job1_1/src/screens/company_applications_screen.dart';
 import 'package:find_job1_1/src/screens/employment_screen.dart';
 import 'package:find_job1_1/src/services/job_application_repository.dart';
@@ -204,7 +205,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('SUGERIDAS PARA TI'), findsNothing);
-    expect(find.text('Anuncios de empleo activos'), findsOneWidget);
+    expect(find.text('Empleo'), findsNothing);
+    expect(find.text('Reclutar'), findsOneWidget);
+    expect(find.text('Cuenta'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBottomNavigation),
+        matching: find.text('Cursos'),
+      ),
+      findsNothing,
+    );
+    expect(find.text('Anuncios de empleo activos'), findsNothing);
   });
 
   testWidgets('applying to a job sends a profile form the company can read', (
@@ -246,7 +257,65 @@ void main() {
 
     expect(applications.applications, hasLength(1));
     expect(applications.applications.single.fullName, 'Aylen Postulante');
-    expect(find.text('Postulación enviada'), findsOneWidget);
+    expect(find.text('Postulación enviada'), findsWidgets);
+
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.text('Postular'), findsNothing);
+    expect(find.text('Enviar postulación'), findsNothing);
+    final sentButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Postulación enviada'),
+    );
+    expect(sentButton.onPressed, isNull);
+  });
+
+  testWidgets('already applied jobs show a disabled sent button', (
+    tester,
+  ) async {
+    final applications = InMemoryJobApplicationRepository([
+      JobApplication(
+        id: 'job-1_user-1',
+        jobId: 'job-1',
+        companyId: 'company-1',
+        applicantUid: 'user-1',
+        jobTitle: _sampleJobs.first.title,
+        companyName: _sampleJobs.first.companyName,
+        fullName: 'Aylen Postulante',
+        email: 'aylen@example.com',
+        phone: '+591 70000000',
+        city: 'Cochabamba',
+        areaOfInterest: 'Tecnología',
+        educationLevel: 'Licenciatura',
+        careerTitle: 'Ingeniería Ambiental',
+        skills: const ['Informática'],
+        languages: const ['Español (Nativo)'],
+        aboutMe: 'Perfil de prueba',
+        message: 'Quiero postular a esta vacante.',
+        availability: 'Inmediata',
+        status: 'received',
+      ),
+    ]);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: JobDetailsScreen(
+          job: _sampleJobs.first,
+          profile: _applicant,
+          applicationRepository: applications,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('Postulación enviada'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(find.text('Postular'), findsNothing);
+    final sentButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Postulación enviada'),
+    );
+    expect(sentButton.onPressed, isNull);
   });
 
   testWidgets('company can open received applicant profiles', (tester) async {

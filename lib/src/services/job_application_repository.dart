@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -7,6 +9,11 @@ abstract interface class JobApplicationRepository {
   Future<void> submitApplication(JobApplication application);
 
   Stream<List<JobApplication>> watchCompanyApplications(String companyId);
+
+  Stream<bool> watchHasApplied({
+    required String jobId,
+    required String applicantUid,
+  });
 }
 
 class InMemoryJobApplicationRepository implements JobApplicationRepository {
@@ -14,12 +21,20 @@ class InMemoryJobApplicationRepository implements JobApplicationRepository {
     : applications = [...?seed];
 
   final List<JobApplication> applications;
+  final _changes = StreamController<void>.broadcast();
+
+  bool _hasApplied({required String jobId, required String applicantUid}) {
+    return applications.any(
+      (item) => item.jobId == jobId && item.applicantUid == applicantUid,
+    );
+  }
 
   @override
   Future<void> submitApplication(JobApplication application) async {
     applications
       ..removeWhere((item) => item.id == application.id)
       ..add(application);
+    _changes.add(null);
   }
 
   @override
@@ -27,6 +42,17 @@ class InMemoryJobApplicationRepository implements JobApplicationRepository {
     return Stream.value(
       applications.where((item) => item.companyId == companyId).toList(),
     );
+  }
+
+  @override
+  Stream<bool> watchHasApplied({
+    required String jobId,
+    required String applicantUid,
+  }) async* {
+    yield _hasApplied(jobId: jobId, applicantUid: applicantUid);
+    await for (final _ in _changes.stream) {
+      yield _hasApplied(jobId: jobId, applicantUid: applicantUid);
+    }
   }
 }
 
@@ -85,5 +111,27 @@ class FirebaseJobApplicationRepository implements JobApplicationRepository {
           });
           return applications;
         });
+  }
+
+  @override
+  Stream<bool> watchHasApplied({
+    required String jobId,
+    required String applicantUid,
+  }) {
+    final user = _auth.currentUser;
+    if (user == null || user.uid != applicantUid) {
+      return Stream.value(false);
+    }
+    return _firestore
+        .collection('applications')
+        .where('applicantUid', isEqualTo: applicantUid)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs.any((doc) {
+            final data = doc.data();
+            return data['jobId'] == jobId ||
+                doc.id == '${jobId}_$applicantUid';
+          }),
+        );
   }
 }

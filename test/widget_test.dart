@@ -98,21 +98,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('MI CUENTA'), findsOneWidget);
       expect(find.text('REGISTRO DE USUARIO'), findsNothing);
-
-      await tester.tap(find.text('Reclutar'));
-      await tester.pumpAndSettle();
-      expect(find.text('Acceso para empresas'), findsOneWidget);
-      expect(find.text('Iniciar sesión'), findsNothing);
-
-      await tester.tap(find.text('Instituciones'));
-      await tester.pumpAndSettle();
-      expect(find.text('Acceso institucional'), findsOneWidget);
-      expect(find.text('Iniciar sesión'), findsNothing);
-
-      await tester.tap(find.text('Extras'));
-      await tester.pumpAndSettle();
-      expect(find.text('EXTRAS'), findsOneWidget);
-      expect(find.text('Iniciar sesión'), findsNothing);
+      expect(find.text('Reclutar'), findsNothing);
+      expect(find.text('Instituciones'), findsNothing);
+      expect(find.text('Extras'), findsNothing);
 
       await tester.tap(find.text('Cursos'));
       await tester.pumpAndSettle();
@@ -387,7 +375,7 @@ void main() {
     expect(auth.currentUser, isNotNull);
   });
 
-  testWidgets('six navigation items remain accessible at mobile width', (
+  testWidgets('student navigation items remain accessible at mobile width', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -401,24 +389,20 @@ void main() {
         home: Scaffold(
           bottomNavigationBar: AppBottomNavigation(
             selectedIndex: selectedIndex,
+            items: AppBottomNavigation.studentItems,
             onSelected: (index) => selectedIndex = index,
           ),
         ),
       ),
     );
 
-    for (final label in [
-      'Empleo',
-      'Reclutar',
-      'Instituciones',
-      'Cuenta',
-      'Cursos',
-      'Extras',
-    ]) {
+    for (final label in ['Empleo', 'Cursos', 'Cuenta']) {
       expect(find.text(label), findsOneWidget);
     }
+    expect(find.text('Reclutar'), findsNothing);
+    expect(find.text('Instituciones'), findsNothing);
     await tester.tap(find.text('Cursos'));
-    expect(selectedIndex, 4);
+    expect(selectedIndex, 1);
   });
 
   testWidgets('login validates email and password and toggles visibility', (

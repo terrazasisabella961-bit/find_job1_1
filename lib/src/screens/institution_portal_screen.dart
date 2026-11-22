@@ -18,12 +18,14 @@ class InstitutionPortalScreen extends StatefulWidget {
     required this.authRepository,
     required this.repository,
     this.onInstitutionReady,
+    this.accountTab = false,
     super.key,
   });
 
   final AuthRepository authRepository;
   final InstitutionRepository repository;
   final VoidCallback? onInstitutionReady;
+  final bool accountTab;
 
   @override
   State<InstitutionPortalScreen> createState() =>
@@ -140,6 +142,7 @@ class _InstitutionPortalScreenState extends State<InstitutionPortalScreen> {
           institution: institution,
           authRepository: widget.authRepository,
           repository: widget.repository,
+          accountTab: widget.accountTab,
           onPublishCourse: () => setState(() {
             _editingCourse = null;
             _creatingCourse = true;
@@ -1025,6 +1028,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
     required this.onPublishCourse,
     required this.onEditCourse,
     required this.onEditInstitution,
+    this.accountTab = false,
     super.key,
   });
 
@@ -1034,6 +1038,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
   final VoidCallback onPublishCourse;
   final ValueChanged<InstitutionCourse> onEditCourse;
   final VoidCallback onEditInstitution;
+  final bool accountTab;
 
   Future<void> _retireCourse(
     BuildContext context,
@@ -1176,7 +1181,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(18, 10, 18, 24),
           children: [
             _InstitutionHeader(
-              title: 'MI INSTITUCIÓN',
+              title: accountTab ? 'MI CUENTA' : 'MI INSTITUCIÓN',
               onBack: null,
               action: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1275,6 +1280,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
                 ],
               ),
             ),
+            if (!accountTab) ...[
             const SizedBox(height: 14),
             SizedBox(
               height: 54,
@@ -1419,6 +1425,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
                     onEdit: () => onEditCourse(course),
                   ),
               ],
+            ],
             ],
           ],
         );

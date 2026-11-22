@@ -48,16 +48,24 @@ class _AppShellState extends State<AppShell> {
   late final JobApplicationRepository _applicationRepository =
       widget.applicationRepository ?? FirebaseJobApplicationRepository();
 
-  void _openCatalog() {
-    setState(() => _selectedIndex = 4);
+  List<AppNavDestination> get _navItems {
+    return switch (widget.accountType) {
+      'company' => AppBottomNavigation.companyItems,
+      'institution' => AppBottomNavigation.institutionItems,
+      _ => AppBottomNavigation.studentItems,
+    };
   }
 
-  Widget _employmentTab({required User? user, required String accountType}) {
-    final isStudent = accountType == 'student' && user != null;
-    if (!isStudent) {
+  void _openLabeledTab(String label) {
+    final index = _navItems.indexWhere((item) => item.label == label);
+    if (index >= 0) setState(() => _selectedIndex = index);
+  }
+
+  Widget _employmentTab({required User? user}) {
+    if (user == null) {
       return EmploymentScreen(
         repository: _recruitmentRepository,
-        onOpenCatalog: _openCatalog,
+        onOpenCatalog: () => _openLabeledTab('Cursos'),
       );
     }
     return StreamBuilder<UserProfile?>(
@@ -65,203 +73,85 @@ class _AppShellState extends State<AppShell> {
       builder: (context, snapshot) {
         return EmploymentScreen(
           repository: _recruitmentRepository,
-          onOpenCatalog: _openCatalog,
+          onOpenCatalog: () => _openLabeledTab('Cursos'),
           profile: snapshot.data,
           showSuggestions: true,
           suggestionsLoading:
               snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData,
-          onCompleteProfile: () => setState(() => _selectedIndex = 3),
+          onCompleteProfile: () => _openLabeledTab('Cuenta'),
           applicationRepository: _applicationRepository,
         );
       },
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final user = widget.authRepository.currentUser;
+  List<Widget> _pages({required User? user}) {
     final accountType = widget.accountType;
-    final pages = <Widget>[
-      _employmentTab(user: user, accountType: accountType),
-      accountType == 'company' && user != null
-          ? RecruitmentScreen(
-              ownerUid: user.uid,
-              repository: _recruitmentRepository,
-              applicationRepository: _applicationRepository,
-              authRepository: widget.authRepository,
-            )
-          : _AccountTypeNotice(
-              title: 'Acceso para empresas',
-              message: 'Usa una cuenta corporativa independiente para administrar ofertas.',
-              onSignOut: widget.authRepository.signOut,
-            ),
-      accountType == 'institution'
-          ? InstitutionPortalScreen(
-              authRepository: widget.authRepository,
-              repository: _institutionRepository,
-              onInstitutionReady: () {
-                if (_selectedIndex != 2 && mounted) {
-                  setState(() => _selectedIndex = 2);
-                }
-              },
-            )
-          : _AccountTypeNotice(
-              title: 'Acceso institucional',
-              message: 'Usa una cuenta institucional independiente para administrar cursos.',
-              onSignOut: widget.authRepository.signOut,
-            ),
-      if (accountType == 'company' && user != null)
+    final courses = CourseCatalogScreen(
+      onOpenAccount: () => _openLabeledTab('Cuenta'),
+      courseRepository: _institutionRepository,
+    );
+    if (accountType == 'company' && user != null) {
+      return [
         RecruitmentScreen(
           ownerUid: user.uid,
           repository: _recruitmentRepository,
           applicationRepository: _applicationRepository,
           authRepository: widget.authRepository,
-        )
-      else if (accountType == 'student')
-        AccountScreen(
-          authRepository: widget.authRepository,
-          profileRepository: widget.profileRepository,
-          onBack: () => setState(() => _selectedIndex = 0),
-        )
-      else
-        _AccountTypeNotice(
-          title: accountType == 'company'
-              ? 'Cuenta de empresa'
-              : 'Mi institución',
-          message: accountType == 'company'
-              ? 'Administra tu perfil y tus vacantes desde Reclutar.'
-              : 'Administra el perfil institucional y los cursos en Instituciones.',
-          actionLabel: 'Cerrar sesión',
-          onSignOut: widget.authRepository.signOut,
         ),
-      CourseCatalogScreen(
-        onOpenAccount: () => setState(() => _selectedIndex = 3),
-        courseRepository: _institutionRepository,
+        RecruitmentScreen(
+          ownerUid: user.uid,
+          repository: _recruitmentRepository,
+          applicationRepository: _applicationRepository,
+          authRepository: widget.authRepository,
+          accountTab: true,
+        ),
+      ];
+    }
+    if (accountType == 'institution') {
+      return [
+        InstitutionPortalScreen(
+          authRepository: widget.authRepository,
+          repository: _institutionRepository,
+        ),
+        courses,
+        InstitutionPortalScreen(
+          authRepository: widget.authRepository,
+          repository: _institutionRepository,
+          accountTab: true,
+        ),
+      ];
+    }
+    return [
+      _employmentTab(user: user),
+      courses,
+      AccountScreen(
+        authRepository: widget.authRepository,
+        profileRepository: widget.profileRepository,
+        onBack: () => _openLabeledTab('Empleo'),
       ),
-      const _ComingSoonScreen(title: 'Extras'),
     ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = widget.authRepository.currentUser;
+    final navItems = _navItems;
+    final pages = _pages(user: user);
+    final selectedIndex = _selectedIndex.clamp(0, pages.length - 1);
 
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: IndexedStack(index: _selectedIndex, children: pages),
+        child: IndexedStack(index: selectedIndex, children: pages),
       ),
       bottomNavigationBar: SafeArea(
         top: false,
         child: AppBottomNavigation(
-          selectedIndex: _selectedIndex,
-          onSelected: (index) {
-            if (accountType == 'company' && index == 2) {
-              _showAccountNotice('Esta cuenta pertenece a una empresa.');
-              return;
-            }
-            if (accountType == 'institution' && index == 1) {
-              _showAccountNotice('Esta cuenta pertenece a una institución.');
-              return;
-            }
-            setState(() => _selectedIndex = index);
-          },
-        ),
-      ),
-    );
-  }
-
-  void _showAccountNotice(String message) {
-    showAppMessage(context, message);
-  }
-}
-
-class _AccountTypeNotice extends StatelessWidget {
-  const _AccountTypeNotice({
-    required this.title,
-    required this.message,
-    required this.onSignOut,
-    this.actionLabel = 'Cambiar de cuenta',
-  });
-
-  final String title;
-  final String message;
-  final Future<void> Function() onSignOut;
-  final String actionLabel;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.business_outlined, color: appOrangeColor, size: 36),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: appMutedColor, fontSize: 12),
-          ),
-          const SizedBox(height: 18),
-          OutlinedButton(
-            onPressed: () async {
-              try {
-                await onSignOut();
-              } on Exception catch (error) {
-                if (context.mounted) {
-                  showAppMessage(
-                    context,
-                    'No se pudo cerrar sesión: $error',
-                    kind: AppMessageKind.error,
-                  );
-                }
-              }
-            },
-            child: Text(actionLabel),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _ComingSoonScreen extends StatelessWidget {
-  const _ComingSoonScreen({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.hourglass_top, color: appPurpleColor, size: 36),
-            const SizedBox(height: 16),
-            Text(
-              title.toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Esta sección se desarrollará en una etapa posterior.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: appMutedColor, fontSize: 12),
-            ),
-          ],
+          selectedIndex: selectedIndex,
+          items: navItems,
+          onSelected: (index) => setState(() => _selectedIndex = index),
         ),
       ),
     );

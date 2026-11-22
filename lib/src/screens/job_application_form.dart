@@ -33,6 +33,7 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
   final _message = TextEditingController();
   String _availability = 'Inmediata';
   bool _busy = false;
+  bool _submitted = false;
 
   static const _availabilityOptions = [
     'Inmediata',
@@ -49,7 +50,7 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
   }
 
   Future<void> _submit() async {
-    if (_busy || !ensureFormValid(context, _formKey)) return;
+    if (_busy || _submitted || !ensureFormValid(context, _formKey)) return;
     setState(() => _busy = true);
     try {
       final profile = widget.profile;
@@ -84,6 +85,10 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
         ),
       );
       if (!mounted) return;
+      setState(() {
+        _submitted = true;
+        _busy = false;
+      });
       showAppMessage(
         context,
         'Tu postulación se envió. La empresa ya puede ver tu ficha y CV.',
@@ -260,9 +265,17 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
               ),
               const SizedBox(height: 16),
               FilledButton.icon(
-                onPressed: _busy ? null : _submit,
-                icon: const Icon(Icons.send_outlined),
-                label: Text(_busy ? 'Enviando...' : 'Enviar postulación'),
+                onPressed: (_busy || _submitted) ? null : _submit,
+                icon: Icon(
+                  _submitted ? Icons.check_circle_outline : Icons.send_outlined,
+                ),
+                label: Text(
+                  _submitted
+                      ? 'Postulación enviada'
+                      : _busy
+                      ? 'Enviando...'
+                      : 'Enviar postulación',
+                ),
                 style: FilledButton.styleFrom(
                   backgroundColor: appOrangeColor,
                   foregroundColor: const Color(0xFF171323),

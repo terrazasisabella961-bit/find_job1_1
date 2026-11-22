@@ -353,6 +353,36 @@ class _AccountScreenState extends State<AccountScreen> {
               icon: Icons.work_outline,
               onEdit: () => _editProfile(profile),
             ),
+            _PersonalInfoTile(
+              label: 'Nivel de estudios',
+              value: _nonEmpty(profile?.educationLevel),
+              icon: Icons.school_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
+            _PersonalInfoTile(
+              label: 'Carrera o título',
+              value: _nonEmpty(profile?.careerTitle),
+              icon: Icons.badge_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
+            _PersonalInfoTile(
+              label: 'Habilidades',
+              value: _listOrEmpty(profile?.skills),
+              icon: Icons.sell_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
+            _PersonalInfoTile(
+              label: 'Idiomas',
+              value: _languagesLabel(profile?.languages),
+              icon: Icons.translate_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
+            _PersonalInfoTile(
+              label: 'Sobre mí',
+              value: _nonEmpty(profile?.aboutMe),
+              icon: Icons.notes_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
             _PasswordTile(onChange: _changePassword),
             const SizedBox(height: 10),
             OutlinedButton.icon(
@@ -382,6 +412,18 @@ class _AccountScreenState extends State<AccountScreen> {
 
   String _nonEmpty(String? value) {
     return value == null || value.isEmpty ? 'No especificado' : value;
+  }
+
+  String _listOrEmpty(List<String>? values) {
+    if (values == null || values.isEmpty) return 'No especificado';
+    return values.join(', ');
+  }
+
+  String _languagesLabel(List<ProfileLanguage>? languages) {
+    if (languages == null || languages.isEmpty) return 'No especificado';
+    return languages
+        .map((language) => '${language.name} (${language.level})')
+        .join(', ');
   }
 }
 

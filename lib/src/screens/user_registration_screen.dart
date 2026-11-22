@@ -49,6 +49,12 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   late final _areaController = TextEditingController(
     text: widget.initialProfile?.areaOfInterest ?? '',
   );
+  late final _careerController = TextEditingController(
+    text: widget.initialProfile?.careerTitle ?? '',
+  );
+  late final _aboutController = TextEditingController(
+    text: widget.initialProfile?.aboutMe ?? '',
+  );
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -66,6 +72,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   ];
 
   String? _city;
+  String? _educationLevel;
+  List<String> _skills = [];
+  List<ProfileLanguage> _languages = [];
   PlatformFile? _cvFile;
   bool _acceptedTerms = false;
   bool _obscurePassword = true;
@@ -77,6 +86,12 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     super.initState();
     final savedCity = widget.initialProfile?.city;
     _city = savedCity == null || savedCity.isEmpty ? null : savedCity;
+    final savedEducation = widget.initialProfile?.educationLevel ?? '';
+    _educationLevel = savedEducation.isEmpty ? null : savedEducation;
+    _skills = List<String>.from(widget.initialProfile?.skills ?? const []);
+    _languages = List<ProfileLanguage>.from(
+      widget.initialProfile?.languages ?? const [],
+    );
   }
 
   List<String> get _availableCities {
@@ -92,6 +107,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _areaController.dispose();
+    _careerController.dispose();
+    _aboutController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -164,13 +181,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       }
       final fullName = _nameController.text.trim();
 
-      final profile = UserProfile(
+      final profile = _profileFromForm(
         uid: user.uid,
-        fullName: fullName,
         email: email,
-        phone: _phoneController.text.trim(),
-        city: _city!,
-        areaOfInterest: _areaController.text.trim(),
         acceptedTerms:
             requiresConsent || widget.initialProfile?.acceptedTerms == true,
         isVisible: widget.initialProfile?.isVisible ?? false,
@@ -204,13 +217,9 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       );
       if (widget.onProfileSaved != null) {
         widget.onProfileSaved!(
-          UserProfile(
+          _profileFromForm(
             uid: widget.authRepository.currentUser?.uid ?? '',
-            fullName: _nameController.text.trim(),
             email: _emailController.text.trim(),
-            phone: _phoneController.text.trim(),
-            city: _city ?? '',
-            areaOfInterest: _areaController.text.trim(),
             acceptedTerms: true,
           ),
         );
@@ -222,6 +231,67 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  UserProfile _profileFromForm({
+    required String uid,
+    required String email,
+    required bool acceptedTerms,
+    bool isVisible = false,
+    String? cvUrl,
+    String? cvFileName,
+  }) {
+    return UserProfile(
+      uid: uid,
+      fullName: _nameController.text.trim(),
+      email: email,
+      phone: _phoneController.text.trim(),
+      city: _city ?? '',
+      areaOfInterest: _areaController.text.trim(),
+      educationLevel: _educationLevel ?? '',
+      careerTitle: _careerController.text.trim(),
+      skills: List<String>.from(_skills),
+      languages: List<ProfileLanguage>.from(_languages),
+      aboutMe: _aboutController.text.trim(),
+      acceptedTerms: acceptedTerms,
+      isVisible: isVisible,
+      cvUrl: cvUrl,
+      cvFileName: cvFileName,
+    );
+  }
+
+  void _toggleSkill(String skill, bool selected) {
+    setState(() {
+      if (selected) {
+        if (!_skills.contains(skill)) _skills.add(skill);
+      } else {
+        _skills.remove(skill);
+      }
+    });
+  }
+
+  void _toggleLanguage(String name, bool selected) {
+    setState(() {
+      if (selected) {
+        if (_languages.every((language) => language.name != name)) {
+          _languages.add(ProfileLanguage(name: name));
+        }
+      } else {
+        _languages.removeWhere((language) => language.name == name);
+      }
+    });
+  }
+
+  void _setLanguageLevel(String name, String level) {
+    setState(() {
+      _languages = [
+        for (final language in _languages)
+          if (language.name == name)
+            ProfileLanguage(name: name, level: level)
+          else
+            language,
+      ];
+    });
   }
 
   void _showMessage(String message) {
@@ -339,6 +409,49 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                       const _FieldHint(
                         'Tu especialidad principal o rubro laboral deseado.',
                       ),
+                      _EducationField(
+                        value: _educationLevel,
+                        options: [
+                          ...profileEducationLevels,
+                          if (_educationLevel != null &&
+                              _educationLevel!.isNotEmpty &&
+                              !profileEducationLevels.contains(
+                                _educationLevel,
+                              ))
+                            _educationLevel!,
+                        ],
+                        onChanged: (value) =>
+                            setState(() => _educationLevel = value),
+                      ),
+                      const _FieldHint('Opcional. Nivel de estudios alcanzado.'),
+                      _RegistrationField(
+                        label: 'Carrera o título',
+                        hint: 'Ej. Ingeniería Ambiental, Administración...',
+                        controller: _careerController,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                      const _FieldHint('Opcional. Nombre de tu carrera o título.'),
+                      _TagSection(
+                        label: 'Habilidades',
+                        hint: 'Opcional. Elige las que te describen.',
+                        options: profileSkillTags,
+                        selected: _skills,
+                        onToggle: _toggleSkill,
+                      ),
+                      _LanguageSection(
+                        selected: _languages,
+                        onToggle: _toggleLanguage,
+                        onLevelChanged: _setLanguageLevel,
+                      ),
+                      _RegistrationField(
+                        label: 'Sobre mí',
+                        hint: 'Dos o tres líneas sobre tu perfil profesional.',
+                        controller: _aboutController,
+                        textCapitalization: TextCapitalization.sentences,
+                        maxLines: 3,
+                        maxLength: 240,
+                      ),
+                      const _FieldHint('Opcional. No es obligatorio para registrarte.'),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -565,19 +678,23 @@ class _RegistrationField extends StatelessWidget {
     required this.label,
     required this.hint,
     required this.controller,
-    required this.validator,
+    this.validator,
     this.keyboardType,
     this.textCapitalization = TextCapitalization.none,
     this.readOnly = false,
+    this.maxLines = 1,
+    this.maxLength,
   });
 
   final String label;
   final String hint;
   final TextEditingController controller;
-  final FormFieldValidator<String> validator;
+  final FormFieldValidator<String>? validator;
   final TextInputType? keyboardType;
   final TextCapitalization textCapitalization;
   final bool readOnly;
+  final int maxLines;
+  final int? maxLength;
 
   @override
   Widget build(BuildContext context) {
@@ -601,9 +718,211 @@ class _RegistrationField extends StatelessWidget {
             keyboardType: keyboardType,
             textCapitalization: textCapitalization,
             readOnly: readOnly,
+            maxLines: maxLines,
+            maxLength: maxLength,
             style: const TextStyle(color: Colors.white, fontSize: 9),
             decoration: _fieldDecoration(hint),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EducationField extends StatelessWidget {
+  const _EducationField({
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String? value;
+  final List<String> options;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Nivel de estudios',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 5),
+          DropdownButtonFormField<String?>(
+            initialValue: value,
+            onChanged: onChanged,
+            dropdownColor: appSurfaceColor,
+            iconEnabledColor: appMutedColor,
+            style: const TextStyle(color: Colors.white, fontSize: 9),
+            decoration: _fieldDecoration('Opcional'),
+            items: [
+              const DropdownMenuItem<String?>(
+                value: null,
+                child: Text('No especificar'),
+              ),
+              for (final option in options)
+                DropdownMenuItem<String?>(value: option, child: Text(option)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TagSection extends StatelessWidget {
+  const _TagSection({
+    required this.label,
+    required this.hint,
+    required this.options,
+    required this.selected,
+    required this.onToggle,
+  });
+
+  final String label;
+  final String hint;
+  final List<String> options;
+  final List<String> selected;
+  final void Function(String skill, bool selected) onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(hint, style: const TextStyle(color: appMutedColor, fontSize: 7)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final option in options)
+                FilterChip(
+                  label: Text(option),
+                  selected: selected.contains(option),
+                  onSelected: (value) => onToggle(option, value),
+                  selectedColor: appPurpleColor.withValues(alpha: 0.35),
+                  checkmarkColor: Colors.white,
+                  labelStyle: TextStyle(
+                    color: selected.contains(option)
+                        ? Colors.white
+                        : appMutedColor,
+                    fontSize: 8,
+                  ),
+                  backgroundColor: appSurfaceColor,
+                  side: const BorderSide(color: appBorderColor),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LanguageSection extends StatelessWidget {
+  const _LanguageSection({
+    required this.selected,
+    required this.onToggle,
+    required this.onLevelChanged,
+  });
+
+  final List<ProfileLanguage> selected;
+  final void Function(String name, bool selected) onToggle;
+  final void Function(String name, String level) onLevelChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Idiomas',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Opcional. En Cochabamba, el quechua puede marcar diferencia.',
+            style: TextStyle(color: appMutedColor, fontSize: 7),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final name in profileLanguageNames)
+                FilterChip(
+                  label: Text(name),
+                  selected: selected.any((language) => language.name == name),
+                  onSelected: (value) => onToggle(name, value),
+                  selectedColor: appOrangeColor.withValues(alpha: 0.35),
+                  checkmarkColor: Colors.white,
+                  labelStyle: TextStyle(
+                    color: selected.any((language) => language.name == name)
+                        ? Colors.white
+                        : appMutedColor,
+                    fontSize: 8,
+                  ),
+                  backgroundColor: appSurfaceColor,
+                  side: const BorderSide(color: appBorderColor),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+            ],
+          ),
+          for (final language in selected) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    language.name,
+                    style: const TextStyle(color: Colors.white, fontSize: 9),
+                  ),
+                ),
+                DropdownButton<String>(
+                  value: language.level,
+                  dropdownColor: appSurfaceColor,
+                  underline: const SizedBox.shrink(),
+                  style: const TextStyle(color: Colors.white, fontSize: 9),
+                  items: [
+                    for (final level in profileLanguageLevels)
+                      DropdownMenuItem(value: level, child: Text(level)),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) onLevelChanged(language.name, value);
+                  },
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

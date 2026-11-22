@@ -135,7 +135,17 @@ service cloud.firestore {
         && request.auth.uid == userId;
       allow create, update: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.data.uid == userId;
+        && request.resource.data.uid == userId
+        && (!('educationLevel' in request.resource.data.keys())
+          || request.resource.data.educationLevel is string)
+        && (!('careerTitle' in request.resource.data.keys())
+          || request.resource.data.careerTitle is string)
+        && (!('aboutMe' in request.resource.data.keys())
+          || request.resource.data.aboutMe is string)
+        && (!('skills' in request.resource.data.keys())
+          || request.resource.data.skills is list)
+        && (!('languages' in request.resource.data.keys())
+          || request.resource.data.languages is list);
     }
 
     match /companies/{companyId} {

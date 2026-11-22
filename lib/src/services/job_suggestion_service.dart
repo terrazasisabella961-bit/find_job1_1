@@ -123,6 +123,25 @@ class LocalJobSuggestionService implements JobSuggestionService {
       }
     }
 
+    if (profile.skills.isNotEmpty) {
+      var skillHits = 0;
+      for (final skill in profile.skills) {
+        final folded = _fold(skill);
+        if (folded.length < 3) continue;
+        if (haystack.contains(folded)) skillHits += 1;
+      }
+      if (skillHits > 0) {
+        score += (skillHits * 6).clamp(0, 18);
+        if (reasons.length < 3) {
+          reasons.add(
+            skillHits == 1
+                ? 'Coincide una habilidad de tu perfil'
+                : 'Coinciden $skillHits habilidades',
+          );
+        }
+      }
+    }
+
     if (score <= 0 || reasons.isEmpty) return null;
     return JobSuggestion(
       job: job,

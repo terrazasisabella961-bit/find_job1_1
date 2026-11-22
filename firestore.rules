@@ -71,12 +71,7 @@ service cloud.firestore {
     }
 
     function verifiedInstitution(institutionId) {
-      return signedIn()
-        && request.auth.token.institution == true
-        && get(/databases/$(database)/documents/institutions/$(institutionId))
-          .data.ownerUid == request.auth.uid
-        && get(/databases/$(database)/documents/institutions/$(institutionId))
-          .data.verificationStatus == 'verified';
+      return ownsInstitution(institutionId);
     }
 
     function validInstitution(data, ownerId) {
@@ -112,7 +107,8 @@ service cloud.firestore {
         && data.duration is string
         && data.description is string
         && data.description.size() > 0
-        && data.totalSeats is int
+        && data.totalSeats is number
+        && data.totalSeats == int(data.totalSeats)
         && data.totalSeats > 0
         && data.minimumLevel is string
         && data.requiredDocuments is list
@@ -135,7 +131,17 @@ service cloud.firestore {
         && request.auth.uid == userId;
       allow create, update: if request.auth != null
         && request.auth.uid == userId
-        && request.resource.data.uid == userId;
+        && request.resource.data.uid == userId
+        && (!('educationLevel' in request.resource.data.keys())
+          || request.resource.data.educationLevel is string)
+        && (!('careerTitle' in request.resource.data.keys())
+          || request.resource.data.careerTitle is string)
+        && (!('aboutMe' in request.resource.data.keys())
+          || request.resource.data.aboutMe is string)
+        && (!('skills' in request.resource.data.keys())
+          || request.resource.data.skills is list)
+        && (!('languages' in request.resource.data.keys())
+          || request.resource.data.languages is list);
     }
 
     match /companies/{companyId} {
@@ -148,6 +154,50 @@ service cloud.firestore {
         && resource.data.ownerUid == request.auth.uid
         && validCompany(request.resource.data, companyId);
       allow delete: if false;
+    }
+
+    function validApplication(data) {
+      return data.applicantUid == request.auth.uid
+        && data.jobId is string
+        && data.jobId.size() > 0
+        && data.companyId is string
+        && data.companyId.size() > 0
+        && data.jobTitle is string
+        && data.companyName is string
+        && data.fullName is string
+        && data.fullName.size() > 0
+        && data.email is string
+        && data.phone is string
+        && data.city is string
+        && data.areaOfInterest is string
+        && data.educationLevel is string
+        && data.careerTitle is string
+        && data.skills is list
+        && data.languages is list
+        && data.aboutMe is string
+        && data.message is string
+        && data.message.size() >= 12
+        && data.message.size() <= 400
+        && data.availability is string
+        && data.status == 'received'
+        && (data.cvFileName == null || data.cvFileName is string)
+        && exists(/databases/$(database)/documents/jobs/$(data.jobId))
+        && get(/databases/$(database)/documents/jobs/$(data.jobId)).data.companyId
+          == data.companyId
+        && get(/databases/$(database)/documents/jobs/$(data.jobId)).data.status
+          == 'published';
+    }
+
+    match /applications/{applicationId} {
+      allow get, list: if signedIn()
+        && (resource.data.applicantUid == request.auth.uid
+          || resource.data.companyId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.applicantUid == request.auth.uid
+        && applicationId == request.resource.data.jobId + '_'
+          + request.auth.uid
+        && validApplication(request.resource.data);
+      allow update, delete: if false;
     }
 
     match /jobs/{jobId} {
@@ -175,19 +225,22 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.auth.uid == institutionId
         && validInstitution(request.resource.data, institutionId)
-        && request.resource.data.verificationStatus == 'pending';
+        && request.resource.data.verificationStatus in ['pending', 'verified'];
       allow update: if signedIn()
         && request.auth.uid == institutionId
         && resource.data.ownerUid == request.auth.uid
         && validInstitution(request.resource.data, institutionId)
-        && request.resource.data.verificationStatus
-          == resource.data.verificationStatus
+        && request.resource.data.verificationStatus in ['pending', 'verified']
         && request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if false;
     }
 
     match /courses/{courseId} {
-      allow get, list: if resource.data.status == 'published'
+      allow get: if (signedIn()
+          && !exists(/databases/$(database)/documents/courses/$(courseId)))
+        || resource.data.status == 'published'
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow list: if resource.data.status == 'published'
         || (signedIn() && resource.data.ownerUid == request.auth.uid);
       allow create: if signedIn()
         && validCourse(request.resource.data, request.auth.uid)

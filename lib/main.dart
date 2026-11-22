@@ -10,9 +10,12 @@ import 'src/screens/user_registration_screen.dart';
 import 'src/services/auth_error_message.dart';
 import 'src/services/auth_repository.dart';
 import 'src/services/institution_repository.dart';
+import 'src/services/job_application_repository.dart';
 import 'src/services/recruitment_repository.dart';
 import 'src/services/user_profile_repository.dart';
-import 'src/widgets/app_bottom_navigation.dart';
+import 'src/widgets/app_feedback.dart';
+import 'src/widgets/cocha_conecta_logo.dart';
+import 'src/widgets/form_field_label.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +23,11 @@ Future<void> main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    try {
+      await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+    } on FirebaseException {
+      // Keep the default persistence if the browser blocks IndexedDB.
+    }
     runApp(const MyApp());
   } on FirebaseException catch (error) {
     runApp(_FirebaseStartupError(message: error.message ?? error.code));
@@ -42,6 +50,7 @@ class MyApp extends StatelessWidget {
     this.profileRepository,
     this.recruitmentRepository,
     this.institutionRepository,
+    this.applicationRepository,
     super.key,
   });
 
@@ -49,6 +58,7 @@ class MyApp extends StatelessWidget {
   final UserProfileRepository? profileRepository;
   final RecruitmentRepository? recruitmentRepository;
   final InstitutionRepository? institutionRepository;
+  final JobApplicationRepository? applicationRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +68,10 @@ class MyApp extends StatelessWidget {
         recruitmentRepository ?? FirebaseRecruitmentRepository();
     final institutions =
         institutionRepository ?? FirebaseInstitutionRepository();
+    final applications =
+        applicationRepository ?? FirebaseJobApplicationRepository();
     return MaterialApp(
-      title: 'Find Job',
+      title: 'CochaConecta',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -69,12 +81,22 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
         fontFamily: 'Roboto',
+        snackBarTheme: const SnackBarThemeData(
+          backgroundColor: Color(0xFF3D2E6B),
+          contentTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       ),
       home: _AuthGate(
         authRepository: auth,
         profileRepository: profiles,
         recruitmentRepository: recruitment,
         institutionRepository: institutions,
+        applicationRepository: applications,
       ),
     );
   }
@@ -86,12 +108,14 @@ class _AuthGate extends StatelessWidget {
     required this.profileRepository,
     required this.recruitmentRepository,
     required this.institutionRepository,
+    required this.applicationRepository,
   });
 
   final AuthRepository authRepository;
   final UserProfileRepository profileRepository;
   final RecruitmentRepository recruitmentRepository;
   final InstitutionRepository institutionRepository;
+  final JobApplicationRepository applicationRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -125,6 +149,7 @@ class _AuthGate extends StatelessWidget {
           profileRepository: profileRepository,
           recruitmentRepository: recruitmentRepository,
           institutionRepository: institutionRepository,
+          applicationRepository: applicationRepository,
         );
       },
     );
@@ -138,6 +163,7 @@ class _AuthenticatedGate extends StatelessWidget {
     required this.profileRepository,
     required this.recruitmentRepository,
     required this.institutionRepository,
+    required this.applicationRepository,
   });
 
   final User user;
@@ -145,37 +171,42 @@ class _AuthenticatedGate extends StatelessWidget {
   final UserProfileRepository profileRepository;
   final RecruitmentRepository recruitmentRepository;
   final InstitutionRepository institutionRepository;
+  final JobApplicationRepository applicationRepository;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: recruitmentRepository.watchCompany(user.uid),
       builder: (context, companySnapshot) {
-        if (companySnapshot.hasError) {
+        if (companySnapshot.hasError &&
+            !isRecoverableFirebaseAccessError(companySnapshot.error)) {
           return _FirebaseStartupError(
             message:
                 'No se pudo comprobar la cuenta de empresa: '
                 '${companySnapshot.error}',
           );
         }
-        if (companySnapshot.connectionState == ConnectionState.waiting) {
+        if (companySnapshot.connectionState == ConnectionState.waiting &&
+            !companySnapshot.hasError) {
           return const _SessionLoading();
         }
-        final company = companySnapshot.data;
+        final company = companySnapshot.hasError ? null : companySnapshot.data;
         if (company != null) {
           return AppShell(
             authRepository: authRepository,
             profileRepository: profileRepository,
             recruitmentRepository: recruitmentRepository,
             institutionRepository: institutionRepository,
-            initialSelectedIndex: 3,
+            applicationRepository: applicationRepository,
+            initialSelectedIndex: 0,
             accountType: 'company',
           );
         }
         return StreamBuilder(
           stream: institutionRepository.watchInstitution(user.uid),
           builder: (context, institutionSnapshot) {
-            if (institutionSnapshot.hasError) {
+            if (institutionSnapshot.hasError &&
+                !isRecoverableFirebaseAccessError(institutionSnapshot.error)) {
               return _FirebaseStartupError(
                 message:
                     'No se pudo comprobar la cuenta institucional: '
@@ -183,16 +214,19 @@ class _AuthenticatedGate extends StatelessWidget {
               );
             }
             if (institutionSnapshot.connectionState ==
-                ConnectionState.waiting) {
+                    ConnectionState.waiting &&
+                !institutionSnapshot.hasError) {
               return const _SessionLoading();
             }
-            if (institutionSnapshot.data != null) {
+            if (!institutionSnapshot.hasError &&
+                institutionSnapshot.data != null) {
               return AppShell(
                 authRepository: authRepository,
                 profileRepository: profileRepository,
                 recruitmentRepository: recruitmentRepository,
                 institutionRepository: institutionRepository,
-                initialSelectedIndex: 2,
+                applicationRepository: applicationRepository,
+                initialSelectedIndex: 0,
                 accountType: 'institution',
               );
             }
@@ -201,6 +235,7 @@ class _AuthenticatedGate extends StatelessWidget {
               profileRepository: profileRepository,
               recruitmentRepository: recruitmentRepository,
               institutionRepository: institutionRepository,
+              applicationRepository: applicationRepository,
               initialSelectedIndex: 0,
               accountType: 'student',
             );
@@ -277,12 +312,12 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _showDemoMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: _surfaceColor),
-      );
+  void _showDemoMessage(String message, {bool isError = false}) {
+    showAppMessage(
+      context,
+      message,
+      kind: isError ? AppMessageKind.error : AppMessageKind.info,
+    );
   }
 
   String? _validateEmail(String? value) {
@@ -296,15 +331,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signIn() async {
-    if (!_formKey.currentState!.validate() || _isSubmitting) return;
+    if (_isSubmitting || !ensureFormValid(context, _formKey)) return;
     setState(() => _isSubmitting = true);
     try {
       await widget.authRepository.signIn(
         email: _emailController.text,
         password: _passwordController.text,
       );
-    } on Exception catch (error) {
-      if (mounted) _showDemoMessage(authErrorMessage(error));
+    } on Object catch (error) {
+      if (mounted) {
+        _showDemoMessage(authErrorMessage(error), isError: true);
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -315,8 +352,10 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isSubmitting = true);
     try {
       await widget.authRepository.signInWithGoogle();
-    } on Exception catch (error) {
-      if (mounted) _showDemoMessage(authErrorMessage(error));
+    } on Object catch (error) {
+      if (mounted) {
+        _showDemoMessage(authErrorMessage(error), isError: true);
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -326,6 +365,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_validateEmail(_emailController.text) != null) {
       _showDemoMessage(
         'Escribe un correo válido para recuperar tu contraseña.',
+        isError: true,
       );
       return;
     }
@@ -339,7 +379,9 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } on Exception catch (error) {
-      if (mounted) _showDemoMessage(authErrorMessage(error));
+      if (mounted) {
+        _showDemoMessage(authErrorMessage(error), isError: true);
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -387,204 +429,247 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        bottom: false,
         child: Column(
           children: [
             Expanded(
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: () => _showDemoMessage(
-                              'Estás en la pantalla de cuenta.',
-                            ),
-                            icon: const Icon(Icons.arrow_back),
-                            color: _purpleColor,
-                            style: IconButton.styleFrom(
-                              backgroundColor: _surfaceColor,
-                              side: const BorderSide(color: _borderColor),
-                              fixedSize: const Size(36, 36),
-                            ),
-                            tooltip: 'Volver',
-                          ),
-                          const Expanded(
-                            child: Text(
-                              'INICIAR SESIÓN',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: _purpleColor,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.4,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 36),
-                        ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight - 8,
                       ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Utilice los campos de correo electrónico y '
-                        'contraseña a continuación para iniciar sesión.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          height: 1.45,
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-                      LoginTextField(
-                        controller: _emailController,
-                        hintText: 'Correo electrónico',
-                        icon: Icons.mail,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: _validateEmail,
-                      ),
-                      const SizedBox(height: 10),
-                      LoginTextField(
-                        controller: _passwordController,
-                        hintText: 'Contraseña',
-                        icon: Icons.lock,
-                        obscureText: _obscurePassword,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Ingresa tu contraseña.'
-                            : null,
-                        onToggleVisibility: () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
-                      ),
-                      const SizedBox(height: 22),
-                      Center(
-                        child: SizedBox(
-                          width: 180,
-                          height: 42,
-                          child: FilledButton(
-                            onPressed: _isSubmitting ? null : _signIn,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFFFF7845),
-                              foregroundColor: const Color(0xFF171323),
-                              shape: const StadiumBorder(),
-                              textStyle: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            child: _isSubmitting
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Color(0xFF171323),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 320),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const HoverScale(
+                                  scale: 1.04,
+                                  child: CochaConectaLogo(height: 132),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Empleo y formación en Cochabamba',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: _mutedColor,
+                                    fontSize: 14,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 22),
+                                SizedBox(
+                                  width: 268,
+                                  child: LoginTextField(
+                                    controller: _emailController,
+                                    hintText: 'Correo electrónico',
+                                    icon: Icons.mail_outline,
+                                    keyboardType: TextInputType.emailAddress,
+                                    validator: _validateEmail,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  width: 268,
+                                  child: LoginTextField(
+                                    controller: _passwordController,
+                                    hintText: 'Contraseña',
+                                    icon: Icons.lock_outline,
+                                    obscureText: _obscurePassword,
+                                    validator: (value) =>
+                                        value == null || value.isEmpty
+                                        ? 'Ingresa tu contraseña.'
+                                        : null,
+                                    onToggleVisibility: () {
+                                      setState(
+                                        () => _obscurePassword =
+                                            !_obscurePassword,
+                                      );
+                                    },
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: _isSubmitting
+                                      ? null
+                                      : _resetPassword,
+                                  child: const Text(
+                                    '¿Olvidaste tu contraseña?',
+                                    style: TextStyle(
+                                      color: _mutedColor,
+                                      fontSize: 13,
                                     ),
-                                  )
-                                : const Text('Iniciar sesión'),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            color: _mutedColor,
-                            fontSize: 9,
-                            height: 1.55,
-                          ),
-                          children: [
-                            TextSpan(
-                              text: 'Consejos: ',
-                              style: TextStyle(
-                                color: Color(0xFFFF7845),
-                                fontWeight: FontWeight.w700,
-                              ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                HoverScale(
+                                  child: SizedBox(
+                                    width: 220,
+                                    height: 46,
+                                    child: FilledButton(
+                                      onPressed: _isSubmitting
+                                          ? null
+                                          : _signIn,
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFFFF7845,
+                                        ),
+                                        foregroundColor: const Color(
+                                          0xFF171323,
+                                        ),
+                                        shape: const StadiumBorder(),
+                                        textStyle: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      child: _isSubmitting
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Color(0xFF171323),
+                                              ),
+                                            )
+                                          : const Text('Iniciar sesión'),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                const Row(
+                                  children: [
+                                    Expanded(
+                                      child: Divider(color: _borderColor),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                      child: Text(
+                                        'o',
+                                        style: TextStyle(
+                                          color: _mutedColor,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Divider(color: _borderColor),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                HoverScale(
+                                  child: SizedBox(
+                                    width: 240,
+                                    height: 46,
+                                    child: OutlinedButton.icon(
+                                      onPressed: _isSubmitting
+                                          ? null
+                                          : _signInWithGoogle,
+                                      icon: const Icon(
+                                        Icons.g_mobiledata,
+                                        size: 26,
+                                      ),
+                                      label: const Text(
+                                        'Continuar con Google',
+                                      ),
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: Colors.white,
+                                        side: const BorderSide(
+                                          color: _borderColor,
+                                        ),
+                                        shape: const StadiumBorder(),
+                                        textStyle: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                HoverScale(
+                                  child: TextButton(
+                                    onPressed: _isSubmitting
+                                        ? null
+                                        : _openRegistration,
+                                    child: const Text(
+                                      '¿No tienes cuenta? Regístrate',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Wrap(
+                                  alignment: WrapAlignment.center,
+                                  spacing: 4,
+                                  runSpacing: 0,
+                                  children: [
+                                    TextButton(
+                                      onPressed: _isSubmitting
+                                          ? null
+                                          : _openCompanyPortal,
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: _mutedColor,
+                                        visualDensity: VisualDensity.compact,
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        minimumSize: Size.zero,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Acceso para empresas',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: _isSubmitting
+                                          ? null
+                                          : _openInstitutions,
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: _mutedColor,
+                                        visualDensity: VisualDensity.compact,
+                                        tapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        minimumSize: Size.zero,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Acceso para instituciones',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            TextSpan(
-                              text:
-                                  'El correo electrónico debe ser una '
-                                  'dirección de correo electrónico válida. '
-                                  'El campo de contraseña no puede estar vacío.',
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      const Divider(color: _borderColor, height: 1),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'O utilice las siguientes opciones para iniciar sesión o '
-                        'registrarte con correo electrónico o restablecer la '
-                        'contraseña de tu cuenta actual.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: _mutedColor,
-                          fontSize: 9,
-                          height: 1.55,
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _isSubmitting ? null : _resetPassword,
-                          child: const Text(
-                            '¿Olvidaste tu contraseña?',
-                            style: TextStyle(color: _mutedColor, fontSize: 9),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        height: 44,
-                        child: FilledButton.icon(
-                          onPressed: _isSubmitting ? null : _signInWithGoogle,
-                          icon: const Icon(Icons.android, size: 16),
-                          label: const Text('Iniciar sesión con Android'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _purpleColor,
-                            foregroundColor: Colors.white,
-                            shape: const StadiumBorder(),
-                            textStyle: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _isSubmitting ? null : _openRegistration,
-                        child: const Text(
-                          '¿No tienes cuenta? Regístrate',
-                          style: TextStyle(color: _mutedColor, fontSize: 9),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
             ),
-            AppBottomNavigation(
-              selectedIndex: 3,
-              onSelected: (index) {
-                if (index == 1) {
-                  _openCompanyPortal();
-                  return;
-                }
-                if (index == 2) {
-                  _openInstitutions();
-                } else {
-                  _showDemoMessage(
-                    'Inicia sesión para acceder a esta sección.',
-                  );
-                }
-              },
-            ),
+            const DevelopedByCredit(),
           ],
         ),
       ),
@@ -614,18 +699,30 @@ class LoginTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FormFieldLabel(
+          hintText,
+          required: true,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(
+      height: 52,
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
         obscureText: obscureText,
         validator: validator,
-        style: const TextStyle(color: Colors.white, fontSize: 11),
+        style: const TextStyle(color: Colors.white, fontSize: 15),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(color: _mutedColor, fontSize: 10),
-          prefixIcon: Icon(icon, color: _purpleColor, size: 16),
+          hintStyle: const TextStyle(color: _mutedColor, fontSize: 14),
+          prefixIcon: Icon(icon, color: _purpleColor, size: 20),
           suffixIcon: onToggleVisibility == null
               ? null
               : IconButton(
@@ -633,7 +730,7 @@ class LoginTextField extends StatelessWidget {
                   icon: Icon(
                     obscureText ? Icons.visibility : Icons.visibility_off,
                     color: _purpleColor,
-                    size: 16,
+                    size: 20,
                   ),
                   tooltip: obscureText
                       ? 'Mostrar contraseña'
@@ -642,7 +739,7 @@ class LoginTextField extends StatelessWidget {
           filled: true,
           fillColor: _surfaceColor,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
-          errorStyle: const TextStyle(fontSize: 8, height: 1.1),
+          errorStyle: const TextStyle(fontSize: 11, height: 1.1),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
             borderSide: const BorderSide(color: _borderColor),
@@ -653,6 +750,8 @@ class LoginTextField extends StatelessWidget {
           ),
         ),
       ),
+        ),
+      ],
     );
   }
 }

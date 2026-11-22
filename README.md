@@ -1,4 +1,4 @@
-# Find Job
+# CochaConecta
 
 Flutter job-search application using Firebase Authentication, Cloud Firestore,
 and Firebase Storage. Existing Firebase initialization, login, registration,

@@ -2,9 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:find_job1_1/src/models/company.dart';
+import 'package:find_job1_1/src/models/institution.dart';
+import 'package:find_job1_1/src/models/institution_course.dart';
+import 'package:find_job1_1/src/models/job_application.dart';
 import 'package:find_job1_1/src/models/job_posting.dart';
+import 'package:find_job1_1/src/models/user_profile.dart';
+import 'package:find_job1_1/src/screens/app_shell.dart';
+import 'package:find_job1_1/src/widgets/app_bottom_navigation.dart';
+import 'package:find_job1_1/src/screens/company_applications_screen.dart';
 import 'package:find_job1_1/src/screens/employment_screen.dart';
+import 'package:find_job1_1/src/services/job_application_repository.dart';
+import 'package:find_job1_1/src/services/auth_repository.dart';
+import 'package:find_job1_1/src/services/institution_repository.dart';
 import 'package:find_job1_1/src/services/recruitment_repository.dart';
+import 'package:find_job1_1/src/services/user_profile_repository.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() {
   testWidgets('employment screen shows a useful empty state without samples', (
@@ -106,7 +119,258 @@ void main() {
     expect(find.text('empleos@ejemplo.bo'), findsOneWidget);
     expect(find.text('Funciones y responsabilidades'), findsOneWidget);
   });
+
+  testWidgets('student profile suggestions appear above the catalog', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EmploymentScreen(
+            repository: _FakeRecruitmentRepository(_sampleJobs),
+            onOpenCatalog: () {},
+            showSuggestions: true,
+            profile: const UserProfile(
+              uid: 'user-1',
+              fullName: 'Ana',
+              email: 'ana@example.com',
+              phone: '',
+              city: 'La Paz',
+              areaOfInterest: 'Tecnología',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('SUGERIDAS PARA TI'), findsOneWidget);
+    expect(
+      find.text(
+        'Según tu área, carrera y habilidades, no según el filtro de búsqueda.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('ANALISTA DE EXPERIENCIAS'), findsWidgets);
+    expect(find.textContaining('Coincide tu área Tecnología'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).first, 'cocina');
+    await tester.pump();
+    expect(find.text('SUGERIDAS PARA TI'), findsOneWidget);
+    expect(find.text('AYUDANTE DE COCINA'), findsOneWidget);
+    expect(find.textContaining('Coincide tu área Tecnología'), findsOneWidget);
+  });
+
+  testWidgets('incomplete profile shows complete-profile call to action', (
+    tester,
+  ) async {
+    var openedAccount = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: EmploymentScreen(
+            repository: _FakeRecruitmentRepository(_sampleJobs),
+            onOpenCatalog: () {},
+            showSuggestions: true,
+            profile: const UserProfile(
+              uid: 'user-1',
+              fullName: 'Ana',
+              email: 'ana@example.com',
+              phone: '',
+              city: '',
+              areaOfInterest: '',
+            ),
+            onCompleteProfile: () => openedAccount = true,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Completar perfil'), findsOneWidget);
+    await tester.tap(find.text('Completar perfil'));
+    expect(openedAccount, isTrue);
+  });
+
+  testWidgets('company accounts do not see the suggestions block', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AppShell(
+          authRepository: _SignedInAuthRepository(),
+          profileRepository: _EmptyProfileRepository(),
+          recruitmentRepository: _FakeRecruitmentRepository(_sampleJobs),
+          institutionRepository: _EmptyInstitutionRepository(),
+          applicationRepository: InMemoryJobApplicationRepository(),
+          accountType: 'company',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('SUGERIDAS PARA TI'), findsNothing);
+    expect(find.text('Empleo'), findsNothing);
+    expect(find.text('Reclutar'), findsOneWidget);
+    expect(find.text('Cuenta'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBottomNavigation),
+        matching: find.text('Cursos'),
+      ),
+      findsNothing,
+    );
+    expect(find.text('Anuncios de empleo activos'), findsNothing);
+  });
+
+  testWidgets('applying to a job sends a profile form the company can read', (
+    tester,
+  ) async {
+    final applications = InMemoryJobApplicationRepository();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: JobDetailsScreen(
+          job: _sampleJobs.first,
+          profile: _applicant,
+          applicationRepository: applications,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('Postular'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Postular'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('DATOS DE TU REGISTRO'), findsOneWidget);
+    expect(find.textContaining('Aylen Postulante'), findsWidgets);
+
+    await tester.enterText(
+      find.byType(TextFormField).last,
+      'Me interesa el puesto por mi experiencia en el área.',
+    );
+    await tester.scrollUntilVisible(
+      find.text('Enviar postulación'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Enviar postulación'));
+    await tester.pumpAndSettle();
+
+    expect(applications.applications, hasLength(1));
+    expect(applications.applications.single.fullName, 'Aylen Postulante');
+    expect(find.text('Postulación enviada'), findsWidgets);
+
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.text('Postular'), findsNothing);
+    expect(find.text('Enviar postulación'), findsNothing);
+    final sentButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Postulación enviada'),
+    );
+    expect(sentButton.onPressed, isNull);
+  });
+
+  testWidgets('already applied jobs show a disabled sent button', (
+    tester,
+  ) async {
+    final applications = InMemoryJobApplicationRepository([
+      JobApplication(
+        id: 'job-1_user-1',
+        jobId: 'job-1',
+        companyId: 'company-1',
+        applicantUid: 'user-1',
+        jobTitle: _sampleJobs.first.title,
+        companyName: _sampleJobs.first.companyName,
+        fullName: 'Aylen Postulante',
+        email: 'aylen@example.com',
+        phone: '+591 70000000',
+        city: 'Cochabamba',
+        areaOfInterest: 'Tecnología',
+        educationLevel: 'Licenciatura',
+        careerTitle: 'Ingeniería Ambiental',
+        skills: const ['Informática'],
+        languages: const ['Español (Nativo)'],
+        aboutMe: 'Perfil de prueba',
+        message: 'Quiero postular a esta vacante.',
+        availability: 'Inmediata',
+        status: 'received',
+      ),
+    ]);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: JobDetailsScreen(
+          job: _sampleJobs.first,
+          profile: _applicant,
+          applicationRepository: applications,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.scrollUntilVisible(
+      find.text('Postulación enviada'),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    expect(find.text('Postular'), findsNothing);
+    final sentButton = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Postulación enviada'),
+    );
+    expect(sentButton.onPressed, isNull);
+  });
+
+  testWidgets('company can open received applicant profiles', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CompanyApplicationsScreen(
+          job: _sampleJobs.first,
+          applications: [
+            JobApplication(
+              id: 'job-1_user-1',
+              jobId: 'job-1',
+              companyId: 'company-1',
+              applicantUid: 'user-1',
+              jobTitle: _sampleJobs.first.title,
+              companyName: _sampleJobs.first.companyName,
+              fullName: 'Aylen Postulante',
+              email: 'aylen@example.com',
+              phone: '+591 70000000',
+              city: 'Cochabamba',
+              areaOfInterest: 'Tecnología',
+              educationLevel: 'Licenciatura',
+              careerTitle: 'Ingeniería Ambiental',
+              skills: const ['Informática'],
+              languages: const ['Español (Nativo)'],
+              aboutMe: 'Perfil de prueba',
+              message: 'Quiero postular a esta vacante.',
+              availability: 'Inmediata',
+              status: 'received',
+              cvFileName: 'CV_ficticio_Ingeniero_Ambiental_CochaConecta.pdf',
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Aylen Postulante'), findsOneWidget);
+    expect(find.text('Quiero postular a esta vacante.'), findsOneWidget);
+    expect(find.text('aylen@example.com'), findsOneWidget);
+  });
 }
+
+const _applicant = UserProfile(
+  uid: 'user-1',
+  fullName: 'Aylen Postulante',
+  email: 'aylen@example.com',
+  phone: '+591 70000000',
+  city: 'Cochabamba',
+  areaOfInterest: 'Tecnología',
+);
 
 final _sampleJobs = [
   JobPosting(
@@ -215,4 +479,101 @@ class _FakeRecruitmentRepository implements RecruitmentRepository {
 
   @override
   Future<void> updateJobStatus(String jobId, String status) async {}
+}
+
+class _SignedInAuthRepository implements AuthRepository {
+  @override
+  Stream<User?> get authStateChanges => Stream.value(currentUser);
+
+  @override
+  User? get currentUser => _FakeUser();
+
+  @override
+  Future<UserCredential> signIn({
+    required String email,
+    required String password,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<UserCredential> register({
+    required String email,
+    required String password,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<UserCredential> signInWithGoogle() => throw UnimplementedError();
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {}
+
+  @override
+  Future<void> updateEmail({
+    required String currentPassword,
+    required String newEmail,
+  }) async {}
+
+  @override
+  Future<void> signOut() async {}
+}
+
+class _FakeUser implements User {
+  @override
+  String get uid => 'authenticated-user';
+
+  @override
+  String? get email => 'user@example.com';
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _EmptyProfileRepository implements UserProfileRepository {
+  @override
+  Future<UserProfile?> getProfile(String uid) async => null;
+
+  @override
+  Stream<UserProfile?> watchProfile(String uid) => Stream.value(null);
+
+  @override
+  Future<void> updateVisibility({
+    required String uid,
+    required bool isVisible,
+  }) async {}
+
+  @override
+  Future<void> saveProfile({
+    required UserProfile profile,
+    PlatformFile? cvFile,
+  }) async {}
+}
+
+class _EmptyInstitutionRepository implements InstitutionRepository {
+  @override
+  Stream<Institution?> watchInstitution(String uid) => Stream.value(null);
+
+  @override
+  Future<void> saveInstitutionRequest(Institution institution) async {}
+
+  @override
+  Stream<List<InstitutionCourse>> watchInstitutionCourses(String uid) =>
+      Stream.value(const []);
+
+  @override
+  Stream<List<InstitutionCourse>> watchPublishedCourses() =>
+      Stream.value(const []);
+
+  @override
+  Future<String> saveCourse(InstitutionCourse course) async => course.id;
+
+  @override
+  Future<void> retireCourse({
+    required String courseId,
+    required String ownerUid,
+  }) async {}
+
+  @override
+  Future<void> publishCourse({
+    required String courseId,
+    required String ownerUid,
+  }) async {}
 }

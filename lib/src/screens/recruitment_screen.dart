@@ -4,11 +4,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../models/company.dart';
+import '../models/job_application.dart';
 import '../models/job_posting.dart';
 import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
+import '../services/job_application_repository.dart';
 import '../services/recruitment_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/app_feedback.dart';
+import '../widgets/form_field_label.dart';
+import 'company_applications_screen.dart';
 
 class CompanyPortalScreen extends StatefulWidget {
   const CompanyPortalScreen({
@@ -181,7 +186,7 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
   }
 
   Future<void> _signIn() async {
-    if (!_formKey.currentState!.validate() || _busy) return;
+    if (_busy || !ensureFormValid(context, _formKey)) return;
     setState(() => _busy = true);
     try {
       await widget.authRepository.signIn(
@@ -190,8 +195,11 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
       );
     } on Exception catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+        showAppMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -201,26 +209,28 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
   Future<void> _resetPassword() async {
     final email = _email.text.trim();
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Escribe primero un correo válido.')),
+      showAppMessage(
+        context,
+        'Escribe primero un correo válido.',
+        kind: AppMessageKind.error,
       );
       return;
     }
     try {
       await widget.authRepository.sendPasswordResetEmail(email);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Si existe una cuenta con ese correo, recibirás instrucciones para restablecer la contraseña.',
-            ),
-          ),
+        showAppMessage(
+          context,
+          'Si existe una cuenta con ese correo, recibirás instrucciones para restablecer la contraseña.',
         );
       }
     } on Exception catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(authErrorMessage(error))));
+        showAppMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
       }
     }
   }
@@ -232,7 +242,9 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
       _PageHeader(
         eyebrow: 'CENTRO DE RECLUTAMIENTO',
         title: 'INICIAR SESIÓN EMPRESA',
-        onBack: () => Navigator.of(context).maybePop(),
+        onBack: Navigator.of(context).canPop()
+            ? () => Navigator.of(context).pop()
+            : null,
       ),
       if (widget.errorMessage != null) ...[
         const SizedBox(height: 12),
@@ -271,7 +283,10 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
               },
             ),
             const SizedBox(height: 13),
-            _SectionLabel('NIT o N° de Identificación Tributaria (Opcional)'),
+            _SectionLabel(
+              'NIT o N° de Identificación Tributaria',
+              required: false,
+            ),
             _FormInput(controller: _taxId, hint: 'Ej. 1023456028'),
             const SizedBox(height: 13),
             _SectionLabel('Contraseña corporativa'),
@@ -344,6 +359,14 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
                 child: const Text('Registrar nueva empresa  ›'),
               ),
             ),
+            if (Navigator.of(context).canPop())
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back, size: 16),
+                  label: const Text('Volver al inicio de sesión'),
+                ),
+              ),
           ],
         ),
       ),
@@ -386,8 +409,10 @@ class _CompanyAccountMessage extends StatelessWidget {
                 await authRepository.signOut();
               } on Exception catch (error) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(authErrorMessage(error))),
+                  showAppMessage(
+                    context,
+                    authErrorMessage(error),
+                    kind: AppMessageKind.error,
                   );
                 }
               }
@@ -404,11 +429,17 @@ class RecruitmentScreen extends StatefulWidget {
   const RecruitmentScreen({
     required this.ownerUid,
     required this.repository,
+    this.applicationRepository,
+    this.authRepository,
+    this.accountTab = false,
     super.key,
   });
 
   final String ownerUid;
   final RecruitmentRepository repository;
+  final JobApplicationRepository? applicationRepository;
+  final AuthRepository? authRepository;
+  final bool accountTab;
 
   @override
   State<RecruitmentScreen> createState() => _RecruitmentScreenState();
@@ -453,6 +484,9 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
         return _CompanyDashboard(
           company: company,
           repository: widget.repository,
+          applicationRepository: widget.applicationRepository,
+          authRepository: widget.authRepository,
+          accountTab: widget.accountTab,
         );
       },
     );
@@ -460,10 +494,35 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
 }
 
 class _CompanyDashboard extends StatelessWidget {
-  const _CompanyDashboard({required this.company, required this.repository});
+  const _CompanyDashboard({
+    required this.company,
+    required this.repository,
+    this.applicationRepository,
+    this.authRepository,
+    this.accountTab = false,
+  });
 
   final Company company;
   final RecruitmentRepository repository;
+  final JobApplicationRepository? applicationRepository;
+  final AuthRepository? authRepository;
+  final bool accountTab;
+
+  Future<void> _signOut(BuildContext context) async {
+    final auth = authRepository;
+    if (auth == null) return;
+    try {
+      await auth.signOut();
+    } on Exception catch (error) {
+      if (context.mounted) {
+        showAppMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
+        );
+      }
+    }
+  }
 
   Future<void> _editCompany(BuildContext context) async {
     await Navigator.of(context).push<void>(
@@ -491,11 +550,10 @@ class _CompanyDashboard extends StatelessWidget {
       await repository.updateJobStatus(jobId, status);
     } on Exception catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authErrorMessage(error)),
-            backgroundColor: appSurfaceColor,
-          ),
+        showAppMessage(
+          context,
+          authErrorMessage(error),
+          kind: AppMessageKind.error,
         );
       }
     }
@@ -522,12 +580,23 @@ class _CompanyDashboard extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
           children: [
-            const _PageHeader(
-              eyebrow: 'CENTRO DE RECLUTAMIENTO',
-              title: 'MI EMPRESA',
+            _PageHeader(
+              eyebrow: accountTab
+                  ? 'CUENTA DE EMPRESA'
+                  : 'CENTRO DE RECLUTAMIENTO',
+              title: accountTab ? 'MI CUENTA' : 'MI EMPRESA',
               onBack: null,
+              action: accountTab && authRepository != null
+                  ? IconButton(
+                      onPressed: () => _signOut(context),
+                      tooltip: 'Cerrar sesión',
+                      icon: const Icon(Icons.logout),
+                      color: const Color(0xFFFF647C),
+                    )
+                  : null,
             ),
             const SizedBox(height: 18),
+            if (accountTab)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -628,21 +697,37 @@ class _CompanyDashboard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: () => _openJobForm(context),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Publicar nuevo empleo o vacante'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: appOrangeColor,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(48),
+                  if (authRepository != null) ...[
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _signOut(context),
+                        icon: const Icon(Icons.logout, size: 16),
+                        label: const Text('Cerrar sesión'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFFFF647C),
+                          side: const BorderSide(color: appBorderColor),
+                          minimumSize: const Size.fromHeight(44),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
+              ),
+            ),
+            if (!accountTab) ...[
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _openJobForm(context),
+                icon: const Icon(Icons.add),
+                label: const Text('Publicar nuevo empleo o vacante'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: appOrangeColor,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(48),
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -684,13 +769,45 @@ class _CompanyDashboard extends StatelessWidget {
                 onAction: () => _openJobForm(context),
               )
             else
-              for (final job in jobs)
-                _CompanyJobCard(
-                  job: job,
-                  onEdit: () => _openJobForm(context, job: job),
-                  onStatusChanged: (status) =>
-                      _changeStatus(context, job.id, status),
-                ),
+              StreamBuilder<List<JobApplication>>(
+                stream:
+                    applicationRepository?.watchCompanyApplications(
+                      company.id,
+                    ) ??
+                    Stream.value(const <JobApplication>[]),
+                builder: (context, applicationSnapshot) {
+                  final applications =
+                      applicationSnapshot.data ?? const <JobApplication>[];
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final job in jobs)
+                        _CompanyJobCard(
+                          job: job,
+                          applicationCount: applications
+                              .where((item) => item.jobId == job.id)
+                              .length,
+                          onEdit: () => _openJobForm(context, job: job),
+                          onStatusChanged: (status) =>
+                              _changeStatus(context, job.id, status),
+                          onViewApplications: applicationRepository == null
+                              ? null
+                              : () => Navigator.of(context).push<void>(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) => CompanyApplicationsScreen(
+                                      job: job,
+                                      applications: applications
+                                          .where((item) => item.jobId == job.id)
+                                          .toList(),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ],
           ],
         );
       },
@@ -786,7 +903,7 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
       value == null || value.trim().isEmpty ? '$label es obligatorio.' : null;
 
   Future<void> _save() async {
-    if (_saving || !_formKey.currentState!.validate()) return;
+    if (_saving || !ensureFormValid(context, _formKey)) return;
     setState(() => _saving = true);
     try {
       final auth = widget.authRepository;
@@ -834,11 +951,10 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
       );
       await widget.repository.saveCompany(company);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('La empresa se guardó correctamente.'),
-            backgroundColor: appSurfaceColor,
-          ),
+        showAppMessage(
+          context,
+          'La empresa se guardó correctamente.',
+          kind: AppMessageKind.success,
         );
         if (widget.initialCompany == null) {
           widget.onSaved?.call(company);
@@ -849,19 +965,17 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
         widget.onRegistrationFailed?.call(error.message);
       }
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(error.message)));
+        showAppMessage(context, error.message, kind: AppMessageKind.error);
       }
     } on Exception catch (error) {
       if (widget.ownerUid == null) {
         widget.onRegistrationFailed?.call(_companySaveErrorMessage(error));
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_companySaveErrorMessage(error)),
-            backgroundColor: appSurfaceColor,
-          ),
+        showAppMessage(
+          context,
+          _companySaveErrorMessage(error),
+          kind: AppMessageKind.error,
         );
       }
     } catch (error, stackTrace) {
@@ -871,9 +985,7 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
         widget.onRegistrationFailed?.call(message);
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: appSurfaceColor),
-        );
+        showAppMessage(context, message, kind: AppMessageKind.error);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -896,9 +1008,11 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
     final editing = widget.initialCompany != null;
     return Form(
       key: _formKey,
-      child: ListView(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           _PageHeader(
             eyebrow: 'CENTRO DE RECLUTAMIENTO',
             title: editing ? 'EDITAR EMPRESA' : 'REGISTRO DE EMPRESA',
@@ -942,7 +1056,10 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
             validator: (value) => _required(value, 'El nombre de empresa'),
           ),
           const SizedBox(height: 12),
-          _SectionLabel('Enlace del sitio web de empresa o entidad (Opcional)'),
+          _SectionLabel(
+            'Enlace del sitio web de empresa o entidad',
+            required: false,
+          ),
           _FormInput(
             controller: _website,
             hint: 'https://...',
@@ -975,7 +1092,7 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
             'Selecciona la ciudad donde reside la empresa.',
           ),
           const SizedBox(height: 12),
-          _SectionLabel('Zona de la empresa'),
+          _SectionLabel('Zona de la empresa', required: false),
           _DropdownField(
             value: _zones.contains(_zone) ? _zone : _zones.first,
             options: _zones,
@@ -1050,8 +1167,21 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
                 onPressed: widget.onCancel,
                 child: const Text('¿Ya registraste tu empresa? Iniciar sesión'),
               ),
+            )
+          else if (editing)
+            TextButton.icon(
+              onPressed: () => Navigator.of(context).maybePop(),
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: const Text('Volver al tablero'),
+            )
+          else if (widget.onCancel != null)
+            TextButton.icon(
+              onPressed: widget.onCancel,
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: const Text('Volver'),
             ),
         ],
+        ),
       ),
     );
   }
@@ -1218,21 +1348,30 @@ class _JobFormScreenState extends State<JobFormScreen> {
   }
 
   Future<void> _save({required bool publish}) async {
-    if (_saving || !_formKey.currentState!.validate()) return;
+    if (_saving || !ensureFormValid(context, _formKey)) return;
     final minimum = _parseSalary(_salaryMinimum.text);
     final maximum = _parseSalary(_salaryMaximum.text);
     if (minimum != null && maximum != null && minimum > maximum) {
-      _showMessage('El salario mínimo no puede superar al máximo.');
+      _showMessage(
+        'El salario mínimo no puede superar al máximo.',
+        kind: AppMessageKind.error,
+      );
       return;
     }
     if (_deadline != null &&
         _dateOnly(_deadline!).isBefore(_dateOnly(_publicationDate))) {
-      _showMessage('La fecha límite debe ser posterior a la publicación.');
+      _showMessage(
+        'La fecha límite debe ser posterior a la publicación.',
+        kind: AppMessageKind.error,
+      );
       return;
     }
     final vacancies = int.tryParse(_vacancies.text.trim());
     if (vacancies == null || vacancies < 1) {
-      _showMessage('Indica una cantidad válida de vacantes.');
+      _showMessage(
+        'Indica una cantidad válida de vacantes.',
+        kind: AppMessageKind.error,
+      );
       return;
     }
     setState(() => _saving = true);
@@ -1291,17 +1430,13 @@ class _JobFormScreenState extends State<JobFormScreen> {
         ),
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            publish
-                ? previous == null
-                      ? 'La oferta se publicó correctamente.'
-                      : 'La oferta se actualizó correctamente.'
-                : 'Borrador guardado correctamente.',
-          ),
-          backgroundColor: appSurfaceColor,
-        ),
+      _showMessage(
+        publish
+            ? previous == null
+                  ? 'La oferta se publicó correctamente.'
+                  : 'La oferta se actualizó correctamente.'
+            : 'Borrador guardado correctamente.',
+        kind: AppMessageKind.success,
       );
       Navigator.of(context).pop();
     } on Object catch (error) {
@@ -1309,7 +1444,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
         _pendingJobId = error.jobId;
       }
       if (mounted) {
-        _showMessage(_jobSaveErrorMessage(error));
+        _showMessage(_jobSaveErrorMessage(error), kind: AppMessageKind.error);
       }
     } finally {
       slowSaveNotice.cancel();
@@ -1347,12 +1482,8 @@ class _JobFormScreenState extends State<JobFormScreen> {
     return authErrorMessage(error);
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: appSurfaceColor),
-      );
+  void _showMessage(String message, {AppMessageKind kind = AppMessageKind.info}) {
+    showAppMessage(context, message, kind: kind);
   }
 
   @override
@@ -1363,9 +1494,11 @@ class _JobFormScreenState extends State<JobFormScreen> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
-            children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               _PageHeader(
                 eyebrow: widget.company.name,
                 title: editing
@@ -1433,7 +1566,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                     : null,
               ),
               const SizedBox(height: 12),
-              _SectionLabel('Zona o Dirección'),
+              _SectionLabel('Zona o Dirección', required: false),
               _FormInput(
                 controller: _zone,
                 hint: 'Ej. Equipetrol Norte, 4to anillo',
@@ -1472,7 +1605,10 @@ class _JobFormScreenState extends State<JobFormScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              const _SectionLabel('Requisitos Obligatorios al Postular'),
+              const _SectionLabel(
+                'Requisitos Obligatorios al Postular',
+                required: false,
+              ),
               for (final option in _documentOptions)
                 _CheckOption(
                   label: option,
@@ -1486,14 +1622,14 @@ class _JobFormScreenState extends State<JobFormScreen> {
                   }),
                 ),
               const SizedBox(height: 12),
-              _SectionLabel('Habilidades / Skills Clave'),
+              _SectionLabel('Habilidades / Skills Clave', required: false),
               _FormInput(
                 controller: _skills,
                 hint: 'React.js, Node.js, TypeScript, PostgreSQL',
               ),
               const SizedBox(height: 16),
               const _FormSection('C. SALARIO Y BENEFICIOS'),
-              const _SectionLabel('Rango Salarial Ofrecido'),
+              const _SectionLabel('Rango Salarial Ofrecido', required: false),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -1535,7 +1671,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                   style: TextStyle(color: appMutedColor, fontSize: 10),
                 ),
               ),
-              const _SectionLabel('Beneficios Adicionales'),
+              const _SectionLabel('Beneficios Adicionales', required: false),
               for (final option in _benefitOptions)
                 _CheckOption(
                   label: option,
@@ -1557,7 +1693,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                 label: Text(_formatDate(_publicationDate)),
               ),
               const SizedBox(height: 12),
-              const _SectionLabel('Cierre de Postulaciones'),
+              const _SectionLabel('Cierre de Postulaciones', required: false),
               OutlinedButton.icon(
                 onPressed: _chooseDeadline,
                 icon: const Icon(Icons.calendar_month_outlined),
@@ -1615,7 +1751,10 @@ class _JobFormScreenState extends State<JobFormScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              _SectionLabel('WhatsApp para consultas rápidas (Opcional)'),
+              _SectionLabel(
+                'WhatsApp para consultas rápidas',
+                required: false,
+              ),
               _FormInput(
                 controller: _whatsApp,
                 hint: '+591 77012345',
@@ -1651,6 +1790,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                 label: const Text('Guardar como Borrador'),
               ),
             ],
+            ),
           ),
         ),
       ),
@@ -1681,11 +1821,15 @@ class _CompanyJobCard extends StatelessWidget {
     required this.job,
     required this.onEdit,
     required this.onStatusChanged,
+    this.onViewApplications,
+    this.applicationCount = 0,
   });
 
   final JobPosting job;
   final VoidCallback onEdit;
   final ValueChanged<String> onStatusChanged;
+  final VoidCallback? onViewApplications;
+  final int applicationCount;
 
   @override
   Widget build(BuildContext context) {
@@ -1738,6 +1882,16 @@ class _CompanyJobCard extends StatelessWidget {
           Wrap(
             spacing: 8,
             children: [
+              if (onViewApplications != null)
+                TextButton.icon(
+                  onPressed: onViewApplications,
+                  icon: const Icon(Icons.people_outline, size: 16),
+                  label: Text(
+                    applicationCount == 0
+                        ? 'Postulantes'
+                        : 'Postulantes ($applicationCount)',
+                  ),
+                ),
               TextButton.icon(
                 onPressed: onEdit,
                 icon: const Icon(Icons.edit_outlined, size: 16),
@@ -1778,11 +1932,13 @@ class _PageHeader extends StatelessWidget {
     required this.eyebrow,
     required this.title,
     required this.onBack,
+    this.action,
   });
 
   final String eyebrow;
   final String title;
   final VoidCallback? onBack;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -1791,6 +1947,7 @@ class _PageHeader extends StatelessWidget {
         if (onBack != null)
           IconButton(
             onPressed: onBack,
+            tooltip: 'Volver al inicio de sesión',
             icon: const Icon(Icons.arrow_back),
             color: Colors.white,
             style: IconButton.styleFrom(
@@ -1825,7 +1982,7 @@ class _PageHeader extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 40),
+        action ?? const SizedBox(width: 40),
       ],
     );
   }
@@ -2054,22 +2211,13 @@ class _RadioOption extends StatelessWidget {
 }
 
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+  const _SectionLabel(this.text, {this.required = true});
 
   final String text;
+  final bool required;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 6),
-    child: Text(
-      text,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-  );
+  Widget build(BuildContext context) => FormFieldLabel(text, required: required);
 }
 
 class _FormInput extends StatelessWidget {

@@ -1,18 +1,37 @@
 import 'package:flutter/material.dart';
 
 import '../models/job_posting.dart';
+import '../models/job_suggestion.dart';
+import '../models/user_profile.dart';
+import '../services/job_application_repository.dart';
+import '../services/job_suggestion_service.dart';
 import '../services/recruitment_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/app_feedback.dart';
+import '../widgets/cocha_conecta_logo.dart';
+import 'job_application_form.dart';
 
 class EmploymentScreen extends StatefulWidget {
   const EmploymentScreen({
     required this.repository,
     required this.onOpenCatalog,
+    this.profile,
+    this.showSuggestions = false,
+    this.suggestionsLoading = false,
+    this.onCompleteProfile,
+    this.applicationRepository,
+    this.suggestionService = const LocalJobSuggestionService(),
     super.key,
   });
 
   final RecruitmentRepository repository;
   final VoidCallback onOpenCatalog;
+  final UserProfile? profile;
+  final bool showSuggestions;
+  final bool suggestionsLoading;
+  final VoidCallback? onCompleteProfile;
+  final JobApplicationRepository? applicationRepository;
+  final JobSuggestionService suggestionService;
 
   @override
   State<EmploymentScreen> createState() => _EmploymentScreenState();
@@ -55,22 +74,8 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
 
   List<JobPosting> _filterJobs(List<JobPosting> jobs) {
     final query = _searchController.text.trim().toLowerCase();
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
     return jobs.where((job) {
-      if (job.deadline != null &&
-          DateTime(
-            job.deadline!.year,
-            job.deadline!.month,
-            job.deadline!.day,
-          ).isBefore(todayDate)) {
-        return false;
-      }
-      if (DateTime(
-        job.publicationDate.year,
-        job.publicationDate.month,
-        job.publicationDate.day,
-      ).isAfter(todayDate)) {
+      if (!job.isCurrentlyListed()) {
         return false;
       }
       final searchable = [
@@ -228,18 +233,39 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
+                  if (widget.showSuggestions) ...[
+                    _JobSuggestionsPanel(
+                      profile: widget.profile,
+                      jobs: jobs,
+                      suggestionService: widget.suggestionService,
+                      loading: widget.suggestionsLoading,
+                      onCompleteProfile: widget.onCompleteProfile,
+                      onOpenJob: (job) => Navigator.of(context).push<void>(
+                        MaterialPageRoute<void>(
+                          builder: (_) => JobDetailsScreen(
+                            job: job,
+                            profile: widget.profile,
+                            applicationRepository: widget.applicationRepository,
+                            onCompleteProfile: widget.onCompleteProfile,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                  ],
+                  const _JobsCatalogHeading(),
+                  const SizedBox(height: 6),
                   Text(
                     '${filteredJobs.length} anuncios encontrados'
                     '${_activeFilterCount > 0 ? ' · $_activeFilterCount filtros' : ''}',
-                    textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
+                      color: appMutedColor,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   if (jobs.isEmpty)
                     const _EmptyJobs()
                   else if (filteredJobs.isEmpty)
@@ -255,7 +281,12 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                         job: job,
                         onTap: () => Navigator.of(context).push<void>(
                           MaterialPageRoute<void>(
-                            builder: (_) => JobDetailsScreen(job: job),
+                            builder: (_) => JobDetailsScreen(
+                            job: job,
+                            profile: widget.profile,
+                            applicationRepository: widget.applicationRepository,
+                            onCompleteProfile: widget.onCompleteProfile,
+                          ),
                           ),
                         ),
                       ),
@@ -294,9 +325,51 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
 }
 
 class JobDetailsScreen extends StatelessWidget {
-  const JobDetailsScreen({required this.job, super.key});
+  const JobDetailsScreen({
+    required this.job,
+    this.profile,
+    this.applicationRepository,
+    this.onCompleteProfile,
+    super.key,
+  });
 
   final JobPosting job;
+  final UserProfile? profile;
+  final JobApplicationRepository? applicationRepository;
+  final VoidCallback? onCompleteProfile;
+
+  void _startApplication(BuildContext context) {
+    final repository = applicationRepository;
+    final userProfile = profile;
+    if (repository == null || userProfile == null) {
+      showAppMessage(
+        context,
+        'Inicia sesión como postulante y completa tu registro para postular.',
+        kind: AppMessageKind.error,
+      );
+      onCompleteProfile?.call();
+      return;
+    }
+    if (userProfile.fullName.trim().isEmpty ||
+        userProfile.city.trim().isEmpty) {
+      showAppMessage(
+        context,
+        'Completa tu perfil (nombre y ciudad) antes de postular.',
+        kind: AppMessageKind.error,
+      );
+      onCompleteProfile?.call();
+      return;
+    }
+    Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => JobApplicationFormScreen(
+          job: job,
+          profile: userProfile,
+          repository: repository,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -437,8 +510,62 @@ class JobDetailsScreen extends StatelessWidget {
               _DetailText(title: 'Teléfono', value: job.companyPhone),
             if (job.companyWebsite.isNotEmpty)
               _DetailText(title: 'Sitio web', value: job.companyWebsite),
+            const SizedBox(height: 18),
+            _ApplyButton(
+              job: job,
+              profile: profile,
+              applicationRepository: applicationRepository,
+              onApply: () => _startApplication(context),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ApplyButton extends StatelessWidget {
+  const _ApplyButton({
+    required this.job,
+    required this.onApply,
+    this.profile,
+    this.applicationRepository,
+  });
+
+  final JobPosting job;
+  final UserProfile? profile;
+  final JobApplicationRepository? applicationRepository;
+  final VoidCallback onApply;
+
+  @override
+  Widget build(BuildContext context) {
+    final repository = applicationRepository;
+    final applicantUid = profile?.uid;
+    if (repository == null || applicantUid == null || applicantUid.isEmpty) {
+      return _button(applied: false);
+    }
+    return StreamBuilder<bool>(
+      stream: repository.watchHasApplied(
+        jobId: job.id,
+        applicantUid: applicantUid,
+      ),
+      builder: (context, snapshot) {
+        return _button(applied: snapshot.data ?? false);
+      },
+    );
+  }
+
+  Widget _button({required bool applied}) {
+    return FilledButton.icon(
+      onPressed: applied ? null : onApply,
+      icon: Icon(applied ? Icons.check_circle_outline : Icons.send_outlined),
+      label: Text(applied ? 'Postulación enviada' : 'Postular'),
+      style: FilledButton.styleFrom(
+        backgroundColor: appOrangeColor,
+        foregroundColor: const Color(0xFF171323),
+        disabledBackgroundColor: const Color(0xFF3A3454),
+        disabledForegroundColor: const Color(0xFFD7D3E8),
+        minimumSize: const Size.fromHeight(48),
       ),
     );
   }
@@ -739,39 +866,318 @@ class _JobFilters {
           : 0);
 }
 
+class _JobSuggestionsPanel extends StatelessWidget {
+  const _JobSuggestionsPanel({
+    required this.profile,
+    required this.jobs,
+    required this.suggestionService,
+    required this.onOpenJob,
+    this.onCompleteProfile,
+    this.loading = false,
+  });
+
+  final UserProfile? profile;
+  final List<JobPosting> jobs;
+  final JobSuggestionService suggestionService;
+  final ValueChanged<JobPosting> onOpenJob;
+  final VoidCallback? onCompleteProfile;
+  final bool loading;
+
+  bool get _hasProfileSignals {
+    final value = profile;
+    if (value == null) return false;
+    return value.areaOfInterest.trim().isNotEmpty ||
+        value.careerTitle.trim().isNotEmpty ||
+        value.skills.isNotEmpty;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget body;
+    if (loading) {
+      body = const Row(
+        children: [
+          SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: appOrangeColor,
+            ),
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Buscando empleos según tu perfil...',
+              style: TextStyle(color: appMutedColor, fontSize: 12),
+            ),
+          ),
+        ],
+      );
+    } else if (!_hasProfileSignals) {
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Completa tu área profesional, carrera o habilidades para recomendarte empleos de tu registro.',
+            style: TextStyle(color: appMutedColor, fontSize: 12),
+          ),
+          if (onCompleteProfile != null) ...[
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: onCompleteProfile,
+              child: const Text('Completar perfil'),
+            ),
+          ],
+        ],
+      );
+    } else {
+      final suggestions = suggestionService.suggest(
+        profile: profile,
+        jobs: jobs,
+      );
+      body = suggestions.isEmpty
+          ? const Text(
+              'Aún no hay ofertas publicadas en tu área. Revisa el catálogo de abajo.',
+              style: TextStyle(color: appMutedColor, fontSize: 12),
+            )
+          : Column(
+              children: [
+                for (final suggestion in suggestions)
+                  _SuggestionCard(
+                    suggestion: suggestion,
+                    onTap: () => onOpenJob(suggestion.job),
+                  ),
+              ],
+            );
+    }
+    return _SuggestionsTray(child: body);
+  }
+}
+
+class _SuggestionsTray extends StatelessWidget {
+  const _SuggestionsTray({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF24183C),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: appPurpleColor.withValues(alpha: 0.55)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: appOrangeColor.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: appOrangeColor,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SUGERIDAS PARA TI',
+                      style: TextStyle(
+                        color: Color(0xFFB48BF1),
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        fontSize: 12,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Según tu área, carrera y habilidades, no según el filtro de búsqueda.',
+                      style: TextStyle(color: appMutedColor, fontSize: 10),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: appOrangeColor.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Text(
+                  'Tu perfil',
+                  style: TextStyle(
+                    color: appOrangeColor,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _SuggestionCard extends StatelessWidget {
+  const _SuggestionCard({required this.suggestion, required this.onTap});
+
+  final JobSuggestion suggestion;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final job = suggestion.job;
+    final reasons = suggestion.reasons;
+    final score = suggestion.score;
+    final label = score >= 70
+        ? 'Muy buen encaje'
+        : score >= 50
+        ? 'Buen encaje'
+        : 'Encaje posible';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: const Color(0xFF1A172F),
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: appOrangeColor.withValues(alpha: 0.35)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        job.title.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: appPurpleColor.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        label,
+                        style: const TextStyle(
+                          color: Color(0xFFD7C4FF),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  job.companyName,
+                  style: const TextStyle(color: appMutedColor, fontSize: 11),
+                ),
+                Text(
+                  '${job.city} · ${job.modality}',
+                  style: const TextStyle(color: appMutedColor, fontSize: 11),
+                ),
+                const SizedBox(height: 6),
+                for (final reason in reasons.take(3))
+                  Text(
+                    '• $reason',
+                    style: const TextStyle(color: Colors.white, fontSize: 11),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _JobsHeader extends StatelessWidget {
   const _JobsHeader();
 
   @override
-  Widget build(BuildContext context) => const Row(
+  Widget build(BuildContext context) => const Column(
     children: [
-      SizedBox(width: 40),
-      Expanded(
-        child: Column(
-          children: [
-            Text(
-              'OPORTUNIDADES PROFESIONALES',
-              style: TextStyle(
-                color: Color(0xFFB48BF1),
-                fontSize: 9,
-                letterSpacing: 0.7,
-              ),
-            ),
-            SizedBox(height: 3),
-            Text(
-              'ANUNCIOS DE EMPLEOS ACTIVOS',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+      CochaConectaLogo(height: 72),
+      SizedBox(height: 8),
+      Text(
+        'Anuncios de empleo activos',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
         ),
       ),
-      SizedBox(width: 40),
     ],
   );
+}
+
+class _JobsCatalogHeading extends StatelessWidget {
+  const _JobsCatalogHeading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        Icon(Icons.work_outline, color: appMutedColor, size: 18),
+        SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'TODOS LOS EMPLEOS',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                  fontSize: 12,
+                ),
+              ),
+              SizedBox(height: 2),
+              Text(
+                'Catálogo completo. Usa el buscador y los filtros.',
+                style: TextStyle(color: appMutedColor, fontSize: 10),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _PublicJobCard extends StatelessWidget {

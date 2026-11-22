@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 abstract interface class AuthRepository {
   Stream<User?> get authStateChanges;
@@ -63,7 +64,11 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<UserCredential> signInWithGoogle() {
-    return _auth.signInWithProvider(GoogleAuthProvider());
+    final provider = GoogleAuthProvider()..addScope('email');
+    if (kIsWeb) {
+      return _auth.signInWithPopup(provider);
+    }
+    return _auth.signInWithProvider(provider);
   }
 
   @override

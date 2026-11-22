@@ -2,11 +2,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../config/file_upload_mode.dart';
+import '../config/simulated_cv.dart';
 import '../models/user_profile.dart';
 import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
 import '../services/user_profile_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/app_feedback.dart';
 import 'user_registration_screen.dart';
 
 class AccountScreen extends StatefulWidget {
@@ -81,16 +84,31 @@ class _AccountScreenState extends State<AccountScreen> {
       );
       if (mounted) setState(_loadProfile);
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     } finally {
       if (mounted) setState(() => _isUpdatingVisibility = false);
     }
   }
 
-  Future<void> _openCv(UserProfile profile) async {
-    final url = profile.cvUrl;
+  Future<void> _openCv([UserProfile? profile]) async {
+    if (simulateFileUploads) {
+      await showSimulatedCvScreen(
+        context,
+        heading: 'Mi currículum',
+        detail:
+            'Como Storage no guarda archivos, se abre este CV de demostración.',
+      );
+      return;
+    }
+    final url = profile?.cvUrl;
     if (url == null || url.isEmpty) {
-      _showMessage('Todavía no has cargado un currículum vitae.');
+      _showMessage(
+        (profile?.cvFileName ?? '').isEmpty
+            ? 'Todavía no has cargado un currículum vitae.'
+            : 'El CV "${profile?.cvFileName}" está simulado: no se guardó en Storage, así que no se puede abrir un enlace.',
+      );
       return;
     }
     try {
@@ -113,7 +131,9 @@ class _AccountScreenState extends State<AccountScreen> {
       if (mounted) _showMessage('Se envió el correo de verificación.');
       if (mounted) setState(() {});
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     }
   }
 
@@ -129,7 +149,9 @@ class _AccountScreenState extends State<AccountScreen> {
         _showMessage('Se enviaron instrucciones para cambiar la contraseña.');
       }
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     }
   }
 
@@ -208,7 +230,9 @@ class _AccountScreenState extends State<AccountScreen> {
         setState(_loadProfile);
       }
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     } finally {
       emailController.dispose();
       passwordController.dispose();
@@ -221,18 +245,16 @@ class _AccountScreenState extends State<AccountScreen> {
     try {
       await widget.authRepository.signOut();
     } on Exception catch (error) {
-      if (mounted) _showMessage(authErrorMessage(error));
+      if (mounted) {
+        _showMessage(authErrorMessage(error), kind: AppMessageKind.error);
+      }
     } finally {
       if (mounted) setState(() => _isSigningOut = false);
     }
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: appSurfaceColor),
-      );
+  void _showMessage(String message, {AppMessageKind kind = AppMessageKind.info}) {
+    showAppMessage(context, message, kind: kind);
   }
 
   @override
@@ -274,12 +296,16 @@ class _AccountScreenState extends State<AccountScreen> {
             _AccountStatusCard(
               isVisible: profile?.isVisible ?? false,
               isUpdating: _isUpdatingVisibility,
-              cvFileName: profile?.cvFileName,
+              cvFileName: simulateFileUploads
+                  ? simulatedCvDisplayName
+                  : profile?.cvFileName,
               onVisibilityChanged: profile == null
                   ? null
                   : (value) => _updateVisibility(profile, value),
               onEditCv: () => _editProfile(profile),
-              onOpenCv: profile == null ? null : () => _openCv(profile),
+              onOpenCv: simulateFileUploads || profile != null
+                  ? () => _openCv(profile)
+                  : null,
             ),
             const SizedBox(height: 12),
             Row(
@@ -334,6 +360,36 @@ class _AccountScreenState extends State<AccountScreen> {
               icon: Icons.work_outline,
               onEdit: () => _editProfile(profile),
             ),
+            _PersonalInfoTile(
+              label: 'Nivel de estudios',
+              value: _nonEmpty(profile?.educationLevel),
+              icon: Icons.school_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
+            _PersonalInfoTile(
+              label: 'Carrera o título',
+              value: _nonEmpty(profile?.careerTitle),
+              icon: Icons.badge_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
+            _PersonalInfoTile(
+              label: 'Habilidades',
+              value: _listOrEmpty(profile?.skills),
+              icon: Icons.sell_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
+            _PersonalInfoTile(
+              label: 'Idiomas',
+              value: _languagesLabel(profile?.languages),
+              icon: Icons.translate_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
+            _PersonalInfoTile(
+              label: 'Sobre mí',
+              value: _nonEmpty(profile?.aboutMe),
+              icon: Icons.notes_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
             _PasswordTile(onChange: _changePassword),
             const SizedBox(height: 10),
             OutlinedButton.icon(
@@ -363,6 +419,18 @@ class _AccountScreenState extends State<AccountScreen> {
 
   String _nonEmpty(String? value) {
     return value == null || value.isEmpty ? 'No especificado' : value;
+  }
+
+  String _listOrEmpty(List<String>? values) {
+    if (values == null || values.isEmpty) return 'No especificado';
+    return values.join(', ');
+  }
+
+  String _languagesLabel(List<ProfileLanguage>? languages) {
+    if (languages == null || languages.isEmpty) return 'No especificado';
+    return languages
+        .map((language) => '${language.name} (${language.level})')
+        .join(', ');
   }
 }
 
@@ -650,46 +718,59 @@ class _StatusMetric extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: appBackgroundColor.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: appBorderColor),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   title,
                   style: const TextStyle(color: appMutedColor, fontSize: 6),
                 ),
-              ),
-              SizedBox(
-                width: 26,
-                height: 18,
-                child: isUpdating
-                    ? const Padding(
-                        padding: EdgeInsets.all(4),
-                        child: CircularProgressIndicator(strokeWidth: 1.5),
-                      )
-                    : Switch(
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: isVisible ? const Color(0xFF4BD6A0) : appMutedColor,
+                    fontSize: 7,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: 44,
+            height: 28,
+            child: Center(
+              child: isUpdating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 1.5),
+                    )
+                  : FittedBox(
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                      child: Switch(
                         value: isVisible,
                         onChanged: onChanged,
                         activeThumbColor: const Color(0xFF4BD6A0),
+                        activeTrackColor: const Color(
+                          0xFF4BD6A0,
+                        ).withValues(alpha: 0.38),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-              ),
-            ],
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: isVisible ? const Color(0xFF4BD6A0) : appMutedColor,
-              fontSize: 7,
-              fontWeight: FontWeight.w600,
+                    ),
             ),
           ),
         ],

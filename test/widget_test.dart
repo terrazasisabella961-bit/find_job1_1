@@ -15,6 +15,7 @@ import 'package:find_job1_1/src/screens/recruitment_screen.dart';
 import 'package:find_job1_1/src/screens/user_registration_screen.dart';
 import 'package:find_job1_1/src/services/auth_repository.dart';
 import 'package:find_job1_1/src/services/institution_repository.dart';
+import 'package:find_job1_1/src/services/job_application_repository.dart';
 import 'package:find_job1_1/src/widgets/app_bottom_navigation.dart';
 import 'package:find_job1_1/src/models/company.dart';
 import 'package:find_job1_1/src/models/job_posting.dart';
@@ -23,22 +24,46 @@ import 'package:find_job1_1/src/services/user_profile_repository.dart';
 
 void main() {
   testWidgets(
-    'unauthenticated users start at login and cannot open private tabs',
+    'unauthenticated users start at login without navigation tabs',
     (WidgetTester tester) async {
       await tester.pumpWidget(_testApp());
       await tester.pump();
 
-      expect(find.text('INICIAR SESIÓN'), findsOneWidget);
-      await tester.tap(find.text('Cuenta'));
-      await tester.pump();
-      expect(find.text('INICIAR SESIÓN'), findsOneWidget);
-      expect(
-        find.text('Inicia sesión para acceder a esta sección.'),
-        findsOneWidget,
-      );
-      await tester.tap(find.text('Instituciones'));
+      expect(find.text('Empleo y formación en Cochabamba'), findsOneWidget);
+      expect(find.text('Iniciar sesión'), findsOneWidget);
+      expect(find.byType(AppBottomNavigation), findsNothing);
+      expect(find.text('Empleo'), findsNothing);
+      expect(find.text('Reclutar'), findsNothing);
+      expect(find.text('Instituciones'), findsNothing);
+      expect(find.text('Cuenta'), findsNothing);
+      expect(find.text('Cursos'), findsNothing);
+      expect(find.text('Extras'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'company and institution access can return to general login',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(_testApp());
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Acceso para empresas'));
+      await tester.tap(find.text('Acceso para empresas'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Iniciar Sesión Corporativa'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Volver al inicio de sesión'));
+      await tester.pumpAndSettle();
+      expect(find.text('Empleo y formación en Cochabamba'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Acceso para instituciones'));
+      await tester.tap(find.text('Acceso para instituciones'));
       await tester.pumpAndSettle();
       expect(find.text('REGISTRO DE INSTITUCIÓN'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Volver'));
+      await tester.pumpAndSettle();
+      expect(find.text('Empleo y formación en Cochabamba'), findsOneWidget);
     },
   );
 
@@ -53,6 +78,7 @@ void main() {
           profileRepository: _FakeUserProfileRepository(),
           recruitmentRepository: _FakeRecruitmentRepository(),
           institutionRepository: _FakeInstitutionRepository(),
+          applicationRepository: InMemoryJobApplicationRepository(),
         ),
       );
       await tester.pumpAndSettle();
@@ -65,38 +91,26 @@ void main() {
       await tester.tap(find.text('Iniciar sesión'));
       await tester.pumpAndSettle();
 
-      expect(find.text('ANUNCIOS DE EMPLEOS ACTIVOS'), findsOneWidget);
+      expect(find.text('Anuncios de empleo activos'), findsOneWidget);
       expect(find.text('REGISTRO DE USUARIO'), findsNothing);
 
       await tester.tap(find.text('Cuenta'));
       await tester.pumpAndSettle();
       expect(find.text('MI CUENTA'), findsOneWidget);
       expect(find.text('REGISTRO DE USUARIO'), findsNothing);
-
-      await tester.tap(find.text('Reclutar'));
-      await tester.pumpAndSettle();
-      expect(find.text('Acceso para empresas'), findsOneWidget);
-      expect(find.text('INICIAR SESIÓN'), findsNothing);
-
-      await tester.tap(find.text('Instituciones'));
-      await tester.pumpAndSettle();
-      expect(find.text('Acceso institucional'), findsOneWidget);
-      expect(find.text('INICIAR SESIÓN'), findsNothing);
-
-      await tester.tap(find.text('Extras'));
-      await tester.pumpAndSettle();
-      expect(find.text('EXTRAS'), findsOneWidget);
-      expect(find.text('INICIAR SESIÓN'), findsNothing);
+      expect(find.text('Reclutar'), findsNothing);
+      expect(find.text('Instituciones'), findsNothing);
+      expect(find.text('Extras'), findsNothing);
 
       await tester.tap(find.text('Cursos'));
       await tester.pumpAndSettle();
       expect(find.text('CURSOS Y POSGRADOS'), findsOneWidget);
       expect(find.text('0 programas encontrados'), findsOneWidget);
-      expect(find.text('INICIAR SESIÓN'), findsNothing);
+      expect(find.text('Iniciar sesión'), findsNothing);
 
       await tester.tap(find.text('Empleo'));
       await tester.pumpAndSettle();
-      expect(find.text('ANUNCIOS DE EMPLEOS ACTIVOS'), findsOneWidget);
+      expect(find.text('Anuncios de empleo activos'), findsOneWidget);
 
       await tester.tap(find.text('Cuenta'));
       await tester.pumpAndSettle();
@@ -107,7 +121,7 @@ void main() {
       );
       await tester.tap(find.text('Cerrar sesión'));
       await tester.pumpAndSettle();
-      expect(find.text('INICIAR SESIÓN'), findsOneWidget);
+      expect(find.text('Iniciar sesión'), findsOneWidget);
     },
   );
 
@@ -146,6 +160,13 @@ void main() {
 
     expect(find.text('MI INSTITUCIÓN'), findsOneWidget);
     expect(find.text('Institución de prueba'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Editar perfil institucional'));
+    await tester.pumpAndSettle();
+    expect(find.text('ACTUALIZAR INSTITUCIÓN'), findsOneWidget);
+    await tester.tap(find.byTooltip('Volver'));
+    await tester.pumpAndSettle();
+    expect(find.text('MI INSTITUCIÓN'), findsOneWidget);
   });
 
   testWidgets(
@@ -187,11 +208,13 @@ void main() {
           profileRepository: _FakeUserProfileRepository(),
           recruitmentRepository: repository,
           institutionRepository: _FakeInstitutionRepository(),
+          applicationRepository: InMemoryJobApplicationRepository(),
         ),
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Reclutar'));
+      await tester.ensureVisible(find.text('Acceso para empresas'));
+      await tester.tap(find.text('Acceso para empresas'));
       await tester.pumpAndSettle();
       final loginFields = find.byType(TextField);
       await tester.enterText(loginFields.at(0), 'user@example.com');
@@ -248,11 +271,13 @@ void main() {
         profileRepository: _FakeUserProfileRepository(),
         recruitmentRepository: repository,
         institutionRepository: _FakeInstitutionRepository(),
+        applicationRepository: InMemoryJobApplicationRepository(),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Reclutar'));
+    await tester.ensureVisible(find.text('Acceso para empresas'));
+    await tester.tap(find.text('Acceso para empresas'));
     await tester.pumpAndSettle();
     final loginFields = find.byType(TextField);
     await tester.enterText(loginFields.at(0), 'user@example.com');
@@ -301,11 +326,12 @@ void main() {
           profileRepository: _FakeUserProfileRepository(),
           recruitmentRepository: _FakeRecruitmentRepository(),
           institutionRepository: _FakeInstitutionRepository(),
+          applicationRepository: InMemoryJobApplicationRepository(),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('ANUNCIOS DE EMPLEOS ACTIVOS'), findsOneWidget);
+      expect(find.text('Anuncios de empleo activos'), findsOneWidget);
       expect(find.text('REGISTRO DE USUARIO'), findsNothing);
       await tester.tap(find.text('Cuenta'));
       await tester.pumpAndSettle();
@@ -349,7 +375,7 @@ void main() {
     expect(auth.currentUser, isNotNull);
   });
 
-  testWidgets('six navigation items remain accessible at mobile width', (
+  testWidgets('student navigation items remain accessible at mobile width', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -363,24 +389,20 @@ void main() {
         home: Scaffold(
           bottomNavigationBar: AppBottomNavigation(
             selectedIndex: selectedIndex,
+            items: AppBottomNavigation.studentItems,
             onSelected: (index) => selectedIndex = index,
           ),
         ),
       ),
     );
 
-    for (final label in [
-      'Empleo',
-      'Reclutar',
-      'Instituciones',
-      'Cuenta',
-      'Cursos',
-      'Extras',
-    ]) {
+    for (final label in ['Empleo', 'Cursos', 'Cuenta']) {
       expect(find.text(label), findsOneWidget);
     }
+    expect(find.text('Reclutar'), findsNothing);
+    expect(find.text('Instituciones'), findsNothing);
     await tester.tap(find.text('Cursos'));
-    expect(selectedIndex, 4);
+    expect(selectedIndex, 1);
   });
 
   testWidgets('login validates email and password and toggles visibility', (
@@ -427,6 +449,11 @@ void main() {
     await tester.pumpWidget(_testApp());
     await tester.pump();
 
+    await tester.scrollUntilVisible(
+      find.text('¿No tienes cuenta? Regístrate'),
+      250,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.text('¿No tienes cuenta? Regístrate'));
     await tester.pumpAndSettle();
 
@@ -454,6 +481,11 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Acepto los '), findsOneWidget);
+    await tester.tap(find.text('Términos y Condiciones'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Simulación: CochaConecta'), findsOneWidget);
+    await tester.tap(find.text('Entendido'));
+    await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Registrarme'));
     await tester.tap(find.text('Registrarme'));
@@ -556,6 +588,7 @@ MyApp _testApp() {
     profileRepository: _FakeUserProfileRepository(),
     recruitmentRepository: _FakeRecruitmentRepository(),
     institutionRepository: _FakeInstitutionRepository(),
+    applicationRepository: InMemoryJobApplicationRepository(),
   );
 }
 
@@ -588,6 +621,12 @@ class _FakeInstitutionRepository implements InstitutionRepository {
 
   @override
   Future<void> retireCourse({
+    required String courseId,
+    required String ownerUid,
+  }) async {}
+
+  @override
+  Future<void> publishCourse({
     required String courseId,
     required String ownerUid,
   }) async {}

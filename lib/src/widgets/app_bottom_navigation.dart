@@ -7,23 +7,46 @@ const appMutedColor = Color(0xFFAAA6BE);
 const appPurpleColor = Color(0xFF8950F5);
 const appOrangeColor = Color(0xFFFF7845);
 
+class AppNavDestination {
+  const AppNavDestination({
+    required this.label,
+    required this.icon,
+  });
+
+  final String label;
+  final IconData icon;
+}
+
 class AppBottomNavigation extends StatelessWidget {
   const AppBottomNavigation({
     required this.selectedIndex,
     required this.onSelected,
+    required this.items,
     super.key,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final List<AppNavDestination> items;
 
-  static const _items = [
-    (label: 'Empleo', icon: Icons.menu),
-    (label: 'Reclutar', icon: Icons.person_add_alt_1),
-    (label: 'Instituciones', icon: Icons.account_balance_outlined),
-    (label: 'Cuenta', icon: Icons.person_outline),
-    (label: 'Cursos', icon: Icons.school_outlined),
-    (label: 'Extras', icon: Icons.info_outline),
+  static const studentItems = [
+    AppNavDestination(label: 'Empleo', icon: Icons.menu),
+    AppNavDestination(label: 'Cursos', icon: Icons.school_outlined),
+    AppNavDestination(label: 'Cuenta', icon: Icons.person_outline),
+  ];
+
+  static const companyItems = [
+    AppNavDestination(label: 'Reclutar', icon: Icons.person_add_alt_1),
+    AppNavDestination(label: 'Cuenta', icon: Icons.person_outline),
+  ];
+
+  static const institutionItems = [
+    AppNavDestination(
+      label: 'Instituciones',
+      icon: Icons.account_balance_outlined,
+    ),
+    AppNavDestination(label: 'Cursos', icon: Icons.school_outlined),
+    AppNavDestination(label: 'Cuenta', icon: Icons.person_outline),
   ];
 
   @override
@@ -36,11 +59,11 @@ class AppBottomNavigation extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (var index = 0; index < _items.length; index++)
+          for (var index = 0; index < items.length; index++)
             Expanded(
               child: _NavigationItem(
-                label: _items[index].label,
-                icon: _items[index].icon,
+                label: items[index].label,
+                icon: items[index].icon,
                 selected: selectedIndex == index,
                 onTap: () => onSelected(index),
               ),
@@ -98,3 +121,49 @@ class _NavigationItem extends StatelessWidget {
     );
   }
 }
+
+Future<void> showSimulatedLegalDialog(
+  BuildContext context, {
+  required String title,
+  required String body,
+}) {
+  return showDialog<void>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        backgroundColor: appSurfaceColor,
+        title: Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          body,
+          style: const TextStyle(
+            color: appMutedColor,
+            fontSize: 13,
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Entendido'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+const simulatedTermsBody =
+    'Simulación: CochaConecta conecta empleo y formación en Cochabamba. '
+    'Al registrarte aceptas usar datos verídicos y no publicar contenido ilegal. '
+    'Este aviso es una vista previa; el documento legal final se publicará más adelante.';
+
+const simulatedPrivacyBody =
+    'Simulación: usamos tu correo y datos de perfil para crear tu cuenta y mostrarte ofertas. '
+    'No vendemos tu información. Esta es una vista previa de la política de privacidad.';

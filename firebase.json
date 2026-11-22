@@ -26,6 +26,7 @@
     "rules": "storage.rules"
   },
   "hosting": {
+    "site": "found-job1-1",
     "public": "build/web",
     "ignore": [
       "firebase.json",

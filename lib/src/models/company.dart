@@ -12,6 +12,8 @@ class Company {
     required this.address,
     required this.website,
     this.logoUrl,
+    this.latitude,
+    this.longitude,
   });
 
   final String id;
@@ -26,6 +28,10 @@ class Company {
   final String address;
   final String website;
   final String? logoUrl;
+  final double? latitude;
+  final double? longitude;
+
+  bool get hasCoordinates => latitude != null && longitude != null;
 
   factory Company.fromMap(String id, Map<String, dynamic> data) => Company(
     id: id,
@@ -40,6 +46,8 @@ class Company {
     address: data['address'] as String? ?? '',
     website: data['website'] as String? ?? '',
     logoUrl: data['logoUrl'] as String?,
+    latitude: (data['latitude'] as num?)?.toDouble(),
+    longitude: (data['longitude'] as num?)?.toDouble(),
   );
 
   Map<String, Object?> toMap() => {
@@ -54,5 +62,7 @@ class Company {
     'address': address,
     'website': website,
     'logoUrl': logoUrl,
+    if (latitude != null) 'latitude': latitude,
+    if (longitude != null) 'longitude': longitude,
   };
 }

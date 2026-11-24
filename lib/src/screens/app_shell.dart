@@ -13,6 +13,7 @@ import 'account_screen.dart';
 import 'course_catalog_screen.dart';
 import 'employment_screen.dart';
 import 'institution_portal_screen.dart';
+import 'nearby_companies_screen.dart';
 import 'recruitment_screen.dart';
 
 class AppShell extends StatefulWidget {
@@ -59,6 +60,22 @@ class _AppShellState extends State<AppShell> {
   void _openLabeledTab(String label) {
     final index = _navItems.indexWhere((item) => item.label == label);
     if (index >= 0) setState(() => _selectedIndex = index);
+  }
+
+  Widget _nearbyTab({required User? user}) {
+    if (user == null) {
+      return NearbyCompaniesScreen(repository: _recruitmentRepository);
+    }
+    return StreamBuilder<UserProfile?>(
+      stream: widget.profileRepository.watchProfile(user.uid),
+      builder: (context, snapshot) {
+        return NearbyCompaniesScreen(
+          repository: _recruitmentRepository,
+          profile: snapshot.data,
+          applicationRepository: _applicationRepository,
+        );
+      },
+    );
   }
 
   Widget _employmentTab({required User? user}) {
@@ -125,6 +142,7 @@ class _AppShellState extends State<AppShell> {
     }
     return [
       _employmentTab(user: user),
+      _nearbyTab(user: user),
       courses,
       AccountScreen(
         authRepository: widget.authRepository,
@@ -142,6 +160,7 @@ class _AppShellState extends State<AppShell> {
     final selectedIndex = _selectedIndex.clamp(0, pages.length - 1);
 
     return Scaffold(
+      backgroundColor: appBackgroundColor,
       body: SafeArea(
         bottom: false,
         child: IndexedStack(index: selectedIndex, children: pages),

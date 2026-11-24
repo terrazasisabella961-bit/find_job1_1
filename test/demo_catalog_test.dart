@@ -35,5 +35,10 @@ void main() {
       withDemoCourses(const []).every((course) => course.status == 'published'),
       isTrue,
     );
+    expect(demoLocatedCompanies, hasLength(5));
+    expect(
+      demoLocatedCompanies.every((company) => company.hasCoordinates),
+      isTrue,
+    );
   });
 }

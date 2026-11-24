@@ -131,13 +131,13 @@ class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
                           children: [
                             Text(
                               '${programs.length} programas encontrados',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white70,
                                 fontSize: 10,
                               ),
                             ),
                             const SizedBox(width: 6),
-                            const Icon(
+                            Icon(
                               Icons.info_outline,
                               color: appPurpleColor,
                               size: 13,
@@ -209,7 +209,7 @@ class _CatalogLoadError extends StatelessWidget {
   const _CatalogLoadError();
 
   @override
-  Widget build(BuildContext context) => const Padding(
+  Widget build(BuildContext context) => Padding(
     padding: EdgeInsets.symmetric(vertical: 24),
     child: Text(
       'No se pudo actualizar la lista de cursos publicados. Inténtalo nuevamente más tarde.',
@@ -274,13 +274,13 @@ class _CatalogHeader extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: appBorderColor),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.school_outlined,
             color: appPurpleColor,
             size: 18,
           ),
         ),
-        const Expanded(
+        Expanded(
           child: Column(
             children: [
               Text(
@@ -305,11 +305,11 @@ class _CatalogHeader extends StatelessWidget {
         ),
         IconButton(
           onPressed: onOpenAccount,
-          icon: const Icon(Icons.person_outline),
+          icon: Icon(Icons.person_outline),
           color: appPurpleColor,
           style: IconButton.styleFrom(
             backgroundColor: appSurfaceColor,
-            side: const BorderSide(color: appBorderColor),
+            side: BorderSide(color: appBorderColor),
             fixedSize: const Size(38, 38),
           ),
           tooltip: 'Abrir cuenta',
@@ -337,16 +337,16 @@ class _SearchField extends StatelessWidget {
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        style: const TextStyle(color: Colors.white, fontSize: 11),
+        style: TextStyle(color: appTextColor, fontSize: 11),
         decoration: InputDecoration(
           hintText: 'Filtrar por categoría o institución',
-          hintStyle: const TextStyle(color: appMutedColor, fontSize: 10),
-          prefixIcon: const Icon(Icons.search, color: appPurpleColor, size: 17),
+          hintStyle: TextStyle(color: appMutedColor, fontSize: 10),
+          prefixIcon: Icon(Icons.search, color: appPurpleColor, size: 17),
           suffixIcon: controller.text.isEmpty
               ? null
               : IconButton(
                   onPressed: onClear,
-                  icon: const Icon(Icons.close, size: 16),
+                  icon: Icon(Icons.close, size: 16),
                   tooltip: 'Limpiar búsqueda',
                 ),
           filled: true,
@@ -354,7 +354,7 @@ class _SearchField extends StatelessWidget {
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
-            borderSide: const BorderSide(color: appBorderColor),
+            borderSide: BorderSide(color: appBorderColor),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
@@ -386,10 +386,10 @@ class _CategoryDropdown extends StatelessWidget {
         onChanged: onChanged,
         dropdownColor: appSurfaceColor,
         iconEnabledColor: appPurpleColor,
-        style: const TextStyle(color: Colors.white, fontSize: 11),
+        style: TextStyle(color: appTextColor, fontSize: 11),
         decoration: InputDecoration(
           labelText: 'Elige un área de estudio',
-          labelStyle: const TextStyle(color: appMutedColor, fontSize: 9),
+          labelStyle: TextStyle(color: appMutedColor, fontSize: 9),
           filled: true,
           fillColor: appSurfaceColor,
           contentPadding: const EdgeInsets.symmetric(
@@ -398,7 +398,7 @@ class _CategoryDropdown extends StatelessWidget {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
-            borderSide: const BorderSide(color: appBorderColor),
+            borderSide: BorderSide(color: appBorderColor),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
@@ -452,8 +452,8 @@ class _ProgramCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       program.title,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: appTextColor,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         height: 1.35,
@@ -535,13 +535,13 @@ class _ProgramCard extends StatelessWidget {
                 child: Container(
                   width: 34,
                   height: 34,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: appOrangeColor,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.arrow_forward,
-                    color: Colors.white,
+                    color: appTextColor,
                     size: 18,
                   ),
                 ),
@@ -626,12 +626,12 @@ class _EmptyResults extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 50),
       child: Column(
         children: [
-          const Icon(Icons.search_off, color: appMutedColor, size: 34),
+          Icon(Icons.search_off, color: appMutedColor, size: 34),
           const SizedBox(height: 12),
           Text(
             'No hay cursos publicados que coincidan con tu búsqueda.',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: appMutedColor, fontSize: 11),
+            style: TextStyle(color: appMutedColor, fontSize: 11),
           ),
         ],
       ),
@@ -670,7 +670,7 @@ class _ProgramDetailScreenState extends State<_ProgramDetailScreen> {
       );
       if (!opened && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo abrir el folleto PDF.')),
+          SnackBar(content: Text('No se pudo abrir el folleto PDF.')),
         );
       }
     } on Exception catch (error) {
@@ -689,7 +689,7 @@ class _ProgramDetailScreenState extends State<_ProgramDetailScreen> {
       appBar: AppBar(
         backgroundColor: appBackgroundColor,
         foregroundColor: Colors.white,
-        title: const Text(
+        title: Text(
           'DETALLE DEL PROGRAMA',
           style: TextStyle(fontSize: 13),
         ),
@@ -710,8 +710,8 @@ class _ProgramDetailScreenState extends State<_ProgramDetailScreen> {
           children: [
             Text(
               program.title,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: appTextColor,
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 height: 1.3,
@@ -720,7 +720,7 @@ class _ProgramDetailScreenState extends State<_ProgramDetailScreen> {
             const SizedBox(height: 12),
             Text(
               program.institution,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Color(0xFFB48BF1),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -766,11 +766,11 @@ class _ProgramDetailScreenState extends State<_ProgramDetailScreen> {
             if (program.brochureUrl?.isNotEmpty == true)
               OutlinedButton.icon(
                 onPressed: () => _openBrochure(program.brochureUrl!),
-                icon: const Icon(Icons.picture_as_pdf_outlined),
-                label: const Text('Abrir folleto PDF'),
+                icon: Icon(Icons.picture_as_pdf_outlined),
+                label: Text('Abrir folleto PDF'),
               ),
             const SizedBox(height: 18),
-            const Text(
+            Text(
               'La información mostrada corresponde a los datos de la publicación institucional.',
               style: TextStyle(color: appMutedColor, fontSize: 11, height: 1.5),
             ),
@@ -802,12 +802,12 @@ class _DetailRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(color: appMutedColor, fontSize: 10),
+            style: TextStyle(color: appMutedColor, fontSize: 10),
           ),
           const SizedBox(height: 5),
           Text(
             value,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            style: TextStyle(color: appTextColor, fontSize: 12),
           ),
         ],
       ),

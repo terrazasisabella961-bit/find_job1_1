@@ -73,6 +73,8 @@ class UserProfile {
     this.isVisible = false,
     this.cvUrl,
     this.cvFileName,
+    this.latitude,
+    this.longitude,
   });
 
   final String uid;
@@ -90,6 +92,10 @@ class UserProfile {
   final bool isVisible;
   final String? cvUrl;
   final String? cvFileName;
+  final double? latitude;
+  final double? longitude;
+
+  bool get hasCoordinates => latitude != null && longitude != null;
 
   Map<String, Object?> toMap() => {
     'uid': uid,
@@ -107,6 +113,8 @@ class UserProfile {
     'isVisible': isVisible,
     'cvUrl': cvUrl,
     'cvFileName': cvFileName,
+    if (latitude != null) 'latitude': latitude,
+    if (longitude != null) 'longitude': longitude,
     'updatedAt': DateTime.now().toUtc().toIso8601String(),
   };
 
@@ -127,6 +135,8 @@ class UserProfile {
       isVisible: data['isVisible'] as bool? ?? false,
       cvUrl: data['cvUrl'] as String?,
       cvFileName: data['cvFileName'] as String?,
+      latitude: (data['latitude'] as num?)?.toDouble(),
+      longitude: (data['longitude'] as num?)?.toDouble(),
     );
   }
 }

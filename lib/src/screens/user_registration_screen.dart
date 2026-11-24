@@ -1,7 +1,9 @@
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
+import '../geo/map_defaults.dart';
 import '../models/user_profile.dart';
 import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
@@ -10,6 +12,7 @@ import '../widgets/app_bottom_navigation.dart';
 import '../widgets/app_feedback.dart';
 import '../widgets/form_field_label.dart';
 import '../widgets/cocha_conecta_logo.dart';
+import '../widgets/location_picker_map.dart';
 
 class UserRegistrationScreen extends StatefulWidget {
   const UserRegistrationScreen({
@@ -74,6 +77,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   ];
 
   String? _city;
+  late LatLng _homePin;
+  var _homeMapGeneration = 0;
   String? _educationLevel;
   List<String> _skills = [];
   List<ProfileLanguage> _languages = [];
@@ -88,6 +93,10 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     super.initState();
     final savedCity = widget.initialProfile?.city;
     _city = savedCity == null || savedCity.isEmpty ? null : savedCity;
+    final savedProfile = widget.initialProfile;
+    _homePin = savedProfile != null && savedProfile.hasCoordinates
+        ? LatLng(savedProfile.latitude!, savedProfile.longitude!)
+        : centerForCity(savedCity ?? 'Cochabamba');
     final savedEducation = widget.initialProfile?.educationLevel ?? '';
     _educationLevel = savedEducation.isEmpty ? null : savedEducation;
     _skills = List<String>.from(widget.initialProfile?.skills ?? const []);
@@ -272,6 +281,8 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       isVisible: isVisible,
       cvUrl: cvUrl,
       cvFileName: cvFileName,
+      latitude: _homePin.latitude,
+      longitude: _homePin.longitude,
     );
   }
 
@@ -346,13 +357,13 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                             ? 'Actualizar tu perfil profesional'
                             : 'Crear tu perfil profesional',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: appTextColor,
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 5),
-                      const Text(
+                      Text(
                         'Regístrate para postularte a las ofertas de empleo y '
                         'acceder a los cursos y diplomados disponibles.',
                         style: TextStyle(
@@ -402,12 +413,26 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                       _CityField(
                         value: _city,
                         cities: _availableCities,
-                        onChanged: (value) => setState(() => _city = value),
+                        onChanged: (value) => setState(() {
+                          _city = value;
+                          if (value != null) {
+                            _homePin = centerForCity(value);
+                            _homeMapGeneration++;
+                          }
+                        }),
                         validator: (value) =>
                             value == null ? 'Selecciona tu ciudad.' : null,
                       ),
                       const _FieldHint(
                         'Selecciona la ciudad donde resides actualmente.',
+                      ),
+                      LocationPickerMap(
+                        key: ValueKey('home-$_homeMapGeneration'),
+                        point: _homePin,
+                        label: 'Ubicación de tu casa',
+                        hint:
+                            'Toca el mapa para mover el pin a tu zona. Así podemos mostrarte empresas cercanas.',
+                        onChanged: (value) => setState(() => _homePin = value),
                       ),
                       _RegistrationField(
                         label: 'Área profesional o de interés',
@@ -468,12 +493,12 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: FormFieldLabel(
                               'Currículum Vitae (CV)',
                               required: false,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: appTextColor,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -487,7 +512,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: const Text(
+                            child: Text(
                               'Recomendado',
                               style: TextStyle(
                                 color: appPurpleColor,
@@ -498,7 +523,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'Sube tu CV para que los reclutadores evalúen tu perfil.',
                         style: TextStyle(color: appMutedColor, fontSize: 8),
                       ),
@@ -614,11 +639,11 @@ class _RegistrationHeader extends StatelessWidget {
       children: [
         IconButton(
           onPressed: onBack,
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           color: appPurpleColor,
           style: IconButton.styleFrom(
             backgroundColor: appSurfaceColor,
-            side: const BorderSide(color: appBorderColor),
+            side: BorderSide(color: appBorderColor),
             fixedSize: const Size(34, 34),
           ),
           tooltip: 'Volver',
@@ -628,7 +653,7 @@ class _RegistrationHeader extends StatelessWidget {
             children: [
               Text(
                 'MI CUENTA',
-                style: const TextStyle(
+                style: TextStyle(
                   color: appMutedColor,
                   fontSize: 11,
                   letterSpacing: 0.7,
@@ -636,8 +661,8 @@ class _RegistrationHeader extends StatelessWidget {
               ),
               Text(
                 isEditing ? 'ACTUALIZAR PERFIL' : 'REGISTRO DE USUARIO',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: appTextColor,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -653,7 +678,7 @@ class _RegistrationHeader extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: appBorderColor),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.person_outline,
             color: appPurpleColor,
             size: 16,
@@ -682,7 +707,7 @@ class _NoticeCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontSize: 7, height: 1.45),
+        style: TextStyle(color: appTextColor, fontSize: 7, height: 1.45),
       ),
     );
   }
@@ -723,8 +748,8 @@ class _RegistrationField extends StatelessWidget {
           FormFieldLabel(
             label,
             required: isRequired,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: appTextColor,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
@@ -739,7 +764,7 @@ class _RegistrationField extends StatelessWidget {
             readOnly: readOnly,
             maxLines: maxLines,
             maxLength: maxLength,
-            style: const TextStyle(color: Colors.white, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 9),
             decoration: _fieldDecoration(hint),
           ),
         ],
@@ -766,11 +791,11 @@ class _EducationField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const FormFieldLabel(
+          FormFieldLabel(
             'Nivel de estudios',
             required: false,
             style: TextStyle(
-              color: Colors.white,
+              color: appTextColor,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
@@ -782,7 +807,7 @@ class _EducationField extends StatelessWidget {
             onChanged: onChanged,
             dropdownColor: appSurfaceColor,
             iconEnabledColor: appMutedColor,
-            style: const TextStyle(color: Colors.white, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 9),
             decoration: _fieldDecoration('Selecciona un nivel'),
             items: [
               const DropdownMenuItem<String?>(
@@ -824,15 +849,15 @@ class _TagSection extends StatelessWidget {
           FormFieldLabel(
             label,
             required: false,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: appTextColor,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 4),
-          Text(hint, style: const TextStyle(color: appMutedColor, fontSize: 7)),
+          Text(hint, style: TextStyle(color: appMutedColor, fontSize: 7)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
@@ -852,7 +877,7 @@ class _TagSection extends StatelessWidget {
                     fontSize: 8,
                   ),
                   backgroundColor: appSurfaceColor,
-                  side: const BorderSide(color: appBorderColor),
+                  side: BorderSide(color: appBorderColor),
                   visualDensity: VisualDensity.compact,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
@@ -882,18 +907,18 @@ class _LanguageSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const FormFieldLabel(
+          FormFieldLabel(
             'Idiomas',
             required: false,
             style: TextStyle(
-              color: Colors.white,
+              color: appTextColor,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'En Cochabamba, el quechua puede marcar diferencia.',
             style: TextStyle(color: appMutedColor, fontSize: 7),
           ),
@@ -916,7 +941,7 @@ class _LanguageSection extends StatelessWidget {
                     fontSize: 8,
                   ),
                   backgroundColor: appSurfaceColor,
-                  side: const BorderSide(color: appBorderColor),
+                  side: BorderSide(color: appBorderColor),
                   visualDensity: VisualDensity.compact,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
@@ -929,14 +954,14 @@ class _LanguageSection extends StatelessWidget {
                 Expanded(
                   child: Text(
                     language.name,
-                    style: const TextStyle(color: Colors.white, fontSize: 9),
+                    style: TextStyle(color: appTextColor, fontSize: 9),
                   ),
                 ),
                 DropdownButton<String>(
                   value: language.level,
                   dropdownColor: appSurfaceColor,
                   underline: const SizedBox.shrink(),
-                  style: const TextStyle(color: Colors.white, fontSize: 9),
+                  style: TextStyle(color: appTextColor, fontSize: 9),
                   items: [
                     for (final level in profileLanguageLevels)
                       DropdownMenuItem(value: level, child: Text(level)),
@@ -974,11 +999,11 @@ class _CityField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const FormFieldLabel(
+          FormFieldLabel(
             'Ciudad de residencia',
             required: true,
             style: TextStyle(
-              color: Colors.white,
+              color: appTextColor,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
@@ -991,7 +1016,7 @@ class _CityField extends StatelessWidget {
             onChanged: onChanged,
             dropdownColor: appSurfaceColor,
             iconEnabledColor: appMutedColor,
-            style: const TextStyle(color: Colors.white, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 9),
             decoration: _fieldDecoration('Selecciona tu ciudad'),
             items: [
               for (final city in cities)
@@ -1037,7 +1062,7 @@ class _CvPicker extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: appOrangeColor.withValues(alpha: 0.5)),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.upload_file_outlined,
               color: appOrangeColor,
               size: 16,
@@ -1051,14 +1076,14 @@ class _CvPicker extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: appTextColor,
               fontSize: 8,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'PDF o DOCX, máx. 10 MB. El archivo se simula y no se sube a la nube.',
             textAlign: TextAlign.center,
             style: TextStyle(color: appMutedColor, fontSize: 7),
@@ -1067,26 +1092,26 @@ class _CvPicker extends StatelessWidget {
           if (file == null)
             OutlinedButton.icon(
               onPressed: onTap,
-              icon: const Icon(Icons.attach_file, size: 12),
+              icon: Icon(Icons.attach_file, size: 12),
               label: Text(
                 existingFileName == null ? 'Elegir archivo' : 'Cambiar CV',
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: appPurpleColor,
                 minimumSize: const Size(110, 26),
-                textStyle: const TextStyle(fontSize: 8),
-                side: const BorderSide(color: appBorderColor),
+                textStyle: TextStyle(fontSize: 8),
+                side: BorderSide(color: appBorderColor),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
             )
           else
             TextButton.icon(
               onPressed: onRemove,
-              icon: const Icon(Icons.delete_outline, size: 12),
-              label: const Text('Quitar archivo'),
+              icon: Icon(Icons.delete_outline, size: 12),
+              label: Text('Quitar archivo'),
               style: TextButton.styleFrom(
                 foregroundColor: appOrangeColor,
-                textStyle: const TextStyle(fontSize: 8),
+                textStyle: TextStyle(fontSize: 8),
               ),
             ),
         ],
@@ -1122,8 +1147,8 @@ class _PasswordField extends StatelessWidget {
           FormFieldLabel(
             label,
             required: true,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: appTextColor,
               fontSize: 9,
               fontWeight: FontWeight.w600,
             ),
@@ -1134,9 +1159,9 @@ class _PasswordField extends StatelessWidget {
             controller: controller,
             validator: validator,
             obscureText: obscureText,
-            style: const TextStyle(color: Colors.white, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 9),
             decoration: _fieldDecoration(hint).copyWith(
-              prefixIcon: const Icon(Icons.lock_outline, size: 14),
+              prefixIcon: Icon(Icons.lock_outline, size: 14),
               suffixIcon: IconButton(
                 onPressed: onToggleVisibility,
                 icon: Icon(
@@ -1167,7 +1192,7 @@ class _FieldHint extends StatelessWidget {
       padding: const EdgeInsets.only(top: 4),
       child: Text(
         text,
-        style: const TextStyle(color: appMutedColor, fontSize: 7, height: 1.3),
+        style: TextStyle(color: appMutedColor, fontSize: 7, height: 1.3),
       ),
     );
   }
@@ -1198,7 +1223,7 @@ class _TermsCheckbox extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeColor: appPurpleColor,
-            side: const BorderSide(color: appMutedColor),
+            side: BorderSide(color: appMutedColor),
           ),
         ),
         const SizedBox(width: 5),
@@ -1207,12 +1232,12 @@ class _TermsCheckbox extends StatelessWidget {
             padding: const EdgeInsets.only(top: 4),
             child: Wrap(
               children: [
-                const Text(
+                Text(
                   'Acepto los ',
                   style: TextStyle(color: appMutedColor, fontSize: 8),
                 ),
                 _TermsLink(text: 'Términos y Condiciones', onTap: onOpenTerms),
-                const Text(
+                Text(
                   ' y la ',
                   style: TextStyle(color: appMutedColor, fontSize: 8),
                 ),
@@ -1220,7 +1245,7 @@ class _TermsCheckbox extends StatelessWidget {
                   text: 'Política de Privacidad',
                   onTap: onOpenPrivacy,
                 ),
-                const Text(
+                Text(
                   '.',
                   style: TextStyle(color: appMutedColor, fontSize: 8),
                 ),
@@ -1245,7 +1270,7 @@ class _TermsLink extends StatelessWidget {
       onTap: onTap,
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           color: appPurpleColor,
           fontSize: 8,
           decoration: TextDecoration.underline,
@@ -1274,7 +1299,7 @@ class _RegistrationActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 10, 24, 8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: appBackgroundColor,
         border: Border(top: BorderSide(color: appBorderColor)),
       ),
@@ -1297,7 +1322,7 @@ class _RegistrationActions extends StatelessWidget {
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.check, size: 15),
+                        : Icon(Icons.check, size: 15),
                     label: Text(
                       isSubmitting
                           ? 'Guardando...'
@@ -1311,7 +1336,7 @@ class _RegistrationActions extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      textStyle: const TextStyle(
+                      textStyle: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
@@ -1322,7 +1347,7 @@ class _RegistrationActions extends StatelessWidget {
               const SizedBox(width: 10),
               IconButton.filled(
                 onPressed: onScrollTop,
-                icon: const Icon(Icons.arrow_upward, size: 16),
+                icon: Icon(Icons.arrow_upward, size: 16),
                 style: IconButton.styleFrom(
                   backgroundColor: appSurfaceColor,
                   foregroundColor: appMutedColor,
@@ -1341,7 +1366,7 @@ class _RegistrationActions extends StatelessWidget {
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text(
+              child: Text(
                 '¿Ya tienes una cuenta? Inicia sesión',
                 style: TextStyle(color: appMutedColor, fontSize: 8),
               ),
@@ -1355,15 +1380,15 @@ class _RegistrationActions extends StatelessWidget {
 InputDecoration _fieldDecoration(String hint) {
   return InputDecoration(
     hintText: hint,
-    hintStyle: const TextStyle(color: Color(0xFF77748A), fontSize: 9),
+    hintStyle: TextStyle(color: Color(0xFF77748A), fontSize: 9),
     filled: true,
     fillColor: appSurfaceColor,
     isDense: true,
     contentPadding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
-    errorStyle: const TextStyle(fontSize: 8, height: 1.2),
+    errorStyle: TextStyle(fontSize: 8, height: 1.2),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: appBorderColor),
+      borderSide: BorderSide(color: appBorderColor),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),

@@ -16,13 +16,36 @@ import 'package:find_job1_1/src/screens/user_registration_screen.dart';
 import 'package:find_job1_1/src/services/auth_repository.dart';
 import 'package:find_job1_1/src/services/institution_repository.dart';
 import 'package:find_job1_1/src/services/job_application_repository.dart';
+import 'package:find_job1_1/src/theme/app_theme_settings.dart';
 import 'package:find_job1_1/src/widgets/app_bottom_navigation.dart';
+import 'package:find_job1_1/src/widgets/appearance_settings_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:find_job1_1/src/models/company.dart';
 import 'package:find_job1_1/src/models/job_posting.dart';
 import 'package:find_job1_1/src/services/recruitment_repository.dart';
 import 'package:find_job1_1/src/services/user_profile_repository.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    AppThemeSettings.instance.resetForTests();
+  });
+
+  testWidgets('account appearance can switch between night and light', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: AppearanceSettingsCard())),
+    );
+    expect(find.text('APARIENCIA'), findsOneWidget);
+    await tester.tap(find.text('Claro'));
+    await tester.pump();
+    expect(AppThemeSettings.instance.isDark, isFalse);
+    await tester.tap(find.text('Noche'));
+    await tester.pump();
+    expect(AppThemeSettings.instance.isDark, isTrue);
+  });
+
   testWidgets(
     'unauthenticated users start at login without navigation tabs',
     (WidgetTester tester) async {
@@ -93,10 +116,18 @@ void main() {
 
       expect(find.text('Anuncios de empleo activos'), findsOneWidget);
       expect(find.text('REGISTRO DE USUARIO'), findsNothing);
+      expect(find.text('Cercanas'), findsOneWidget);
+
+      await tester.tap(find.text('Cercanas'));
+      await tester.pumpAndSettle();
+      expect(find.text('EMPRESAS CERCANAS'), findsOneWidget);
 
       await tester.tap(find.text('Cuenta'));
       await tester.pumpAndSettle();
       expect(find.text('MI CUENTA'), findsOneWidget);
+      expect(find.text('APARIENCIA'), findsOneWidget);
+      expect(find.text('Noche'), findsOneWidget);
+      expect(find.text('Claro'), findsOneWidget);
       expect(find.text('REGISTRO DE USUARIO'), findsNothing);
       expect(find.text('Reclutar'), findsNothing);
       expect(find.text('Instituciones'), findsNothing);
@@ -190,6 +221,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repository.savedCompany, isNotNull);
+      expect(repository.savedCompany!.hasCoordinates, isTrue);
       expect(find.text('MI EMPRESA'), findsOneWidget);
       expect(find.text('Publicar nuevo empleo o vacante'), findsOneWidget);
     },
@@ -396,13 +428,13 @@ void main() {
       ),
     );
 
-    for (final label in ['Empleo', 'Cursos', 'Cuenta']) {
+    for (final label in ['Empleo', 'Cercanas', 'Cursos', 'Cuenta']) {
       expect(find.text(label), findsOneWidget);
     }
     expect(find.text('Reclutar'), findsNothing);
     expect(find.text('Instituciones'), findsNothing);
     await tester.tap(find.text('Cursos'));
-    expect(selectedIndex, 1);
+    expect(selectedIndex, 2);
   });
 
   testWidgets('login validates email and password and toggles visibility', (
@@ -462,6 +494,12 @@ void main() {
     expect(find.text('Correo electrónico'), findsOneWidget);
     expect(find.text('Teléfono / WhatsApp'), findsOneWidget);
     expect(find.text('Ciudad de residencia'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Ubicación de tu casa'),
+      350,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('Ubicación de tu casa'), findsOneWidget);
     expect(find.text('Área profesional o de interés'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Currículum Vitae (CV)'),
@@ -915,6 +953,9 @@ class _FakeRecruitmentRepository implements RecruitmentRepository {
 
   @override
   Stream<List<JobPosting>> watchPublicJobs() => Stream.value(const []);
+
+  @override
+  Stream<List<Company>> watchLocatedCompanies() => Stream.value(const []);
 
   @override
   Stream<List<JobPosting>> watchCompanyJobs(String ownerUid) =>

@@ -15,6 +15,8 @@ abstract interface class RecruitmentRepository {
 
   Stream<List<JobPosting>> watchPublicJobs();
 
+  Stream<List<Company>> watchLocatedCompanies();
+
   Stream<List<JobPosting>> watchCompanyJobs(String ownerUid);
 
   Future<String> saveJob(JobPosting job);
@@ -91,6 +93,28 @@ class FirebaseRecruitmentRepository implements RecruitmentRepository {
                       JobPosting.fromMap(document.id, document.data()),
                 )
                 .toList(),
+          ),
+        );
+  }
+
+  @override
+  Stream<List<Company>> watchLocatedCompanies() {
+    return _firestore
+        .collection('companies')
+        .snapshots()
+        .map(
+          (snapshot) => withDemoCompanies(
+            snapshot.docs
+                .map((document) => Company.fromMap(document.id, document.data()))
+                .where((company) => company.hasCoordinates)
+                .toList(),
+          ),
+        )
+        .transform(
+          StreamTransformer.fromHandlers(
+            handleError: (Object error, StackTrace stack, EventSink<List<Company>> sink) {
+              sink.add(withDemoCompanies(const []));
+            },
           ),
         );
   }

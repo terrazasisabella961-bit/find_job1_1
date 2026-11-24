@@ -22,7 +22,9 @@ service cloud.firestore {
         && data.phone is string
         && data.city is string
         && data.address is string
-        && data.website is string;
+        && data.website is string
+        && (!('latitude' in data.keys()) || data.latitude is number)
+        && (!('longitude' in data.keys()) || data.longitude is number);
     }
 
     function validJob(data) {
@@ -141,11 +143,15 @@ service cloud.firestore {
         && (!('skills' in request.resource.data.keys())
           || request.resource.data.skills is list)
         && (!('languages' in request.resource.data.keys())
-          || request.resource.data.languages is list);
+          || request.resource.data.languages is list)
+        && (!('latitude' in request.resource.data.keys())
+          || request.resource.data.latitude is number)
+        && (!('longitude' in request.resource.data.keys())
+          || request.resource.data.longitude is number);
     }
 
     match /companies/{companyId} {
-      allow read: if signedIn() && request.auth.uid == companyId;
+      allow read: if signedIn();
       allow create: if signedIn()
         && request.auth.uid == companyId
         && validCompany(request.resource.data, companyId);

@@ -31,13 +31,13 @@ class CompanyApplicationsScreen extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: Icon(Icons.arrow_back, color: appTextColor),
                 ),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'POSTULANTES',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: appTextColor,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.4,
                     ),
@@ -47,8 +47,8 @@ class CompanyApplicationsScreen extends StatelessWidget {
             ),
             Text(
               job.title,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: appTextColor,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -56,11 +56,11 @@ class CompanyApplicationsScreen extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               '${items.length} ficha${items.length == 1 ? '' : 's'} recibida${items.length == 1 ? '' : 's'}',
-              style: const TextStyle(color: appMutedColor, fontSize: 12),
+              style: TextStyle(color: appMutedColor, fontSize: 12),
             ),
             const SizedBox(height: 16),
             if (items.isEmpty)
-              const Text(
+              Text(
                 'Aún no hay postulaciones para esta oferta.',
                 style: TextStyle(color: appMutedColor),
               )
@@ -95,8 +95,8 @@ class _ApplicantCard extends StatelessWidget {
         children: [
           Text(
             application.fullName,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: appTextColor,
               fontWeight: FontWeight.w700,
               fontSize: 14,
             ),
@@ -108,39 +108,39 @@ class _ApplicantCard extends StatelessWidget {
               application.areaOfInterest,
               application.availability,
             ].where((item) => item.trim().isNotEmpty).join(' · '),
-            style: const TextStyle(color: appMutedColor, fontSize: 11),
+            style: TextStyle(color: appMutedColor, fontSize: 11),
           ),
           const SizedBox(height: 8),
           Text(
             application.email,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            style: TextStyle(color: appTextColor, fontSize: 12),
           ),
           Text(
             application.phone,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            style: TextStyle(color: appTextColor, fontSize: 12),
           ),
           if (application.educationLevel.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
               application.educationLevel,
-              style: const TextStyle(color: appMutedColor, fontSize: 12),
+              style: TextStyle(color: appMutedColor, fontSize: 12),
             ),
           ],
           if (application.careerTitle.isNotEmpty)
             Text(
               application.careerTitle,
-              style: const TextStyle(color: appMutedColor, fontSize: 12),
+              style: TextStyle(color: appMutedColor, fontSize: 12),
             ),
           if (application.skills.isNotEmpty)
             Text(
               application.skills.join(', '),
-              style: const TextStyle(color: appMutedColor, fontSize: 12),
+              style: TextStyle(color: appMutedColor, fontSize: 12),
             ),
           if (application.message.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               application.message,
-              style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.35),
+              style: TextStyle(color: appTextColor, fontSize: 12, height: 1.35),
             ),
           ],
           if (application.cvFileName != null &&
@@ -154,7 +154,7 @@ class _ApplicantCard extends StatelessWidget {
                       detail: application.cvFileName!,
                     )
                   : null,
-              icon: const Icon(Icons.picture_as_pdf_outlined, size: 16),
+              icon: Icon(Icons.picture_as_pdf_outlined, size: 16),
               label: Text(application.cvFileName!),
             ),
           ],

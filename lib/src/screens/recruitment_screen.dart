@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
+import '../geo/map_defaults.dart';
 import '../models/company.dart';
 import '../models/job_application.dart';
 import '../models/job_posting.dart';
@@ -11,8 +13,10 @@ import '../services/auth_repository.dart';
 import '../services/job_application_repository.dart';
 import '../services/recruitment_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/appearance_settings_card.dart';
 import '../widgets/app_feedback.dart';
 import '../widgets/form_field_label.dart';
+import '../widgets/location_picker_map.dart';
 import 'company_applications_screen.dart';
 
 class CompanyPortalScreen extends StatefulWidget {
@@ -116,7 +120,7 @@ class _CompanyPortalScreenState extends State<CompanyPortalScreen> {
                 }
                 if (companySnapshot.connectionState ==
                     ConnectionState.waiting) {
-                  return const Center(
+                  return Center(
                     child: CircularProgressIndicator(color: appPurpleColor),
                   );
                 }
@@ -314,7 +318,7 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
                       setState(() => _remember = value ?? false),
                   activeColor: appOrangeColor,
                 ),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Recordar esta terminal',
                     style: TextStyle(color: appMutedColor, fontSize: 10),
@@ -322,7 +326,7 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
                 ),
                 TextButton(
                   onPressed: _resetPassword,
-                  child: const Text('¿Olvidó su contraseña?'),
+                  child: Text('¿Olvidó su contraseña?'),
                 ),
               ],
             ),
@@ -338,7 +342,7 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Center(
+            Center(
               child: Text(
                 'O VERIFICAR ACCESO MEDIANTE',
                 style: TextStyle(color: appMutedColor, fontSize: 10),
@@ -347,8 +351,8 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: null,
-              icon: const Icon(Icons.business, size: 16),
-              label: const Text(
+              icon: Icon(Icons.business, size: 16),
+              label: Text(
                 'Validar con Dominio Corporativo / SSO Empresarial',
               ),
             ),
@@ -356,15 +360,15 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
             Center(
               child: TextButton(
                 onPressed: widget.onRegister,
-                child: const Text('Registrar nueva empresa  ›'),
+                child: Text('Registrar nueva empresa  ›'),
               ),
             ),
             if (Navigator.of(context).canPop())
               Center(
                 child: TextButton.icon(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.arrow_back, size: 16),
-                  label: const Text('Volver al inicio de sesión'),
+                  icon: Icon(Icons.arrow_back, size: 16),
+                  label: Text('Volver al inicio de sesión'),
                 ),
               ),
           ],
@@ -395,12 +399,12 @@ class _CompanyAccountMessage extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: appMutedColor),
+            style: TextStyle(color: appMutedColor),
           ),
           const SizedBox(height: 16),
           FilledButton(
             onPressed: onCompleteProfile,
-            child: const Text('Completar perfil de empresa'),
+            child: Text('Completar perfil de empresa'),
           ),
           const SizedBox(height: 8),
           OutlinedButton(
@@ -417,7 +421,7 @@ class _CompanyAccountMessage extends StatelessWidget {
                 }
               }
             },
-            child: const Text('Cerrar sesión'),
+            child: Text('Cerrar sesión'),
           ),
         ],
       ),
@@ -460,7 +464,7 @@ class _RecruitmentScreenState extends State<RecruitmentScreen> {
         }
         if (snapshot.connectionState == ConnectionState.waiting &&
             _companySavedThisSession == null) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(color: appPurpleColor),
           );
         }
@@ -590,12 +594,16 @@ class _CompanyDashboard extends StatelessWidget {
                   ? IconButton(
                       onPressed: () => _signOut(context),
                       tooltip: 'Cerrar sesión',
-                      icon: const Icon(Icons.logout),
+                      icon: Icon(Icons.logout),
                       color: const Color(0xFFFF647C),
                     )
                   : null,
             ),
             const SizedBox(height: 18),
+            if (accountTab) ...[
+            const AppearanceSettingsCard(),
+            const SizedBox(height: 12),
+            ],
             if (accountTab)
             Container(
               padding: const EdgeInsets.all(16),
@@ -621,7 +629,7 @@ class _CompanyDashboard extends StatelessWidget {
                         company.name.isEmpty
                             ? 'EMP'
                             : company.name.substring(0, 1).toUpperCase(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: appPurpleColor,
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
@@ -634,8 +642,8 @@ class _CompanyDashboard extends StatelessWidget {
                     child: Text(
                       company.name,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: appTextColor,
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                       ),
@@ -646,7 +654,7 @@ class _CompanyDashboard extends StatelessWidget {
                     child: Text(
                       '${company.city}, Bolivia · NIT: ${company.taxId}',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: appMutedColor,
                         fontSize: 10,
                       ),
@@ -663,21 +671,21 @@ class _CompanyDashboard extends StatelessWidget {
                       ),
                       TextButton.icon(
                         onPressed: () => _editCompany(context),
-                        icon: const Icon(Icons.edit_outlined, size: 14),
-                        label: const Text('Editar perfil'),
+                        icon: Icon(Icons.edit_outlined, size: 14),
+                        label: Text('Editar perfil'),
                       ),
                     ],
                   ),
-                  const Divider(color: appBorderColor, height: 24),
+                  Divider(color: appBorderColor, height: 24),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.language,
                         color: appMutedColor,
                         size: 15,
                       ),
                       const SizedBox(width: 7),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Sitio web:',
                           style: TextStyle(color: appMutedColor, fontSize: 10),
@@ -689,8 +697,8 @@ class _CompanyDashboard extends StatelessWidget {
                               ? 'No especificado'
                               : company.website,
                           textAlign: TextAlign.right,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: appTextColor,
                             fontSize: 10,
                           ),
                         ),
@@ -703,11 +711,11 @@ class _CompanyDashboard extends StatelessWidget {
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         onPressed: () => _signOut(context),
-                        icon: const Icon(Icons.logout, size: 16),
-                        label: const Text('Cerrar sesión'),
+                        icon: Icon(Icons.logout, size: 16),
+                        label: Text('Cerrar sesión'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFFFF647C),
-                          side: const BorderSide(color: appBorderColor),
+                          side: BorderSide(color: appBorderColor),
                           minimumSize: const Size.fromHeight(44),
                         ),
                       ),
@@ -721,8 +729,8 @@ class _CompanyDashboard extends StatelessWidget {
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: () => _openJobForm(context),
-                icon: const Icon(Icons.add),
-                label: const Text('Publicar nuevo empleo o vacante'),
+                icon: Icon(Icons.add),
+                label: Text('Publicar nuevo empleo o vacante'),
                 style: FilledButton.styleFrom(
                   backgroundColor: appOrangeColor,
                   foregroundColor: Colors.white,
@@ -733,7 +741,7 @@ class _CompanyDashboard extends StatelessWidget {
             const SizedBox(height: 20),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'TUS OFERTAS LABORALES',
                     style: TextStyle(
@@ -745,7 +753,7 @@ class _CompanyDashboard extends StatelessWidget {
                 ),
                 Text(
                   '${jobs.where((job) => job.status == 'published').length} activas',
-                  style: const TextStyle(color: appMutedColor, fontSize: 11),
+                  style: TextStyle(color: appMutedColor, fontSize: 11),
                 ),
               ],
             ),
@@ -753,7 +761,7 @@ class _CompanyDashboard extends StatelessWidget {
             if (snapshot.hasError)
               _InlineError(message: 'No se pudieron cargar las ofertas.')
             else if (snapshot.connectionState == ConnectionState.waiting)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(28),
                 child: Center(
                   child: CircularProgressIndicator(color: appPurpleColor),
@@ -858,6 +866,14 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
   late String _city = _cities.contains(widget.initialCompany?.city)
       ? widget.initialCompany!.city
       : 'Santa Cruz de la Sierra';
+  late LatLng _officePin = widget.initialCompany != null &&
+          widget.initialCompany!.hasCoordinates
+      ? LatLng(
+          widget.initialCompany!.latitude!,
+          widget.initialCompany!.longitude!,
+        )
+      : centerForCity(_city);
+  var _officeMapGeneration = 0;
   late String _zone = _zones.contains(widget.initialCompany?.address)
       ? widget.initialCompany!.address
       : '';
@@ -948,6 +964,8 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
         city: _city,
         address: _zone,
         website: _website.text.trim(),
+        latitude: _officePin.latitude,
+        longitude: _officePin.longitude,
       );
       await widget.repository.saveCompany(company);
       if (mounted) {
@@ -1023,14 +1041,14 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
           const SizedBox(height: 18),
           Text(
             editing ? 'Actualizar empresa o entidad' : 'Registrar empresa',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: appTextColor,
               fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 7),
-          const Text(
+          Text(
             'Asocia tu empresa a tu perfil para publicar ofertas de empleo y buscar talento en tu región. Solo necesitas registrarla una vez.',
             style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.45),
           ),
@@ -1086,10 +1104,23 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
           _DropdownField(
             value: _city,
             options: _cities,
-            onChanged: (value) => setState(() => _city = value),
+            onChanged: (value) => setState(() {
+              _city = value;
+              _officePin = centerForCity(value);
+              _officeMapGeneration++;
+            }),
           ),
           const _RecruitmentHint(
             'Selecciona la ciudad donde reside la empresa.',
+          ),
+          const SizedBox(height: 12),
+          LocationPickerMap(
+            key: ValueKey('office-$_officeMapGeneration'),
+            point: _officePin,
+            label: 'Ubicación de la empresa',
+            hint:
+                'Toca el mapa para colocar el pin de tu sede. Los postulantes la verán en Empresas cercanas.',
+            onChanged: (value) => setState(() => _officePin = value),
           ),
           const SizedBox(height: 12),
           _SectionLabel('Zona de la empresa', required: false),
@@ -1147,7 +1178,7 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
                     height: 16,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.check),
+                : Icon(Icons.check),
             label: Text(
               _saving
                   ? 'Guardando...'
@@ -1165,20 +1196,20 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
             Center(
               child: TextButton(
                 onPressed: widget.onCancel,
-                child: const Text('¿Ya registraste tu empresa? Iniciar sesión'),
+                child: Text('¿Ya registraste tu empresa? Iniciar sesión'),
               ),
             )
           else if (editing)
             TextButton.icon(
               onPressed: () => Navigator.of(context).maybePop(),
-              icon: const Icon(Icons.arrow_back, size: 16),
-              label: const Text('Volver al tablero'),
+              icon: Icon(Icons.arrow_back, size: 16),
+              label: Text('Volver al tablero'),
             )
           else if (widget.onCancel != null)
             TextButton.icon(
               onPressed: widget.onCancel,
-              icon: const Icon(Icons.arrow_back, size: 16),
-              label: const Text('Volver'),
+              icon: Icon(Icons.arrow_back, size: 16),
+              label: Text('Volver'),
             ),
         ],
         ),
@@ -1666,7 +1697,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                     setState(() => _salaryConfidential = value ?? false),
                 contentPadding: EdgeInsets.zero,
                 activeColor: appOrangeColor,
-                title: const Text(
+                title: Text(
                   'Mantener remuneración como “A convenir / Confidencial”',
                   style: TextStyle(color: appMutedColor, fontSize: 10),
                 ),
@@ -1689,14 +1720,14 @@ class _JobFormScreenState extends State<JobFormScreen> {
               const _SectionLabel('Fecha de Publicación'),
               OutlinedButton.icon(
                 onPressed: _choosePublicationDate,
-                icon: const Icon(Icons.calendar_month_outlined),
+                icon: Icon(Icons.calendar_month_outlined),
                 label: Text(_formatDate(_publicationDate)),
               ),
               const SizedBox(height: 12),
               const _SectionLabel('Cierre de Postulaciones', required: false),
               OutlinedButton.icon(
                 onPressed: _chooseDeadline,
-                icon: const Icon(Icons.calendar_month_outlined),
+                icon: Icon(Icons.calendar_month_outlined),
                 label: Text(
                   _deadline == null
                       ? 'Seleccionar fecha límite'
@@ -1706,7 +1737,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                   foregroundColor: Colors.white,
                   alignment: Alignment.centerLeft,
                   padding: const EdgeInsets.all(14),
-                  side: const BorderSide(color: appBorderColor),
+                  side: BorderSide(color: appBorderColor),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1769,7 +1800,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.check),
+                    : Icon(Icons.check),
                 label: Text(
                   _saving
                       ? 'Publicando...'
@@ -1786,8 +1817,8 @@ class _JobFormScreenState extends State<JobFormScreen> {
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: _saving ? null : () => _save(publish: false),
-                icon: const Icon(Icons.save_outlined),
-                label: const Text('Guardar como Borrador'),
+                icon: Icon(Icons.save_outlined),
+                label: Text('Guardar como Borrador'),
               ),
             ],
             ),
@@ -1855,8 +1886,8 @@ class _CompanyJobCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   job.title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: appTextColor,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1876,7 +1907,7 @@ class _CompanyJobCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${job.city} · ${job.modality} · ${job.employmentType}',
-            style: const TextStyle(color: appMutedColor, fontSize: 11),
+            style: TextStyle(color: appMutedColor, fontSize: 11),
           ),
           const SizedBox(height: 9),
           Wrap(
@@ -1885,7 +1916,7 @@ class _CompanyJobCard extends StatelessWidget {
               if (onViewApplications != null)
                 TextButton.icon(
                   onPressed: onViewApplications,
-                  icon: const Icon(Icons.people_outline, size: 16),
+                  icon: Icon(Icons.people_outline, size: 16),
                   label: Text(
                     applicationCount == 0
                         ? 'Postulantes'
@@ -1894,8 +1925,8 @@ class _CompanyJobCard extends StatelessWidget {
                 ),
               TextButton.icon(
                 onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined, size: 16),
-                label: const Text('Editar'),
+                icon: Icon(Icons.edit_outlined, size: 16),
+                label: Text('Editar'),
               ),
               if (job.status != 'closed')
                 TextButton.icon(
@@ -1915,8 +1946,8 @@ class _CompanyJobCard extends StatelessWidget {
               if (job.status != 'closed')
                 TextButton.icon(
                   onPressed: () => onStatusChanged('closed'),
-                  icon: const Icon(Icons.close, size: 16),
-                  label: const Text('Cerrar'),
+                  icon: Icon(Icons.close, size: 16),
+                  label: Text('Cerrar'),
                   style: TextButton.styleFrom(foregroundColor: appOrangeColor),
                 ),
             ],
@@ -1948,8 +1979,8 @@ class _PageHeader extends StatelessWidget {
           IconButton(
             onPressed: onBack,
             tooltip: 'Volver al inicio de sesión',
-            icon: const Icon(Icons.arrow_back),
-            color: Colors.white,
+            icon: Icon(Icons.arrow_back),
+            color: appTextColor,
             style: IconButton.styleFrom(
               backgroundColor: appSurfaceColor,
               fixedSize: const Size(40, 40),
@@ -1963,7 +1994,7 @@ class _PageHeader extends StatelessWidget {
               Text(
                 eyebrow.toUpperCase(),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Color(0xFFB48BF1),
                   fontSize: 9,
                   letterSpacing: 0.8,
@@ -1973,8 +2004,8 @@ class _PageHeader extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: appTextColor,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
@@ -2005,7 +2036,7 @@ class _NoticeCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontSize: 11, height: 1.4),
+        style: TextStyle(color: appTextColor, fontSize: 11, height: 1.4),
       ),
     );
   }
@@ -2021,7 +2052,7 @@ class _RecruitmentHint extends StatelessWidget {
     padding: const EdgeInsets.only(top: 4, bottom: 4),
     child: Text(
       text,
-      style: const TextStyle(color: appMutedColor, fontSize: 9),
+      style: TextStyle(color: appMutedColor, fontSize: 9),
     ),
   );
 }
@@ -2048,7 +2079,7 @@ class _FormSection extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: appOrangeColor,
               fontSize: 11,
               fontWeight: FontWeight.w700,
@@ -2086,7 +2117,7 @@ class _CompanyMiniCard extends StatelessWidget {
           ),
           child: Text(
             company.name.isEmpty ? 'EMP' : company.name.substring(0, 1),
-            style: const TextStyle(
+            style: TextStyle(
               color: appOrangeColor,
               fontWeight: FontWeight.w700,
             ),
@@ -2099,8 +2130,8 @@ class _CompanyMiniCard extends StatelessWidget {
             children: [
               Text(
                 company.name,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: appTextColor,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
@@ -2108,12 +2139,12 @@ class _CompanyMiniCard extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 'Publicando como ${company.sector}',
-                style: const TextStyle(color: appMutedColor, fontSize: 9),
+                style: TextStyle(color: appMutedColor, fontSize: 9),
               ),
             ],
           ),
         ),
-        const Icon(Icons.check_circle, color: Color(0xFF23C990), size: 15),
+        Icon(Icons.check_circle, color: Color(0xFF23C990), size: 15),
       ],
     ),
   );
@@ -2160,12 +2191,12 @@ class _CheckOption extends StatelessWidget {
     activeColor: appOrangeColor,
     title: Text(
       label,
-      style: const TextStyle(color: appMutedColor, fontSize: 10),
+      style: TextStyle(color: appMutedColor, fontSize: 10),
     ),
     tileColor: appSurfaceColor,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(9),
-      side: const BorderSide(color: appBorderColor),
+      side: BorderSide(color: appBorderColor),
     ),
   );
 }
@@ -2202,7 +2233,7 @@ class _RadioOption extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             label,
-            style: const TextStyle(color: Colors.white, fontSize: 10),
+            style: TextStyle(color: appTextColor, fontSize: 10),
           ),
         ],
       ),
@@ -2248,21 +2279,21 @@ class _FormInput extends StatelessWidget {
     keyboardType: keyboardType,
     maxLines: maxLines,
     obscureText: obscureText,
-    style: const TextStyle(color: Colors.white, fontSize: 12),
+    style: TextStyle(color: appTextColor, fontSize: 12),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: appMutedColor, fontSize: 11),
+      hintStyle: TextStyle(color: appMutedColor, fontSize: 11),
       filled: true,
       fillColor: appSurfaceColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       suffixIcon: suffix,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: appBorderColor),
+        borderSide: BorderSide(color: appBorderColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: appBorderColor),
+        borderSide: BorderSide(color: appBorderColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
@@ -2287,18 +2318,18 @@ class _DropdownField extends StatelessWidget {
   Widget build(BuildContext context) => DropdownButtonFormField<String>(
     initialValue: value,
     dropdownColor: appSurfaceColor,
-    style: const TextStyle(color: Colors.white, fontSize: 12),
+    style: TextStyle(color: appTextColor, fontSize: 12),
     decoration: InputDecoration(
       filled: true,
       fillColor: appSurfaceColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: appBorderColor),
+        borderSide: BorderSide(color: appBorderColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: appBorderColor),
+        borderSide: BorderSide(color: appBorderColor),
       ),
     ),
     items: [
@@ -2326,7 +2357,7 @@ class _RecruitmentMessage extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: appTextColor),
           ),
         ],
       ),
@@ -2363,8 +2394,8 @@ class _EmptyPanel extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           title,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: appTextColor,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -2372,7 +2403,7 @@ class _EmptyPanel extends StatelessWidget {
         Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: appMutedColor, fontSize: 12),
+          style: TextStyle(color: appMutedColor, fontSize: 12),
         ),
         const SizedBox(height: 12),
         OutlinedButton(onPressed: onAction, child: Text(actionLabel)),
@@ -2389,6 +2420,6 @@ class _InlineError extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.all(18),
-    child: Text(message, style: const TextStyle(color: appOrangeColor)),
+    child: Text(message, style: TextStyle(color: appOrangeColor)),
   );
 }

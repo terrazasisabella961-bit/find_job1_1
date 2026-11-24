@@ -1,3 +1,4 @@
+import '../models/company.dart';
 import '../models/institution_course.dart';
 import '../models/job_posting.dart';
 
@@ -11,6 +12,14 @@ List<JobPosting> withDemoJobs(List<JobPosting> remote) {
     ...remote,
     ...demoPublishedJobs.where((job) => !ids.contains(job.id)),
   ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+}
+
+List<Company> withDemoCompanies(List<Company> remote) {
+  final ids = {for (final company in remote) company.id};
+  return [
+    ...remote,
+    ...demoLocatedCompanies.where((company) => !ids.contains(company.id)),
+  ];
 }
 
 List<InstitutionCourse> withDemoCourses(List<InstitutionCourse> remote) {
@@ -228,6 +237,89 @@ final demoPublishedCourses = [
     brochureUrl: null,
     status: 'published',
     createdAt: _published.add(const Duration(hours: 8)),
+  ),
+];
+
+final demoLocatedCompanies = [
+  const Company(
+    id: 'demo-company-ecoandes',
+    ownerUid: 'demo-company-ecoandes',
+    name: 'EcoAndes Consultores',
+    taxId: '1029384756',
+    sector: 'Consultoría ambiental',
+    description:
+        'Consultora cochabambina de gestión ambiental, evaluaciones de impacto y seguimiento de medidas de mitigación para empresas y municipios.',
+    email: 'empleos@ecoandes.bo',
+    phone: '+591 4441122',
+    city: 'Cochabamba',
+    address: 'Av. Heroínas 1420',
+    website: 'https://ecoandes.bo',
+    latitude: -17.3938,
+    longitude: -66.1560,
+  ),
+  const Company(
+    id: 'demo-company-nexotech',
+    ownerUid: 'demo-company-nexotech',
+    name: 'NexoTech Solutions',
+    taxId: '1093847561',
+    sector: 'Tecnología',
+    description:
+        'Empresa de software que desarrolla aplicaciones, APIs y productos digitales para equipos de negocio en Bolivia.',
+    email: 'talento@nexotech.bo',
+    phone: '+591 4442233',
+    city: 'Cochabamba',
+    address: 'Calle España 312',
+    website: 'https://nexotech.bo',
+    latitude: -17.3895,
+    longitude: -66.1568,
+  ),
+  const Company(
+    id: 'demo-company-datavision',
+    ownerUid: 'demo-company-datavision',
+    name: 'DataVision Bolivia',
+    taxId: '1082736459',
+    sector: 'Analítica y software',
+    description:
+        'Equipo de analítica e ingeniería de datos. Construimos tableros, reportes y productos de información para la toma de decisiones.',
+    email: 'rrhh@datavision.bo',
+    phone: '+591 4443344',
+    city: 'Cochabamba',
+    address: 'Av. Blanco Galindo km 2',
+    website: 'https://datavision.bo',
+    latitude: -17.3850,
+    longitude: -66.1750,
+  ),
+  const Company(
+    id: 'demo-company-pixel',
+    ownerUid: 'demo-company-pixel',
+    name: 'Pixel Creative Studio',
+    taxId: '1071625348',
+    sector: 'Diseño y publicidad',
+    description:
+        'Estudio creativo de experiencias digitales, identidad visual y campañas para marcas locales.',
+    email: 'hola@pixelcreative.bo',
+    phone: '+591 4444455',
+    city: 'Cochabamba',
+    address: 'Calle 25 de Mayo 210',
+    website: 'https://pixelcreative.bo',
+    latitude: -17.3972,
+    longitude: -66.1579,
+  ),
+  const Company(
+    id: 'demo-company-andino',
+    ownerUid: 'demo-company-andino',
+    name: 'Grupo Empresarial Andino',
+    taxId: '1060514237',
+    sector: 'Comercio',
+    description:
+        'Grupo comercial con operación en Cochabamba. Gestión de talento, logística y administración para sus unidades de negocio.',
+    email: 'talento@grupoandino.bo',
+    phone: '+591 4445566',
+    city: 'Cochabamba',
+    address: 'Av. América 890',
+    website: 'https://grupoandino.bo',
+    latitude: -17.3748,
+    longitude: -66.1595,
   ),
 ];
 

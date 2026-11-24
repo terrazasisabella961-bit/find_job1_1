@@ -63,20 +63,20 @@ class DevelopedByCredit extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
       child: Text.rich(
-        const TextSpan(
+        TextSpan(
           children: [
-            TextSpan(text: 'Desarrollado por: '),
+            const TextSpan(text: 'Desarrollado por: '),
             TextSpan(
               text: '3π +2',
               style: TextStyle(
-                color: Colors.white,
+                color: appTextColor,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ),
         textAlign: TextAlign.center,
-        style: const TextStyle(
+        style: TextStyle(
           color: appMutedColor,
           fontSize: 12,
           height: 1.3,

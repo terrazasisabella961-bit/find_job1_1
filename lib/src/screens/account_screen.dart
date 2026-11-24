@@ -9,6 +9,7 @@ import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
 import '../services/user_profile_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/appearance_settings_card.dart';
 import '../widgets/app_feedback.dart';
 import 'user_registration_screen.dart';
 
@@ -176,9 +177,9 @@ class _AccountScreenState extends State<AccountScreen> {
         context: context,
         builder: (dialogContext) => AlertDialog(
           backgroundColor: appSurfaceColor,
-          title: const Text(
+          title: Text(
             'Cambiar correo electrónico',
-            style: TextStyle(color: Colors.white, fontSize: 14),
+            style: TextStyle(color: appTextColor, fontSize: 14),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -186,14 +187,14 @@ class _AccountScreenState extends State<AccountScreen> {
               TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-                decoration: const InputDecoration(labelText: 'Nuevo correo'),
+                style: TextStyle(color: appTextColor, fontSize: 12),
+                decoration: InputDecoration(labelText: 'Nuevo correo'),
               ),
               TextField(
                 controller: passwordController,
                 obscureText: true,
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-                decoration: const InputDecoration(
+                style: TextStyle(color: appTextColor, fontSize: 12),
+                decoration: InputDecoration(
                   labelText: 'Contraseña actual',
                 ),
               ),
@@ -202,11 +203,11 @@ class _AccountScreenState extends State<AccountScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancelar'),
+              child: Text('Cancelar'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Continuar'),
+              child: Text('Continuar'),
             ),
           ],
         ),
@@ -264,7 +265,7 @@ class _AccountScreenState extends State<AccountScreen> {
       future: _profileFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(color: appPurpleColor),
           );
         }
@@ -286,6 +287,8 @@ class _AccountScreenState extends State<AccountScreen> {
               },
             ),
             const SizedBox(height: 8),
+            const AppearanceSettingsCard(),
+            const SizedBox(height: 10),
             _IdentityCard(
               profile: profile,
               emailVerified: user?.emailVerified ?? false,
@@ -310,7 +313,7 @@ class _AccountScreenState extends State<AccountScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'DATOS PERSONALES Y PROFESIONALES',
                     style: TextStyle(
@@ -323,11 +326,11 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
                 TextButton.icon(
                   onPressed: () => _editProfile(profile),
-                  icon: const Icon(Icons.edit_outlined, size: 10),
-                  label: const Text('Edición rápida'),
+                  icon: Icon(Icons.edit_outlined, size: 10),
+                  label: Text('Edición rápida'),
                   style: TextButton.styleFrom(
                     foregroundColor: appOrangeColor,
-                    textStyle: const TextStyle(fontSize: 7),
+                    textStyle: TextStyle(fontSize: 7),
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -400,7 +403,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       height: 12,
                       child: CircularProgressIndicator(strokeWidth: 1.5),
                     )
-                  : const Icon(Icons.logout, size: 12),
+                  : Icon(Icons.logout, size: 12),
               label: Text(
                 _isSigningOut ? 'Cerrando sesión...' : 'Cerrar sesión',
               ),
@@ -408,7 +411,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 foregroundColor: appOrangeColor,
                 side: const BorderSide(color: Color(0xFF5D2C43)),
                 backgroundColor: appSurfaceColor,
-                textStyle: const TextStyle(fontSize: 8),
+                textStyle: TextStyle(fontSize: 8),
               ),
             ),
           ],
@@ -449,7 +452,7 @@ class _AccountHeader extends StatelessWidget {
           tooltip: 'Volver',
           onPressed: onBack,
         ),
-        const Expanded(
+        Expanded(
           child: Column(
             children: [
               Text(
@@ -463,7 +466,7 @@ class _AccountHeader extends StatelessWidget {
               Text(
                 'MI CUENTA',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: appTextColor,
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                 ),
@@ -529,7 +532,7 @@ class _IdentityCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [Color(0xFF6535D4), Color(0xFF9C54DB)],
@@ -537,8 +540,8 @@ class _IdentityCard extends StatelessWidget {
                 ),
                 child: Text(
                   initials.isEmpty ? '?' : initials,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: appTextColor,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -550,11 +553,11 @@ class _IdentityCard extends StatelessWidget {
                 child: Container(
                   width: 20,
                   height: 20,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: appOrangeColor,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.edit, size: 11, color: Colors.white),
+                  child: Icon(Icons.edit, size: 11, color: appTextColor),
                 ),
               ),
             ],
@@ -567,8 +570,8 @@ class _IdentityCard extends StatelessWidget {
                 child: Text(
                   name,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: appTextColor,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                   ),
@@ -588,7 +591,7 @@ class _IdentityCard extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: appMutedColor, fontSize: 7),
+            style: TextStyle(color: appMutedColor, fontSize: 7),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -650,7 +653,7 @@ class _AccountStatusCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Row(
+          Row(
             children: [
               Expanded(
                 child: Text(
@@ -682,7 +685,7 @@ class _AccountStatusCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              const Expanded(
+              Expanded(
                 child: _MetricCard(
                   title: 'Postulaciones',
                   value: 'Sin datos',
@@ -734,7 +737,7 @@ class _StatusMetric extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(color: appMutedColor, fontSize: 6),
+                  style: TextStyle(color: appMutedColor, fontSize: 6),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -805,7 +808,7 @@ class _MetricCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(color: appMutedColor, fontSize: 6),
+            style: TextStyle(color: appMutedColor, fontSize: 6),
           ),
           const Spacer(),
           Row(
@@ -814,7 +817,7 @@ class _MetricCard extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 value,
-                style: const TextStyle(color: Colors.white, fontSize: 7),
+                style: TextStyle(color: appTextColor, fontSize: 7),
               ),
             ],
           ),
@@ -853,7 +856,7 @@ class _CvCard extends StatelessWidget {
               color: const Color(0xFF2D1E47),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.insert_drive_file_outlined,
               color: appPurpleColor,
               size: 14,
@@ -870,8 +873,8 @@ class _CvCard extends StatelessWidget {
                     fileName ?? 'No se ha cargado un CV',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: appTextColor,
                       fontSize: 7,
                       fontWeight: FontWeight.w600,
                     ),
@@ -881,7 +884,7 @@ class _CvCard extends StatelessWidget {
                     fileName == null
                         ? 'Selecciona Editar perfil para cargar tu CV'
                         : 'Archivo cargado · Toca para abrir',
-                    style: const TextStyle(color: appMutedColor, fontSize: 6),
+                    style: TextStyle(color: appMutedColor, fontSize: 6),
                   ),
                 ],
               ),
@@ -889,7 +892,7 @@ class _CvCard extends StatelessWidget {
           ),
           IconButton(
             onPressed: onEdit,
-            icon: const Icon(Icons.edit_outlined, color: appOrangeColor),
+            icon: Icon(Icons.edit_outlined, color: appOrangeColor),
             iconSize: 12,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints.tightFor(width: 26, height: 26),
@@ -932,7 +935,7 @@ class _PersonalInfoTile extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(color: appMutedColor, fontSize: 6),
+                  style: TextStyle(color: appMutedColor, fontSize: 6),
                 ),
                 const SizedBox(height: 3),
                 Row(
@@ -944,8 +947,8 @@ class _PersonalInfoTile extends StatelessWidget {
                         value,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: appTextColor,
                           fontSize: 7,
                           fontWeight: FontWeight.w600,
                         ),
@@ -958,7 +961,7 @@ class _PersonalInfoTile extends StatelessWidget {
           ),
           IconButton(
             onPressed: onEdit,
-            icon: const Icon(Icons.edit_outlined, color: appMutedColor),
+            icon: Icon(Icons.edit_outlined, color: appMutedColor),
             iconSize: 12,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints.tightFor(width: 26, height: 26),
@@ -986,9 +989,9 @@ class _PasswordTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.lock_outline, size: 10, color: appPurpleColor),
+          Icon(Icons.lock_outline, size: 10, color: appPurpleColor),
           const SizedBox(width: 5),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -999,18 +1002,18 @@ class _PasswordTile extends StatelessWidget {
                 SizedBox(height: 3),
                 Text(
                   '••••••••••••',
-                  style: TextStyle(color: Colors.white, fontSize: 8),
+                  style: TextStyle(color: appTextColor, fontSize: 8),
                 ),
               ],
             ),
           ),
           TextButton.icon(
             onPressed: onChange,
-            icon: const Icon(Icons.edit_outlined, size: 9),
-            label: const Text('Cambiar'),
+            icon: Icon(Icons.edit_outlined, size: 9),
+            label: Text('Cambiar'),
             style: TextButton.styleFrom(
               foregroundColor: appOrangeColor,
-              textStyle: const TextStyle(fontSize: 7),
+              textStyle: TextStyle(fontSize: 7),
               padding: EdgeInsets.zero,
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1051,8 +1054,8 @@ class _StatusChip extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: appTextColor,
               fontSize: 7,
               fontWeight: FontWeight.w600,
             ),
@@ -1083,7 +1086,7 @@ class _RoundIconButton extends StatelessWidget {
       color: appPurpleColor,
       style: IconButton.styleFrom(
         backgroundColor: appSurfaceColor,
-        side: const BorderSide(color: appBorderColor),
+        side: BorderSide(color: appBorderColor),
         fixedSize: const Size(32, 32),
       ),
       tooltip: tooltip,
@@ -1109,16 +1112,16 @@ class _AccountError extends StatelessWidget {
               'No se pudo cargar el perfil. Tu sesión sigue activa. '
               'Comprueba la conexión y vuelve a intentarlo.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: TextStyle(color: appTextColor, fontSize: 12),
             ),
             const SizedBox(height: 6),
             Text(
               '$error',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: appMutedColor, fontSize: 9),
+              style: TextStyle(color: appMutedColor, fontSize: 9),
             ),
             const SizedBox(height: 12),
-            OutlinedButton(onPressed: onRetry, child: const Text('Reintentar')),
+            OutlinedButton(onPressed: onRetry, child: Text('Reintentar')),
           ],
         ),
       ),

@@ -148,7 +148,7 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
         }
         if (snapshot.connectionState == ConnectionState.waiting &&
             !snapshot.hasData) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(color: appPurpleColor),
           );
         }
@@ -168,17 +168,17 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                         child: TextField(
                           controller: _searchController,
                           onChanged: (_) => setState(() {}),
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: appTextColor,
                             fontSize: 12,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Filtrar por ciudad o localidad',
-                            hintStyle: const TextStyle(
+                            hintStyle: TextStyle(
                               color: appMutedColor,
                               fontSize: 11,
                             ),
-                            prefixIcon: const Icon(
+                            prefixIcon: Icon(
                               Icons.search,
                               color: appMutedColor,
                             ),
@@ -190,7 +190,7 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                                       _searchController.clear();
                                       setState(() {});
                                     },
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.close,
                                       color: appMutedColor,
                                     ),
@@ -202,13 +202,13 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(
+                              borderSide: BorderSide(
                                 color: appBorderColor,
                               ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(14),
-                              borderSide: const BorderSide(
+                              borderSide: BorderSide(
                                 color: appBorderColor,
                               ),
                             ),
@@ -222,12 +222,12 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                         icon: Badge(
                           isLabelVisible: _activeFilterCount > 0,
                           label: Text('$_activeFilterCount'),
-                          child: const Icon(Icons.tune),
+                          child: Icon(Icons.tune),
                         ),
                         style: IconButton.styleFrom(
                           foregroundColor: Colors.white,
                           backgroundColor: appSurfaceColor,
-                          side: const BorderSide(color: appBorderColor),
+                          side: BorderSide(color: appBorderColor),
                           fixedSize: const Size(48, 48),
                         ),
                       ),
@@ -259,7 +259,7 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                   Text(
                     '${filteredJobs.length} anuncios encontrados'
                     '${_activeFilterCount > 0 ? ' · $_activeFilterCount filtros' : ''}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: appMutedColor,
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -293,11 +293,11 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
                     onPressed: widget.onOpenCatalog,
-                    icon: const Icon(Icons.school_outlined),
-                    label: const Text('Ver cursos y posgrados'),
+                    icon: Icon(Icons.school_outlined),
+                    label: Text('Ver cursos y posgrados'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: appPurpleColor,
-                      side: const BorderSide(color: appBorderColor),
+                      side: BorderSide(color: appBorderColor),
                     ),
                   ),
                 ],
@@ -313,7 +313,7 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                       _filters = const _JobFilters();
                       _searchController.clear();
                     }),
-                    child: const Text('Limpiar búsqueda y filtros'),
+                    child: Text('Limpiar búsqueda y filtros'),
                   ),
                 ),
               ),
@@ -383,14 +383,14 @@ class JobDetailsScreen extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.arrow_back),
-                  color: Colors.white,
+                  icon: Icon(Icons.arrow_back),
+                  color: appTextColor,
                   style: IconButton.styleFrom(
                     backgroundColor: appSurfaceColor,
                     fixedSize: const Size(40, 40),
                   ),
                 ),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'DETALLE DE LA OFERTA',
                     textAlign: TextAlign.center,
@@ -407,8 +407,8 @@ class JobDetailsScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               job.title,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: appTextColor,
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
               ),
@@ -416,7 +416,7 @@ class JobDetailsScreen extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               job.companyName,
-              style: const TextStyle(color: appPurpleColor, fontSize: 15),
+              style: TextStyle(color: appPurpleColor, fontSize: 15),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -483,7 +483,7 @@ class JobDetailsScreen extends StatelessWidget {
                     '${job.deadline!.day}/${job.deadline!.month}/${job.deadline!.year}',
               ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'INFORMACIÓN PÚBLICA DE LA EMPRESA',
               style: TextStyle(
                 color: Color(0xFFB48BF1),
@@ -637,10 +637,10 @@ class _FiltersSheetState extends State<_FiltersSheet> {
       child: DropdownButtonFormField<String?>(
         initialValue: validValue,
         dropdownColor: appSurfaceColor,
-        style: const TextStyle(color: Colors.white, fontSize: 13),
+        style: TextStyle(color: appTextColor, fontSize: 13),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: appMutedColor),
+          labelStyle: TextStyle(color: appMutedColor),
           filled: true,
           fillColor: appSurfaceColor,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -666,13 +666,13 @@ class _FiltersSheetState extends State<_FiltersSheet> {
     if ((minimumInput.isNotEmpty && minimum == null) ||
         (maximumInput.isNotEmpty && maximum == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa un rango salarial válido.')),
+        SnackBar(content: Text('Ingresa un rango salarial válido.')),
       );
       return;
     }
     if (minimum != null && maximum != null && minimum > maximum) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('El salario mínimo no puede superar al máximo.'),
         ),
       );
@@ -708,10 +708,10 @@ class _FiltersSheetState extends State<_FiltersSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
+              Text(
                 'Filtrar ofertas',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: appTextColor,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
@@ -738,9 +738,9 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                 widget.experiences,
                 (value) => setState(() => _experience = value),
               ),
-              const Text(
+              Text(
                 'Rango salarial mensual (BOB)',
-                style: TextStyle(color: Colors.white, fontSize: 12),
+                style: TextStyle(color: appTextColor, fontSize: 12),
               ),
               const SizedBox(height: 8),
               Row(
@@ -764,9 +764,9 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                 contentPadding: EdgeInsets.zero,
                 value: _onlyWithSalary,
                 onChanged: (value) => setState(() => _onlyWithSalary = value),
-                title: const Text(
+                title: Text(
                   'Solo ofertas con salario publicado',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
+                  style: TextStyle(color: appTextColor, fontSize: 12),
                 ),
                 activeThumbColor: const Color(0xFF4BD6A0),
               ),
@@ -784,7 +784,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                     child: TextButton(
                       onPressed: () =>
                           Navigator.of(context).pop(const _JobFilters()),
-                      child: const Text('Limpiar filtros'),
+                      child: Text('Limpiar filtros'),
                     ),
                   ),
                   Expanded(
@@ -793,7 +793,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                       style: FilledButton.styleFrom(
                         backgroundColor: appOrangeColor,
                       ),
-                      child: const Text('Aplicar filtros'),
+                      child: Text('Aplicar filtros'),
                     ),
                   ),
                 ],
@@ -816,10 +816,10 @@ class _SalaryField extends StatelessWidget {
   Widget build(BuildContext context) => TextField(
     controller: controller,
     keyboardType: TextInputType.number,
-    style: const TextStyle(color: Colors.white, fontSize: 13),
+    style: TextStyle(color: appTextColor, fontSize: 13),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: appMutedColor),
+      hintStyle: TextStyle(color: appMutedColor),
       filled: true,
       fillColor: appSurfaceColor,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -895,7 +895,7 @@ class _JobSuggestionsPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget body;
     if (loading) {
-      body = const Row(
+      body = Row(
         children: [
           SizedBox(
             width: 18,
@@ -918,7 +918,7 @@ class _JobSuggestionsPanel extends StatelessWidget {
       body = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Completa tu área profesional, carrera o habilidades para recomendarte empleos de tu registro.',
             style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
@@ -926,7 +926,7 @@ class _JobSuggestionsPanel extends StatelessWidget {
             const SizedBox(height: 10),
             TextButton(
               onPressed: onCompleteProfile,
-              child: const Text('Completar perfil'),
+              child: Text('Completar perfil'),
             ),
           ],
         ],
@@ -937,7 +937,7 @@ class _JobSuggestionsPanel extends StatelessWidget {
         jobs: jobs,
       );
       body = suggestions.isEmpty
-          ? const Text(
+          ? Text(
               'Aún no hay ofertas publicadas en tu área. Revisa el catálogo de abajo.',
               style: TextStyle(color: appMutedColor, fontSize: 12),
             )
@@ -982,14 +982,14 @@ class _SuggestionsTray extends StatelessWidget {
                   color: appOrangeColor.withValues(alpha: 0.18),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.auto_awesome,
                   color: appOrangeColor,
                   size: 18,
                 ),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1016,7 +1016,7 @@ class _SuggestionsTray extends StatelessWidget {
                   color: appOrangeColor.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
+                child: Text(
                   'Tu perfil',
                   style: TextStyle(
                     color: appOrangeColor,
@@ -1074,8 +1074,8 @@ class _SuggestionCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         job.title.toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: appTextColor,
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
                         ),
@@ -1092,7 +1092,7 @@ class _SuggestionCard extends StatelessWidget {
                       ),
                       child: Text(
                         label,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Color(0xFFD7C4FF),
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -1104,17 +1104,17 @@ class _SuggestionCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   job.companyName,
-                  style: const TextStyle(color: appMutedColor, fontSize: 11),
+                  style: TextStyle(color: appMutedColor, fontSize: 11),
                 ),
                 Text(
                   '${job.city} · ${job.modality}',
-                  style: const TextStyle(color: appMutedColor, fontSize: 11),
+                  style: TextStyle(color: appMutedColor, fontSize: 11),
                 ),
                 const SizedBox(height: 6),
                 for (final reason in reasons.take(3))
                   Text(
                     '• $reason',
-                    style: const TextStyle(color: Colors.white, fontSize: 11),
+                    style: TextStyle(color: appTextColor, fontSize: 11),
                   ),
               ],
             ),
@@ -1129,14 +1129,14 @@ class _JobsHeader extends StatelessWidget {
   const _JobsHeader();
 
   @override
-  Widget build(BuildContext context) => const Column(
+  Widget build(BuildContext context) => Column(
     children: [
       CochaConectaLogo(height: 72),
       SizedBox(height: 8),
       Text(
         'Anuncios de empleo activos',
         style: TextStyle(
-          color: Colors.white,
+          color: appTextColor,
           fontSize: 16,
           fontWeight: FontWeight.w700,
         ),
@@ -1150,7 +1150,7 @@ class _JobsCatalogHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
         Icon(Icons.work_outline, color: appMutedColor, size: 18),
         SizedBox(width: 8),
@@ -1161,7 +1161,7 @@ class _JobsCatalogHeading extends StatelessWidget {
               Text(
                 'TODOS LOS EMPLEOS',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: appTextColor,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.4,
                   fontSize: 12,
@@ -1204,34 +1204,34 @@ class _PublicJobCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.work_outline, color: appPurpleColor, size: 15),
+                Icon(Icons.work_outline, color: appPurpleColor, size: 15),
                 const SizedBox(width: 7),
                 Expanded(
                   child: Text(
                     job.title.toUpperCase(),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: appTextColor,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios,
                   color: appMutedColor,
                   size: 13,
                 ),
               ],
             ),
-            const Divider(color: appBorderColor, height: 17),
+            Divider(color: appBorderColor, height: 17),
             Text(
               job.companyName.toUpperCase(),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: appTextColor,
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
               ),
@@ -1285,7 +1285,7 @@ class _JobMetadata extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: appMutedColor, fontSize: 10),
+            style: TextStyle(color: appMutedColor, fontSize: 10),
           ),
         ),
       ],
@@ -1312,7 +1312,7 @@ class _Tag extends StatelessWidget {
       children: [
         Icon(icon, color: appPurpleColor, size: 13),
         const SizedBox(width: 5),
-        Text(text, style: const TextStyle(color: Colors.white, fontSize: 11)),
+        Text(text, style: TextStyle(color: appTextColor, fontSize: 11)),
       ],
     ),
   );
@@ -1332,7 +1332,7 @@ class _DetailText extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             color: Color(0xFFB48BF1),
             fontWeight: FontWeight.w700,
             fontSize: 12,
@@ -1341,8 +1341,8 @@ class _DetailText extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: appTextColor,
             height: 1.4,
             fontSize: 13,
           ),
@@ -1356,7 +1356,7 @@ class _EmptyJobs extends StatelessWidget {
   const _EmptyJobs();
 
   @override
-  Widget build(BuildContext context) => const Padding(
+  Widget build(BuildContext context) => Padding(
     padding: EdgeInsets.fromLTRB(12, 56, 12, 40),
     child: Column(
       children: [
@@ -1365,7 +1365,7 @@ class _EmptyJobs extends StatelessWidget {
         Text(
           'No hay ofertas activas por ahora',
           style: TextStyle(
-            color: Colors.white,
+            color: appTextColor,
             fontWeight: FontWeight.w700,
             fontSize: 15,
           ),
@@ -1391,19 +1391,19 @@ class _NoMatches extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(12, 48, 12, 32),
     child: Column(
       children: [
-        const Icon(Icons.filter_alt_off, color: appPurpleColor, size: 34),
+        Icon(Icons.filter_alt_off, color: appPurpleColor, size: 34),
         const SizedBox(height: 10),
-        const Text(
+        Text(
           'No encontramos coincidencias',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: TextStyle(color: appTextColor, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 5),
-        const Text(
+        Text(
           'Prueba con otros términos o limpia los filtros.',
           textAlign: TextAlign.center,
           style: TextStyle(color: appMutedColor, fontSize: 12),
         ),
-        TextButton(onPressed: onClear, child: const Text('Limpiar filtros')),
+        TextButton(onPressed: onClear, child: Text('Limpiar filtros')),
       ],
     ),
   );
@@ -1422,21 +1422,21 @@ class _JobsLoadError extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.cloud_off_outlined, color: appOrangeColor, size: 32),
+          Icon(Icons.cloud_off_outlined, color: appOrangeColor, size: 32),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'No se pudieron cargar las ofertas.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: appTextColor),
           ),
           const SizedBox(height: 5),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: appMutedColor, fontSize: 11),
+            style: TextStyle(color: appMutedColor, fontSize: 11),
           ),
           const SizedBox(height: 12),
-          OutlinedButton(onPressed: onRetry, child: const Text('Reintentar')),
+          OutlinedButton(onPressed: onRetry, child: Text('Reintentar')),
         ],
       ),
     ),

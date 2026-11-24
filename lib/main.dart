@@ -13,6 +13,8 @@ import 'src/services/institution_repository.dart';
 import 'src/services/job_application_repository.dart';
 import 'src/services/recruitment_repository.dart';
 import 'src/services/user_profile_repository.dart';
+import 'src/theme/app_theme_settings.dart';
+import 'src/widgets/app_bottom_navigation.dart';
 import 'src/widgets/app_feedback.dart';
 import 'src/widgets/cocha_conecta_logo.dart';
 import 'src/widgets/form_field_label.dart';
@@ -38,13 +40,7 @@ Future<void> main() async {
   }
 }
 
-const _backgroundColor = Color(0xFF151226);
-const _surfaceColor = Color(0xFF1A172F);
-const _borderColor = Color(0xFF302B49);
-const _mutedColor = Color(0xFFAAA6BE);
-const _purpleColor = Color(0xFF8950F5);
-
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({
     this.authRepository,
     this.profileRepository,
@@ -61,37 +57,62 @@ class MyApp extends StatelessWidget {
   final JobApplicationRepository? applicationRepository;
 
   @override
-  Widget build(BuildContext context) {
-    final auth = authRepository ?? FirebaseAuthRepository();
-    final profiles = profileRepository ?? FirebaseUserProfileRepository();
-    final recruitment =
-        recruitmentRepository ?? FirebaseRecruitmentRepository();
-    final institutions =
-        institutionRepository ?? FirebaseInstitutionRepository();
-    final applications =
-        applicationRepository ?? FirebaseJobApplicationRepository();
-    return MaterialApp(
-      title: 'CochaConecta',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: _backgroundColor,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _purpleColor,
-          brightness: Brightness.dark,
-        ),
-        fontFamily: 'Roboto',
-        snackBarTheme: const SnackBarThemeData(
-          backgroundColor: Color(0xFF3D2E6B),
-          contentTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    AppThemeSettings.instance.load();
+  }
+
+  ThemeData _theme(Brightness brightness) {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: brightness,
+      scaffoldBackgroundColor: appBackgroundColor,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: appPurpleColor,
+        brightness: brightness,
       ),
-      home: _AuthGate(
+      fontFamily: 'Roboto',
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: Color(0xFF3D2E6B),
+        contentTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = widget.authRepository ?? FirebaseAuthRepository();
+    final profiles = widget.profileRepository ?? FirebaseUserProfileRepository();
+    final recruitment =
+        widget.recruitmentRepository ?? FirebaseRecruitmentRepository();
+    final institutions =
+        widget.institutionRepository ?? FirebaseInstitutionRepository();
+    final applications =
+        widget.applicationRepository ?? FirebaseJobApplicationRepository();
+    return ListenableBuilder(
+      listenable: AppThemeSettings.instance,
+      builder: (context, child) {
+        final isDark = AppThemeSettings.instance.isDark;
+        return MaterialApp(
+          title: 'CochaConecta',
+          debugShowCheckedModeBanner: false,
+          theme: _theme(Brightness.light),
+          darkTheme: _theme(Brightness.dark),
+          themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+          home: child,
+        );
+      },
+      child: _AuthGate(
         authRepository: auth,
         profileRepository: profiles,
         recruitmentRepository: recruitment,
@@ -102,13 +123,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class _AuthGate extends StatelessWidget {
+class _AuthGate extends StatefulWidget {
   const _AuthGate({
     required this.authRepository,
     required this.profileRepository,
     required this.recruitmentRepository,
     required this.institutionRepository,
     required this.applicationRepository,
+    super.key,
   });
 
   final AuthRepository authRepository;
@@ -118,10 +140,31 @@ class _AuthGate extends StatelessWidget {
   final JobApplicationRepository applicationRepository;
 
   @override
+  State<_AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<_AuthGate> {
+  @override
+  void initState() {
+    super.initState();
+    AppThemeSettings.instance.addListener(_onTheme);
+  }
+
+  @override
+  void dispose() {
+    AppThemeSettings.instance.removeListener(_onTheme);
+    super.dispose();
+  }
+
+  void _onTheme() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: authRepository.authStateChanges,
-      initialData: authRepository.currentUser,
+      stream: widget.authRepository.authStateChanges,
+      initialData: widget.authRepository.currentUser,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _FirebaseStartupError(
@@ -130,26 +173,26 @@ class _AuthGate extends StatelessWidget {
         }
         if (snapshot.connectionState == ConnectionState.waiting &&
             !snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator(color: _purpleColor)),
+          return Scaffold(
+            body: Center(child: CircularProgressIndicator(color: appPurpleColor)),
           );
         }
         if (snapshot.data == null) {
           return LoginScreen(
-            authRepository: authRepository,
-            profileRepository: profileRepository,
-            institutionRepository: institutionRepository,
-            recruitmentRepository: recruitmentRepository,
+            authRepository: widget.authRepository,
+            profileRepository: widget.profileRepository,
+            institutionRepository: widget.institutionRepository,
+            recruitmentRepository: widget.recruitmentRepository,
           );
         }
         final user = snapshot.data!;
         return _AuthenticatedGate(
           user: user,
-          authRepository: authRepository,
-          profileRepository: profileRepository,
-          recruitmentRepository: recruitmentRepository,
-          institutionRepository: institutionRepository,
-          applicationRepository: applicationRepository,
+          authRepository: widget.authRepository,
+          profileRepository: widget.profileRepository,
+          recruitmentRepository: widget.recruitmentRepository,
+          institutionRepository: widget.institutionRepository,
+          applicationRepository: widget.applicationRepository,
         );
       },
     );
@@ -250,8 +293,8 @@ class _SessionLoading extends StatelessWidget {
   const _SessionLoading();
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
-    body: Center(child: CircularProgressIndicator(color: _purpleColor)),
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(child: CircularProgressIndicator(color: appPurpleColor)),
   );
 }
 
@@ -264,14 +307,14 @@ class _FirebaseStartupError extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        backgroundColor: _backgroundColor,
+        backgroundColor: appBackgroundColor,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
               'No se pudo iniciar Firebase.\n$message',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: appTextColor),
             ),
           ),
         ),
@@ -456,11 +499,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: CochaConectaLogo(height: 132),
                                 ),
                                 const SizedBox(height: 8),
-                                const Text(
+                                Text(
                                   'Empleo y formación en Cochabamba',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: _mutedColor,
+                                    color: appMutedColor,
                                     fontSize: 14,
                                     height: 1.4,
                                   ),
@@ -500,10 +543,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   onPressed: _isSubmitting
                                       ? null
                                       : _resetPassword,
-                                  child: const Text(
+                                  child: Text(
                                     '¿Olvidaste tu contraseña?',
                                     style: TextStyle(
-                                      color: _mutedColor,
+                                      color: appMutedColor,
                                       fontSize: 13,
                                     ),
                                   ),
@@ -525,7 +568,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           0xFF171323,
                                         ),
                                         shape: const StadiumBorder(),
-                                        textStyle: const TextStyle(
+                                        textStyle: TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,
                                         ),
@@ -539,15 +582,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 color: Color(0xFF171323),
                                               ),
                                             )
-                                          : const Text('Iniciar sesión'),
+                                          : Text('Iniciar sesión'),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                const Row(
+                                Row(
                                   children: [
                                     Expanded(
-                                      child: Divider(color: _borderColor),
+                                      child: Divider(color: appBorderColor),
                                     ),
                                     Padding(
                                       padding: EdgeInsets.symmetric(
@@ -556,13 +599,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                       child: Text(
                                         'o',
                                         style: TextStyle(
-                                          color: _mutedColor,
+                                          color: appMutedColor,
                                           fontSize: 13,
                                         ),
                                       ),
                                     ),
                                     Expanded(
-                                      child: Divider(color: _borderColor),
+                                      child: Divider(color: appBorderColor),
                                     ),
                                   ],
                                 ),
@@ -575,20 +618,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                       onPressed: _isSubmitting
                                           ? null
                                           : _signInWithGoogle,
-                                      icon: const Icon(
+                                      icon: Icon(
                                         Icons.g_mobiledata,
                                         size: 26,
                                       ),
-                                      label: const Text(
+                                      label: Text(
                                         'Continuar con Google',
                                       ),
                                       style: OutlinedButton.styleFrom(
                                         foregroundColor: Colors.white,
-                                        side: const BorderSide(
-                                          color: _borderColor,
+                                        side: BorderSide(
+                                          color: appBorderColor,
                                         ),
                                         shape: const StadiumBorder(),
-                                        textStyle: const TextStyle(
+                                        textStyle: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -602,10 +645,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                     onPressed: _isSubmitting
                                         ? null
                                         : _openRegistration,
-                                    child: const Text(
+                                    child: Text(
                                       '¿No tienes cuenta? Regístrate',
                                       style: TextStyle(
-                                        color: Colors.white,
+                                        color: appTextColor,
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -622,7 +665,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ? null
                                           : _openCompanyPortal,
                                       style: TextButton.styleFrom(
-                                        foregroundColor: _mutedColor,
+                                        foregroundColor: appMutedColor,
                                         visualDensity: VisualDensity.compact,
                                         tapTargetSize:
                                             MaterialTapTargetSize.shrinkWrap,
@@ -632,7 +675,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           vertical: 4,
                                         ),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         'Acceso para empresas',
                                         style: TextStyle(fontSize: 12),
                                       ),
@@ -642,7 +685,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ? null
                                           : _openInstitutions,
                                       style: TextButton.styleFrom(
-                                        foregroundColor: _mutedColor,
+                                        foregroundColor: appMutedColor,
                                         visualDensity: VisualDensity.compact,
                                         tapTargetSize:
                                             MaterialTapTargetSize.shrinkWrap,
@@ -652,7 +695,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           vertical: 4,
                                         ),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         'Acceso para instituciones',
                                         style: TextStyle(fontSize: 12),
                                       ),
@@ -705,8 +748,8 @@ class LoginTextField extends StatelessWidget {
         FormFieldLabel(
           hintText,
           required: true,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: appTextColor,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -718,18 +761,18 @@ class LoginTextField extends StatelessWidget {
         keyboardType: keyboardType,
         obscureText: obscureText,
         validator: validator,
-        style: const TextStyle(color: Colors.white, fontSize: 15),
+        style: TextStyle(color: appTextColor, fontSize: 15),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(color: _mutedColor, fontSize: 14),
-          prefixIcon: Icon(icon, color: _purpleColor, size: 20),
+          hintStyle: TextStyle(color: appMutedColor, fontSize: 14),
+          prefixIcon: Icon(icon, color: appPurpleColor, size: 20),
           suffixIcon: onToggleVisibility == null
               ? null
               : IconButton(
                   onPressed: onToggleVisibility,
                   icon: Icon(
                     obscureText ? Icons.visibility : Icons.visibility_off,
-                    color: _purpleColor,
+                    color: appPurpleColor,
                     size: 20,
                   ),
                   tooltip: obscureText
@@ -737,16 +780,16 @@ class LoginTextField extends StatelessWidget {
                       : 'Ocultar contraseña',
                 ),
           filled: true,
-          fillColor: _surfaceColor,
+          fillColor: appSurfaceColor,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
-          errorStyle: const TextStyle(fontSize: 11, height: 1.1),
+          errorStyle: TextStyle(fontSize: 11, height: 1.1),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
-            borderSide: const BorderSide(color: _borderColor),
+            borderSide: BorderSide(color: appBorderColor),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
-            borderSide: const BorderSide(color: _purpleColor),
+            borderSide: const BorderSide(color: appPurpleColor),
           ),
         ),
       ),

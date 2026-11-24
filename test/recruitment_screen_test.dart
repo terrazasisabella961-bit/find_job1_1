@@ -81,6 +81,9 @@ class _PendingRecruitmentRepository implements RecruitmentRepository {
   Stream<List<JobPosting>> watchPublicJobs() => const Stream.empty();
 
   @override
+  Stream<List<Company>> watchLocatedCompanies() => const Stream.empty();
+
+  @override
   Stream<List<JobPosting>> watchCompanyJobs(String ownerUid) =>
       const Stream.empty();
 

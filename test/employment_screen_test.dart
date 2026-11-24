@@ -471,6 +471,9 @@ class _FakeRecruitmentRepository implements RecruitmentRepository {
   Stream<List<JobPosting>> watchPublicJobs() => Stream.value(jobs);
 
   @override
+  Stream<List<Company>> watchLocatedCompanies() => Stream.value(const []);
+
+  @override
   Stream<List<JobPosting>> watchCompanyJobs(String ownerUid) =>
       Stream.value(jobs.where((job) => job.ownerUid == ownerUid).toList());
 

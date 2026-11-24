@@ -31,7 +31,7 @@ void showAppMessage(
       SnackBar(
         content: Text(
           message,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontSize: 13,
             fontWeight: FontWeight.w600,

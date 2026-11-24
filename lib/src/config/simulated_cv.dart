@@ -83,14 +83,14 @@ class _SimulatedCvScreenState extends State<SimulatedCvScreen> {
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     tooltip: 'Volver',
-                    icon: const Icon(Icons.arrow_back),
-                    color: Colors.white,
+                    icon: Icon(Icons.arrow_back),
+                    color: appTextColor,
                     style: IconButton.styleFrom(
                       backgroundColor: appSurfaceColor,
-                      side: const BorderSide(color: appBorderColor),
+                      side: BorderSide(color: appBorderColor),
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'CURRÍCULUM SIMULADO',
                       textAlign: TextAlign.center,
@@ -106,7 +106,7 @@ class _SimulatedCvScreenState extends State<SimulatedCvScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              const Icon(
+              Icon(
                 Icons.picture_as_pdf,
                 color: appOrangeColor,
                 size: 72,
@@ -115,8 +115,8 @@ class _SimulatedCvScreenState extends State<SimulatedCvScreen> {
               Text(
                 widget.heading,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: appTextColor,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -125,7 +125,7 @@ class _SimulatedCvScreenState extends State<SimulatedCvScreen> {
               Text(
                 widget.detail,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   color: appMutedColor,
                   fontSize: 14,
                   height: 1.4,
@@ -140,13 +140,13 @@ class _SimulatedCvScreenState extends State<SimulatedCvScreen> {
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: appBorderColor),
                 ),
-                child: const Column(
+                child: Column(
                   children: [
                     Text(
                       simulatedCvDisplayName,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: appTextColor,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -163,7 +163,7 @@ class _SimulatedCvScreenState extends State<SimulatedCvScreen> {
               const SizedBox(height: 18),
               FilledButton.icon(
                 onPressed: _open,
-                icon: const Icon(Icons.open_in_new),
+                icon: Icon(Icons.open_in_new),
                 label: Text(_opened ? 'Abrir CV de nuevo' : 'Abrir CV'),
                 style: FilledButton.styleFrom(
                   backgroundColor: appOrangeColor,
@@ -174,7 +174,7 @@ class _SimulatedCvScreenState extends State<SimulatedCvScreen> {
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Continuar'),
+                child: Text('Continuar'),
               ),
             ],
           ),

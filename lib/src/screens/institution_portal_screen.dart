@@ -11,6 +11,7 @@ import '../services/auth_error_message.dart';
 import '../services/auth_repository.dart';
 import '../services/institution_repository.dart';
 import '../widgets/app_bottom_navigation.dart';
+import '../widgets/appearance_settings_card.dart';
 import '../widgets/app_feedback.dart';
 import '../widgets/form_field_label.dart';
 
@@ -91,7 +92,7 @@ class _InstitutionPortalScreenState extends State<InstitutionPortalScreen> {
           );
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(color: appPurpleColor),
           );
         }
@@ -249,16 +250,16 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
             : null,
       ),
       const SizedBox(height: 24),
-      const Text(
+      Text(
         'Iniciar sesión',
         style: TextStyle(
-          color: Colors.white,
+          color: appTextColor,
           fontSize: 20,
           fontWeight: FontWeight.w700,
         ),
       ),
       const SizedBox(height: 7),
-      const Text(
+      Text(
         'Accede al tablero de tu institución con las credenciales registradas.',
         style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.45),
       ),
@@ -298,7 +299,7 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: _resetPassword,
-                child: const Text('¿Olvidó su contraseña?'),
+                child: Text('¿Olvidó su contraseña?'),
               ),
             ),
             const SizedBox(height: 20),
@@ -314,13 +315,13 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
       const SizedBox(height: 12),
       TextButton(
         onPressed: widget.onRegister,
-        child: const Text('¿Tu institución aún no tiene cuenta? Regístrala'),
+        child: Text('¿Tu institución aún no tiene cuenta? Regístrala'),
       ),
       if (Navigator.of(context).canPop())
         TextButton.icon(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back, size: 16),
-          label: const Text('Volver al inicio de sesión'),
+          icon: Icon(Icons.arrow_back, size: 16),
+          label: Text('Volver al inicio de sesión'),
         ),
     ],
   );
@@ -616,14 +617,14 @@ class _InstitutionRegistrationScreenState
             widget.initialInstitution == null
                 ? 'Vincular entidad educativa'
                 : 'Actualizar institución',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: appTextColor,
               fontSize: 17,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'Registra tu universidad, instituto o centro de formación para publicar cursos, diplomados, posgrados y conectar con futuros estudiantes.',
             style: TextStyle(color: appMutedColor, fontSize: 10, height: 1.5),
           ),
@@ -857,18 +858,18 @@ class _InstitutionRegistrationScreenState
             onChanged: (value) => setState(() => _twoFactor = value),
             contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             activeThumbColor: appOrangeColor,
-            title: const Text(
+            title: Text(
               'Solicitar verificación en dos pasos (2FA)',
-              style: TextStyle(color: Colors.white, fontSize: 11),
+              style: TextStyle(color: appTextColor, fontSize: 11),
             ),
-            subtitle: const Text(
+            subtitle: Text(
               'La activación requiere configurar un segundo factor en Firebase Authentication.',
               style: TextStyle(color: appMutedColor, fontSize: 9),
             ),
             tileColor: appSurfaceColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: appBorderColor),
+              side: BorderSide(color: appBorderColor),
             ),
           ),
           const SizedBox(height: 10),
@@ -881,7 +882,7 @@ class _InstitutionRegistrationScreenState
               activeColor: appOrangeColor,
               title: Wrap(
                 children: [
-                  const Text(
+                  Text(
                     'Acepto los ',
                     style: TextStyle(color: appMutedColor, fontSize: 9),
                   ),
@@ -891,7 +892,7 @@ class _InstitutionRegistrationScreenState
                       title: 'Términos y Condiciones',
                       body: simulatedTermsBody,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Términos y Condiciones para Instituciones',
                       style: TextStyle(
                         color: appPurpleColor,
@@ -900,7 +901,7 @@ class _InstitutionRegistrationScreenState
                       ),
                     ),
                   ),
-                  const Text(
+                  Text(
                     ' y la ',
                     style: TextStyle(color: appMutedColor, fontSize: 9),
                   ),
@@ -910,7 +911,7 @@ class _InstitutionRegistrationScreenState
                       title: 'Política de Privacidad',
                       body: simulatedPrivacyBody,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Política de Privacidad de Datos Institucionales',
                       style: TextStyle(
                         color: appPurpleColor,
@@ -919,7 +920,7 @@ class _InstitutionRegistrationScreenState
                       ),
                     ),
                   ),
-                  const Text(
+                  Text(
                     '.',
                     style: TextStyle(color: appMutedColor, fontSize: 9),
                   ),
@@ -940,22 +941,22 @@ class _InstitutionRegistrationScreenState
           if (!hasExistingUser && widget.initialInstitution == null) ...[
             TextButton(
               onPressed: widget.onSignIn,
-              child: const Text(
+              child: Text(
                 '¿Ya tienes una cuenta institucional? Iniciar sesión',
               ),
             ),
             if (Navigator.of(context).canPop())
               TextButton.icon(
                 onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.arrow_back, size: 16),
-                label: const Text('Volver al inicio de sesión'),
+                icon: Icon(Icons.arrow_back, size: 16),
+                label: Text('Volver al inicio de sesión'),
               ),
           ],
           if (editing && onBack != null)
             TextButton.icon(
               onPressed: onBack,
-              icon: const Icon(Icons.arrow_back, size: 16),
-              label: const Text('Volver al tablero'),
+              icon: Icon(Icons.arrow_back, size: 16),
+              label: Text('Volver al tablero'),
             ),
         ],
         ),
@@ -1006,7 +1007,7 @@ class _InstitutionRegistrationScreenState
       child: DropdownButtonFormField<String>(
         initialValue: selectedValue,
         dropdownColor: appSurfaceColor,
-        style: const TextStyle(color: Colors.white, fontSize: 11),
+        style: TextStyle(color: appTextColor, fontSize: 11),
         decoration: _inputDecoration(hint ?? 'Selecciona una opción'),
         items: [
           for (final option in uniqueOptions)
@@ -1049,19 +1050,19 @@ class InstitutionDashboardScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: appSurfaceColor,
-        title: const Text('Retirar publicación'),
+        title: Text('Retirar publicación'),
         content: Text(
           'El curso "${course.title}" dejará de aparecer en el catálogo público.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: appOrangeColor),
-            child: const Text('Retirar curso'),
+            child: Text('Retirar curso'),
           ),
         ],
       ),
@@ -1102,19 +1103,19 @@ class InstitutionDashboardScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: appSurfaceColor,
-        title: const Text('Publicar curso'),
+        title: Text('Publicar curso'),
         content: Text(
           'El borrador "${course.title}" pasará al catálogo público de CochaConecta.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+            child: Text('Cancelar'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(backgroundColor: appOrangeColor),
-            child: const Text('Publicar ahora'),
+            child: Text('Publicar ahora'),
           ),
         ],
       ),
@@ -1189,13 +1190,13 @@ class InstitutionDashboardScreen extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: onEditInstitution,
-                    icon: const Icon(Icons.settings_outlined),
+                    icon: Icon(Icons.settings_outlined),
                     color: appMutedColor,
                     tooltip: 'Editar perfil institucional',
                   ),
                   IconButton(
                     onPressed: () => _signOut(context),
-                    icon: const Icon(Icons.logout),
+                    icon: Icon(Icons.logout),
                     color: Color(0xFFFF647C),
                     tooltip: 'Cerrar sesión',
                   ),
@@ -1203,6 +1204,10 @@ class InstitutionDashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
+            if (accountTab) ...[
+              const AppearanceSettingsCard(),
+              const SizedBox(height: 12),
+            ],
             Container(
               padding: const EdgeInsets.all(18),
               decoration: _panelDecoration(),
@@ -1216,7 +1221,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: appPurpleColor, width: 2),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.school_outlined,
                       color: appPurpleColor,
                       size: 36,
@@ -1226,8 +1231,8 @@ class InstitutionDashboardScreen extends StatelessWidget {
                   Text(
                     institution.displayName,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: appTextColor,
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
                     ),
@@ -1236,14 +1241,14 @@ class InstitutionDashboardScreen extends StatelessWidget {
                   Text(
                     '${institution.city}, ${institution.country} · NIT: ${institution.taxId}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: appMutedColor, fontSize: 11),
+                    style: TextStyle(color: appMutedColor, fontSize: 11),
                   ),
                   const SizedBox(height: 12),
                   _VerificationBadge(verified: verified),
-                  const Divider(color: appBorderColor, height: 28),
+                  Divider(color: appBorderColor, height: 28),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.language,
                         color: appMutedColor,
                         size: 15,
@@ -1257,8 +1262,8 @@ class InstitutionDashboardScreen extends StatelessWidget {
                       ),
                       Text(
                         institution.primaryDomain,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: appTextColor,
                           fontSize: 11,
                         ),
                       ),
@@ -1269,11 +1274,11 @@ class InstitutionDashboardScreen extends StatelessWidget {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () => _signOut(context),
-                      icon: const Icon(Icons.logout, size: 16),
-                      label: const Text('Cerrar sesión'),
+                      icon: Icon(Icons.logout, size: 16),
+                      label: Text('Cerrar sesión'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFFF647C),
-                        side: const BorderSide(color: appBorderColor),
+                        side: BorderSide(color: appBorderColor),
                         minimumSize: const Size.fromHeight(44),
                       ),
                     ),
@@ -1287,12 +1292,12 @@ class InstitutionDashboardScreen extends StatelessWidget {
               height: 54,
               child: FilledButton.icon(
                 onPressed: onPublishCourse,
-                icon: const Icon(Icons.add_circle_outline),
-                label: const Text('Publicar nuevo curso o posgrado'),
+                icon: Icon(Icons.add_circle_outline),
+                label: Text('Publicar nuevo curso o posgrado'),
                 style: FilledButton.styleFrom(
                   backgroundColor: appOrangeColor,
                   foregroundColor: Colors.white,
-                  textStyle: const TextStyle(
+                  textStyle: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -1335,7 +1340,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
             const SizedBox(height: 18),
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'PROGRAMAS DE LA INSTITUCIÓN',
                     style: TextStyle(
@@ -1348,7 +1353,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
                 ),
                 Text(
                   '${courses.length} total',
-                  style: const TextStyle(color: appMutedColor, fontSize: 10),
+                  style: TextStyle(color: appMutedColor, fontSize: 10),
                 ),
               ],
             ),
@@ -1356,7 +1361,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
             if (snapshot.hasError)
               _InlineNotice('No se pudieron cargar los cursos.')
             else if (snapshot.connectionState == ConnectionState.waiting)
-              const Center(
+              Center(
                 child: Padding(
                   padding: EdgeInsets.all(22),
                   child: CircularProgressIndicator(color: appPurpleColor),
@@ -1368,7 +1373,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
               )
             else ...[
               if (drafts.isNotEmpty) ...[
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(top: 4, bottom: 8),
                   child: Text(
                     'BORRADORES',
@@ -1388,7 +1393,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
                   ),
               ],
               if (publishedCourses.isNotEmpty) ...[
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(top: 8, bottom: 8),
                   child: Text(
                     'PUBLICADOS EN EL CATÁLOGO',
@@ -1408,7 +1413,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
                   ),
               ],
               if (retiredCourses.isNotEmpty) ...[
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(top: 8, bottom: 8),
                   child: Text(
                     'RETIRADOS',
@@ -1819,7 +1824,7 @@ class _InstitutionCourseFormScreenState
           maxLines: 4,
           validator: (value) => _required(value, 'La descripción'),
         ),
-        const Divider(color: appBorderColor, height: 28),
+        Divider(color: appBorderColor, height: 28),
         const _SectionHeading('B. REQUISITOS Y CUPOS DE POSTULACIÓN'),
         Row(
           children: [
@@ -1870,17 +1875,17 @@ class _InstitutionCourseFormScreenState
                 }),
                 selectedColor: appOrangeColor.withValues(alpha: 0.24),
                 checkmarkColor: appOrangeColor,
-                labelStyle: const TextStyle(color: Colors.white, fontSize: 10),
+                labelStyle: TextStyle(color: appTextColor, fontSize: 10),
                 backgroundColor: appSurfaceColor,
-                side: const BorderSide(color: appBorderColor),
+                side: BorderSide(color: appBorderColor),
               ),
           ],
         ),
-        const Divider(color: appBorderColor, height: 28),
+        Divider(color: appBorderColor, height: 28),
         Row(
           children: [
-            const Expanded(child: _SectionHeading('C. COSTO E INVERSIÓN')),
-            const Text(
+            Expanded(child: _SectionHeading('C. COSTO E INVERSIÓN')),
+            Text(
               'Transparente para alumnos',
               style: TextStyle(color: appMutedColor, fontSize: 8),
             ),
@@ -1940,21 +1945,21 @@ class _InstitutionCourseFormScreenState
           onChanged: (value) => setState(() => _certification = value),
           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
           activeThumbColor: appOrangeColor,
-          title: const Text(
+          title: Text(
             'Certificación Universitaria Incluida',
-            style: TextStyle(color: Colors.white, fontSize: 11),
+            style: TextStyle(color: appTextColor, fontSize: 11),
           ),
-          subtitle: const Text(
+          subtitle: Text(
             'Acreditado con resolución ministerial válida',
             style: TextStyle(color: appMutedColor, fontSize: 9),
           ),
           tileColor: appSurfaceColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
-            side: const BorderSide(color: appBorderColor),
+            side: BorderSide(color: appBorderColor),
           ),
         ),
-        const Divider(color: appBorderColor, height: 28),
+        Divider(color: appBorderColor, height: 28),
         const _SectionHeading('D. CRONOGRAMA Y VIGENCIA'),
         _DateField(
           label: 'Fecha de Publicación en la App',
@@ -1988,7 +1993,7 @@ class _InstitutionCourseFormScreenState
             if (value != null && mounted) setState(() => _startDate = value);
           },
         ),
-        const Divider(color: appBorderColor, height: 28),
+        Divider(color: appBorderColor, height: 28),
         const _SectionHeading('E. SOPORTE Y CONSULTAS ACADÉMICAS'),
         Row(
           children: [
@@ -2021,7 +2026,7 @@ class _InstitutionCourseFormScreenState
         ),
         OutlinedButton.icon(
           onPressed: _selectBrochure,
-          icon: const Icon(Icons.cloud_upload_outlined, color: appOrangeColor),
+          icon: Icon(Icons.cloud_upload_outlined, color: appOrangeColor),
           label: Text(
             _brochure?.name ??
                 'Subir convocatoria o plan de estudios · Máx. 15 MB',
@@ -2051,19 +2056,19 @@ class _InstitutionCourseFormScreenState
         const SizedBox(height: 8),
         OutlinedButton.icon(
           onPressed: _busy ? null : () => _save(publish: false),
-          icon: const Icon(Icons.save_outlined, size: 17),
-          label: const Text('Guardar como Borrador'),
+          icon: Icon(Icons.save_outlined, size: 17),
+          label: Text('Guardar como Borrador'),
           style: OutlinedButton.styleFrom(
             foregroundColor: appMutedColor,
             backgroundColor: appSurfaceColor,
             minimumSize: const Size.fromHeight(44),
-            side: const BorderSide(color: appBorderColor),
+            side: BorderSide(color: appBorderColor),
           ),
         ),
         TextButton.icon(
           onPressed: widget.onBack,
-          icon: const Icon(Icons.arrow_back, size: 16),
-          label: const Text('Volver al tablero'),
+          icon: Icon(Icons.arrow_back, size: 16),
+          label: Text('Volver al tablero'),
         ),
         ],
       ),
@@ -2109,7 +2114,7 @@ class _InstitutionCourseFormScreenState
         DropdownButtonFormField<String>(
           initialValue: safeValue,
           dropdownColor: appSurfaceColor,
-          style: const TextStyle(color: Colors.white, fontSize: 10),
+          style: TextStyle(color: appTextColor, fontSize: 10),
           decoration: _inputDecoration('Selecciona una opción'),
           items: [
             for (final option in uniqueOptions)
@@ -2168,7 +2173,7 @@ class _InstitutionCourseCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   course.programType.toUpperCase(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Color(0xFFB48BF1),
                     fontWeight: FontWeight.w700,
                     fontSize: 10,
@@ -2192,8 +2197,8 @@ class _InstitutionCourseCard extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             course.title,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: appTextColor,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
@@ -2201,7 +2206,7 @@ class _InstitutionCourseCard extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             '${course.modality} · ${course.totalSeats} cupos · ${course.currency} ${_decimal(course.totalCost)}',
-            style: const TextStyle(color: appMutedColor, fontSize: 10),
+            style: TextStyle(color: appMutedColor, fontSize: 10),
           ),
           if (course.description.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
@@ -2209,7 +2214,7 @@ class _InstitutionCourseCard extends StatelessWidget {
               course.description.trim(),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 color: appMutedColor,
                 fontSize: 10,
                 height: 1.35,
@@ -2222,21 +2227,21 @@ class _InstitutionCourseCard extends StatelessWidget {
             children: [
               TextButton.icon(
                 onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined, size: 15),
-                label: const Text('Editar'),
+                icon: Icon(Icons.edit_outlined, size: 15),
+                label: Text('Editar'),
               ),
               if (onPublish != null)
                 TextButton.icon(
                   onPressed: onPublish,
-                  icon: const Icon(Icons.publish_outlined, size: 15),
-                  label: const Text('Publicar'),
+                  icon: Icon(Icons.publish_outlined, size: 15),
+                  label: Text('Publicar'),
                   style: TextButton.styleFrom(foregroundColor: appOrangeColor),
                 ),
               if (onRetire != null)
                 TextButton.icon(
                   onPressed: onRetire,
-                  icon: const Icon(Icons.remove_circle_outline, size: 15),
-                  label: const Text('Retirar'),
+                  icon: Icon(Icons.remove_circle_outline, size: 15),
+                  label: Text('Retirar'),
                 ),
             ],
           ),
@@ -2266,7 +2271,7 @@ class _InstitutionMiniCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(9),
             border: Border.all(color: appBorderColor),
           ),
-          child: const Icon(Icons.school, color: appOrangeColor, size: 20),
+          child: Icon(Icons.school, color: appOrangeColor, size: 20),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -2275,8 +2280,8 @@ class _InstitutionMiniCard extends StatelessWidget {
             children: [
               Text(
                 institution.displayName,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: appTextColor,
                   fontWeight: FontWeight.w700,
                   fontSize: 11,
                 ),
@@ -2286,7 +2291,7 @@ class _InstitutionMiniCard extends StatelessWidget {
                 institution.isVerified
                     ? 'Institución verificada'
                     : 'Verificación pendiente',
-                style: const TextStyle(color: appMutedColor, fontSize: 9),
+                style: TextStyle(color: appMutedColor, fontSize: 9),
               ),
             ],
           ),
@@ -2314,11 +2319,11 @@ class _InstitutionHeader extends StatelessWidget {
         IconButton(
           onPressed: onBack,
           tooltip: 'Volver',
-          icon: const Icon(Icons.arrow_back),
-          color: Colors.white,
+          icon: Icon(Icons.arrow_back),
+          color: appTextColor,
           style: IconButton.styleFrom(
             backgroundColor: appSurfaceColor,
-            side: const BorderSide(color: appBorderColor),
+            side: BorderSide(color: appBorderColor),
             fixedSize: const Size(36, 36),
           ),
         )
@@ -2391,20 +2396,20 @@ class _Metric extends StatelessWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: appMutedColor, fontSize: 9),
+          style: TextStyle(color: appMutedColor, fontSize: 9),
         ),
         const SizedBox(height: 5),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: appTextColor,
             fontSize: 20,
             fontWeight: FontWeight.w700,
           ),
         ),
         Text(
           detail,
-          style: const TextStyle(color: Color(0xFF23C990), fontSize: 9),
+          style: TextStyle(color: Color(0xFF23C990), fontSize: 9),
         ),
       ],
     ),
@@ -2432,7 +2437,7 @@ class _Notice extends StatelessWidget {
     ),
     child: RichText(
       text: TextSpan(
-        style: const TextStyle(color: appMutedColor, fontSize: 9, height: 1.45),
+        style: TextStyle(color: appMutedColor, fontSize: 9, height: 1.45),
         children: [
           TextSpan(
             text: '$title: ',
@@ -2467,8 +2472,8 @@ class _SectionHeading extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: appTextColor,
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.3,
@@ -2490,8 +2495,8 @@ class _FormLabel extends StatelessWidget {
   Widget build(BuildContext context) => FormFieldLabel(
     label,
     required: required,
-    style: const TextStyle(
-      color: Colors.white,
+    style: TextStyle(
+      color: appTextColor,
       fontSize: 10,
       fontWeight: FontWeight.w600,
     ),
@@ -2509,7 +2514,7 @@ class _FieldHint extends StatelessWidget {
     padding: const EdgeInsets.only(top: 4, bottom: 5),
     child: Text(
       text,
-      style: const TextStyle(color: appMutedColor, fontSize: 8, height: 1.4),
+      style: TextStyle(color: appMutedColor, fontSize: 8, height: 1.4),
     ),
   );
 }
@@ -2545,7 +2550,7 @@ class _InstitutionInput extends StatelessWidget {
       obscureText: obscureText,
       readOnly: readOnly,
       maxLines: obscureText ? 1 : maxLines,
-      style: const TextStyle(color: Colors.white, fontSize: 11),
+      style: TextStyle(color: appTextColor, fontSize: 11),
       decoration: _inputDecoration(hint).copyWith(suffixIcon: suffix),
     ),
   );
@@ -2569,7 +2574,7 @@ class _DateField extends StatelessWidget {
       _FormLabel(label, required: true),
       OutlinedButton.icon(
         onPressed: onTap,
-        icon: const Icon(Icons.calendar_month_outlined, size: 15),
+        icon: Icon(Icons.calendar_month_outlined, size: 15),
         label: Align(
           alignment: Alignment.centerLeft,
           child: Text('${value.month}/${value.day}/${value.year}'),
@@ -2578,7 +2583,7 @@ class _DateField extends StatelessWidget {
           foregroundColor: Colors.white,
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
-          side: const BorderSide(color: appBorderColor),
+          side: BorderSide(color: appBorderColor),
           backgroundColor: appSurfaceColor,
         ),
       ),
@@ -2619,7 +2624,7 @@ class _PrimaryAction extends StatelessWidget {
         backgroundColor: appOrangeColor,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
-        textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+        textStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
       ),
     ),
   );
@@ -2637,19 +2642,19 @@ class _InstitutionAccountMismatch extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.account_balance_outlined,
             color: appOrangeColor,
             size: 36,
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Esta cuenta no está registrada como institución.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            style: TextStyle(color: appTextColor, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Inicia sesión con una cuenta institucional independiente para '
             'evitar mezclar perfiles.',
             textAlign: TextAlign.center,
@@ -2670,7 +2675,7 @@ class _InstitutionAccountMismatch extends StatelessWidget {
                 }
               }
             },
-            child: const Text('Cerrar sesión'),
+            child: Text('Cerrar sesión'),
           ),
         ],
       ),
@@ -2694,10 +2699,10 @@ class _InstitutionError extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 12),
+            style: TextStyle(color: appTextColor, fontSize: 12),
           ),
           const SizedBox(height: 10),
-          OutlinedButton(onPressed: onRetry, child: const Text('Reintentar')),
+          OutlinedButton(onPressed: onRetry, child: Text('Reintentar')),
         ],
       ),
     ),
@@ -2716,7 +2721,7 @@ class _InlineNotice extends StatelessWidget {
     child: Text(
       message,
       textAlign: TextAlign.center,
-      style: const TextStyle(color: appMutedColor, fontSize: 10),
+      style: TextStyle(color: appMutedColor, fontSize: 10),
     ),
   );
 }
@@ -2729,17 +2734,17 @@ BoxDecoration _panelDecoration() => BoxDecoration(
 
 InputDecoration _inputDecoration(String hint) => InputDecoration(
   hintText: hint,
-  hintStyle: const TextStyle(color: appMutedColor, fontSize: 10),
+  hintStyle: TextStyle(color: appMutedColor, fontSize: 10),
   filled: true,
   fillColor: appSurfaceColor,
   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
   border: OutlineInputBorder(
     borderRadius: BorderRadius.circular(10),
-    borderSide: const BorderSide(color: appBorderColor),
+    borderSide: BorderSide(color: appBorderColor),
   ),
   enabledBorder: OutlineInputBorder(
     borderRadius: BorderRadius.circular(10),
-    borderSide: const BorderSide(color: appBorderColor),
+    borderSide: BorderSide(color: appBorderColor),
   ),
   focusedBorder: OutlineInputBorder(
     borderRadius: BorderRadius.circular(10),

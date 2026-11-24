@@ -18,6 +18,7 @@ void main() {
     expect(profile.skills, isEmpty);
     expect(profile.languages, isEmpty);
     expect(profile.aboutMe, isEmpty);
+    expect(profile.hasCoordinates, isFalse);
   });
 
   test('new profile fields round-trip through the Firestore map', () {

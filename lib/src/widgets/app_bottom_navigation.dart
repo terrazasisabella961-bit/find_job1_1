@@ -1,11 +1,41 @@
 import 'package:flutter/material.dart';
 
-const appBackgroundColor = Color(0xFF151226);
-const appSurfaceColor = Color(0xFF1A172F);
-const appBorderColor = Color(0xFF302B49);
-const appMutedColor = Color(0xFFAAA6BE);
 const appPurpleColor = Color(0xFF8950F5);
 const appOrangeColor = Color(0xFFFF7845);
+
+const _darkBackground = Color(0xFF151226);
+const _darkSurface = Color(0xFF1A172F);
+const _darkBorder = Color(0xFF302B49);
+const _darkMuted = Color(0xFFAAA6BE);
+const _darkText = Color(0xFFFFFFFF);
+
+const _lightBackground = Color(0xFFF4F1FA);
+const _lightSurface = Color(0xFFFFFFFF);
+const _lightBorder = Color(0xFFD9D3E8);
+const _lightMuted = Color(0xFF6B6580);
+const _lightText = Color(0xFF1A1528);
+
+Color appBackgroundColor = _darkBackground;
+Color appSurfaceColor = _darkSurface;
+Color appBorderColor = _darkBorder;
+Color appMutedColor = _darkMuted;
+Color appTextColor = _darkText;
+
+void applyDarkAppPalette() {
+  appBackgroundColor = _darkBackground;
+  appSurfaceColor = _darkSurface;
+  appBorderColor = _darkBorder;
+  appMutedColor = _darkMuted;
+  appTextColor = _darkText;
+}
+
+void applyLightAppPalette() {
+  appBackgroundColor = _lightBackground;
+  appSurfaceColor = _lightSurface;
+  appBorderColor = _lightBorder;
+  appMutedColor = _lightMuted;
+  appTextColor = _lightText;
+}
 
 class AppNavDestination {
   const AppNavDestination({
@@ -31,6 +61,7 @@ class AppBottomNavigation extends StatelessWidget {
 
   static const studentItems = [
     AppNavDestination(label: 'Empleo', icon: Icons.menu),
+    AppNavDestination(label: 'Cercanas', icon: Icons.place_outlined),
     AppNavDestination(label: 'Cursos', icon: Icons.school_outlined),
     AppNavDestination(label: 'Cuenta', icon: Icons.person_outline),
   ];
@@ -53,7 +84,7 @@ class AppBottomNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 58,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: appSurfaceColor,
         border: Border(top: BorderSide(color: appBorderColor)),
       ),
@@ -134,15 +165,15 @@ Future<void> showSimulatedLegalDialog(
         backgroundColor: appSurfaceColor,
         title: Text(
           title,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: appTextColor,
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
         ),
         content: Text(
           body,
-          style: const TextStyle(
+          style: TextStyle(
             color: appMutedColor,
             fontSize: 13,
             height: 1.4,
@@ -151,7 +182,7 @@ Future<void> showSimulatedLegalDialog(
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Entendido'),
+            child: Text('Entendido'),
           ),
         ],
       );

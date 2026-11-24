@@ -139,13 +139,13 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    icon: Icon(Icons.arrow_back, color: appTextColor),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'POSTULAR',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: appTextColor,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.4,
                       ),
@@ -155,8 +155,8 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
               ),
               Text(
                 widget.job.title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: appTextColor,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
@@ -164,7 +164,7 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
               const SizedBox(height: 4),
               Text(
                 widget.job.companyName,
-                style: const TextStyle(color: appPurpleColor, fontSize: 13),
+                style: TextStyle(color: appPurpleColor, fontSize: 13),
               ),
               const SizedBox(height: 16),
               Container(
@@ -178,7 +178,7 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'DATOS DE TU REGISTRO',
                       style: TextStyle(
                         color: Color(0xFFB48BF1),
@@ -217,7 +217,7 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
               TextFormField(
                 controller: _phone,
                 keyboardType: TextInputType.phone,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: appTextColor),
                 decoration: _decoration('Ej. +591 70000000'),
                 validator: (value) => value == null || value.trim().isEmpty
                     ? 'El teléfono es obligatorio.'
@@ -232,7 +232,7 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
               DropdownButtonFormField<String>(
                 initialValue: _availability,
                 dropdownColor: appSurfaceColor,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
+                style: TextStyle(color: appTextColor, fontSize: 13),
                 decoration: _decoration('Elige una opción'),
                 items: [
                   for (final option in _availabilityOptions)
@@ -252,7 +252,7 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
                 controller: _message,
                 maxLines: 4,
                 maxLength: 400,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: appTextColor),
                 decoration: _decoration(
                   'Cuéntales por qué te interesa el puesto.',
                 ),
@@ -293,16 +293,16 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
 
   InputDecoration _decoration(String hint) => InputDecoration(
     hintText: hint,
-    hintStyle: const TextStyle(color: appMutedColor, fontSize: 12),
+    hintStyle: TextStyle(color: appMutedColor, fontSize: 12),
     filled: true,
     fillColor: appSurfaceColor,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: appBorderColor),
+      borderSide: BorderSide(color: appBorderColor),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: appBorderColor),
+      borderSide: BorderSide(color: appBorderColor),
     ),
   );
 }
@@ -323,11 +323,11 @@ class _Fact extends StatelessWidget {
           children: [
             TextSpan(
               text: '$label: ',
-              style: const TextStyle(color: appMutedColor, fontSize: 12),
+              style: TextStyle(color: appMutedColor, fontSize: 12),
             ),
             TextSpan(
               text: value,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: TextStyle(color: appTextColor, fontSize: 12),
             ),
           ],
         ),

@@ -31,7 +31,7 @@ class LocationPickerMap extends StatelessWidget {
         FormFieldLabel(label, required: required),
         Text(
           hint,
-          style: TextStyle(color: appMutedColor, fontSize: 11),
+          style: TextStyle(color: appMutedColor, fontSize: 12),
         ),
         const SizedBox(height: 8),
         ClipRRect(

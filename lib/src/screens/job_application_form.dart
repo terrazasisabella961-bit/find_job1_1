@@ -157,14 +157,14 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
                 widget.job.title,
                 style: TextStyle(
                   color: appTextColor,
-                  fontSize: 18,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 widget.job.companyName,
-                style: TextStyle(color: appPurpleColor, fontSize: 13),
+                style: TextStyle(color: appPurpleColor, fontSize: 12),
               ),
               const SizedBox(height: 16),
               Container(
@@ -182,7 +182,7 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
                       'DATOS DE TU REGISTRO',
                       style: TextStyle(
                         color: Color(0xFFB48BF1),
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -232,7 +232,7 @@ class _JobApplicationFormScreenState extends State<JobApplicationFormScreen> {
               DropdownButtonFormField<String>(
                 initialValue: _availability,
                 dropdownColor: appSurfaceColor,
-                style: TextStyle(color: appTextColor, fontSize: 13),
+                style: TextStyle(color: appTextColor, fontSize: 12),
                 decoration: _decoration('Elige una opción'),
                 items: [
                   for (final option in _availabilityOptions)

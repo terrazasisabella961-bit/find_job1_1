@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -16,6 +17,7 @@ import 'src/services/user_profile_repository.dart';
 import 'src/theme/app_theme_settings.dart';
 import 'src/widgets/app_bottom_navigation.dart';
 import 'src/widgets/app_feedback.dart';
+import 'src/widgets/student_age_gate.dart';
 import 'src/widgets/cocha_conecta_logo.dart';
 import 'src/widgets/form_field_label.dart';
 
@@ -68,20 +70,124 @@ class _MyAppState extends State<MyApp> {
   }
 
   ThemeData _theme(Brightness brightness) {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: appPurpleColor,
+      brightness: brightness,
+    ).copyWith(
+      surface: appSurfaceColor,
+      onSurface: appTextColor,
+      onSurfaceVariant: appMutedColor,
+      outline: appBorderColor,
+      primary: appPurpleColor,
+      onPrimary: Colors.white,
+      secondary: appOrangeColor,
+      onSecondary: Colors.white,
+    );
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      colorScheme: scheme,
       scaffoldBackgroundColor: appBackgroundColor,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: appPurpleColor,
-        brightness: brightness,
-      ),
+      canvasColor: appBackgroundColor,
+      cardColor: appSurfaceColor,
+      dividerColor: appBorderColor,
       fontFamily: 'Roboto',
+      textTheme: ThemeData(brightness: brightness).textTheme.apply(
+        bodyColor: appTextColor,
+        displayColor: appTextColor,
+      ).copyWith(
+        bodyLarge: TextStyle(color: appTextColor, fontSize: 12),
+        bodyMedium: TextStyle(color: appTextColor, fontSize: 12),
+        bodySmall: TextStyle(color: appTextColor, fontSize: 12),
+        titleLarge: TextStyle(
+          color: appTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+        titleMedium: TextStyle(
+          color: appTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        titleSmall: TextStyle(
+          color: appTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        headlineSmall: TextStyle(
+          color: appTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+        headlineMedium: TextStyle(
+          color: appTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+        headlineLarge: TextStyle(
+          color: appTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+        labelLarge: TextStyle(
+          color: appTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        labelMedium: TextStyle(color: appTextColor, fontSize: 12),
+        labelSmall: TextStyle(color: appTextColor, fontSize: 12),
+      ),
+      iconTheme: IconThemeData(color: appTextColor),
+      appBarTheme: AppBarTheme(
+        backgroundColor: appBackgroundColor,
+        foregroundColor: appTextColor,
+        elevation: 0,
+        titleTextStyle: TextStyle(
+          color: appTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          foregroundColor: Colors.white,
+          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: appTextColor,
+          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: appTextColor,
+          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        hintStyle: TextStyle(color: appMutedColor, fontSize: 12),
+        labelStyle: TextStyle(color: appTextColor, fontSize: 12),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: appSurfaceColor,
+        textStyle: TextStyle(color: appTextColor, fontSize: 12),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: appSurfaceColor,
+        titleTextStyle: TextStyle(
+          color: appTextColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+        contentTextStyle: TextStyle(color: appMutedColor, fontSize: 12),
+      ),
       snackBarTheme: const SnackBarThemeData(
         backgroundColor: Color(0xFF3D2E6B),
         contentTextStyle: TextStyle(
           color: Colors.white,
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
         behavior: SnackBarBehavior.floating,
@@ -106,6 +212,13 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           title: 'CochaConecta',
           debugShowCheckedModeBanner: false,
+          locale: const Locale('es'),
+          supportedLocales: const [Locale('es'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           theme: _theme(Brightness.light),
           darkTheme: _theme(Brightness.dark),
           themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
@@ -273,14 +386,19 @@ class _AuthenticatedGate extends StatelessWidget {
                 accountType: 'institution',
               );
             }
-            return AppShell(
+            return StudentAgeGate(
+              userUid: user.uid,
               authRepository: authRepository,
               profileRepository: profileRepository,
-              recruitmentRepository: recruitmentRepository,
-              institutionRepository: institutionRepository,
-              applicationRepository: applicationRepository,
-              initialSelectedIndex: 0,
-              accountType: 'student',
+              child: AppShell(
+                authRepository: authRepository,
+                profileRepository: profileRepository,
+                recruitmentRepository: recruitmentRepository,
+                institutionRepository: institutionRepository,
+                applicationRepository: applicationRepository,
+                initialSelectedIndex: 0,
+                accountType: 'student',
+              ),
             );
           },
         );
@@ -504,7 +622,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: appMutedColor,
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     height: 1.4,
                                   ),
                                 ),
@@ -547,7 +665,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     '¿Olvidaste tu contraseña?',
                                     style: TextStyle(
                                       color: appMutedColor,
-                                      fontSize: 13,
+                                      fontSize: 12,
                                     ),
                                   ),
                                 ),
@@ -569,7 +687,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                         shape: const StadiumBorder(),
                                         textStyle: TextStyle(
-                                          fontSize: 15,
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w700,
                                         ),
                                       ),
@@ -600,7 +718,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         'o',
                                         style: TextStyle(
                                           color: appMutedColor,
-                                          fontSize: 13,
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ),
@@ -626,13 +744,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                         'Continuar con Google',
                                       ),
                                       style: OutlinedButton.styleFrom(
-                                        foregroundColor: Colors.white,
+                                        foregroundColor: appTextColor,
                                         side: BorderSide(
                                           color: appBorderColor,
                                         ),
                                         shape: const StadiumBorder(),
                                         textStyle: TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -649,7 +767,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       '¿No tienes cuenta? Regístrate',
                                       style: TextStyle(
                                         color: appTextColor,
-                                        fontSize: 14,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -761,10 +879,10 @@ class LoginTextField extends StatelessWidget {
         keyboardType: keyboardType,
         obscureText: obscureText,
         validator: validator,
-        style: TextStyle(color: appTextColor, fontSize: 15),
+        style: TextStyle(color: appTextColor, fontSize: 12),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(color: appMutedColor, fontSize: 14),
+          hintStyle: TextStyle(color: appMutedColor, fontSize: 12),
           prefixIcon: Icon(icon, color: appPurpleColor, size: 20),
           suffixIcon: onToggleVisibility == null
               ? null
@@ -782,7 +900,7 @@ class LoginTextField extends StatelessWidget {
           filled: true,
           fillColor: appSurfaceColor,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
-          errorStyle: TextStyle(fontSize: 11, height: 1.1),
+          errorStyle: TextStyle(fontSize: 12, height: 1.1),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(13),
             borderSide: BorderSide(color: appBorderColor),

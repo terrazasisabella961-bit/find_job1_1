@@ -9,11 +9,11 @@ const _darkBorder = Color(0xFF302B49);
 const _darkMuted = Color(0xFFAAA6BE);
 const _darkText = Color(0xFFFFFFFF);
 
-const _lightBackground = Color(0xFFF4F1FA);
+const _lightBackground = Color(0xFFF3F0F8);
 const _lightSurface = Color(0xFFFFFFFF);
-const _lightBorder = Color(0xFFD9D3E8);
-const _lightMuted = Color(0xFF6B6580);
-const _lightText = Color(0xFF1A1528);
+const _lightBorder = Color(0xFFCBC4DC);
+const _lightMuted = Color(0xFF4A455C);
+const _lightText = Color(0xFF140F22);
 
 Color appBackgroundColor = _darkBackground;
 Color appSurfaceColor = _darkSurface;
@@ -120,7 +120,7 @@ class _NavigationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? appPurpleColor : const Color(0xFF77748A);
+    final color = selected ? appPurpleColor : appMutedColor;
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 60;
@@ -140,7 +140,7 @@ class _NavigationItem extends StatelessWidget {
                     child: Text(
                       label,
                       maxLines: 1,
-                      style: TextStyle(color: color, fontSize: 8),
+                      style: TextStyle(color: color, fontSize: 12),
                     ),
                   ),
                 ),
@@ -167,7 +167,7 @@ Future<void> showSimulatedLegalDialog(
           title,
           style: TextStyle(
             color: appTextColor,
-            fontSize: 16,
+            fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -175,7 +175,7 @@ Future<void> showSimulatedLegalDialog(
           body,
           style: TextStyle(
             color: appMutedColor,
-            fontSize: 13,
+            fontSize: 12,
             height: 1.4,
           ),
         ),

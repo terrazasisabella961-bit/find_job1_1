@@ -304,7 +304,7 @@ class _NearbyCompanyCard extends StatelessWidget {
                         style: TextStyle(
                           color: appTextColor,
                           fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -326,7 +326,7 @@ class _NearbyCompanyCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${company.city}${company.address.isEmpty ? '' : ' · ${company.address}'}',
-                  style: TextStyle(color: appMutedColor, fontSize: 11),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
               ],
             ),

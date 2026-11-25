@@ -19,10 +19,12 @@ void main() {
     expect(profile.languages, isEmpty);
     expect(profile.aboutMe, isEmpty);
     expect(profile.hasCoordinates, isFalse);
+    expect(profile.birthDate, isNull);
+    expect(profile.isUnder18, isFalse);
   });
 
   test('new profile fields round-trip through the Firestore map', () {
-    const original = UserProfile(
+    final original = UserProfile(
       uid: 'user-2',
       fullName: 'Luis',
       email: 'luis@example.com',
@@ -37,6 +39,7 @@ void main() {
         ProfileLanguage(name: 'Quechua', level: 'Intermedio'),
       ],
       aboutMe: 'Busco empleo en gestión ambiental.',
+      birthDate: DateTime(2000, 5, 20),
     );
 
     final restored = UserProfile.fromMap(
@@ -51,5 +54,20 @@ void main() {
     expect(restored.languages.first.level, 'Nativo');
     expect(restored.languages.last.name, 'Quechua');
     expect(restored.aboutMe, 'Busco empleo en gestión ambiental.');
+    expect(restored.birthDate, DateTime(2000, 5, 20));
+    expect(restored.isUnder18, isFalse);
+  });
+
+  test('age gate treats today as the 18th birthday', () {
+    final today = DateTime(2026, 11, 24);
+    expect(
+      isAtLeast18YearsOld(DateTime(2008, 11, 24), now: today),
+      isTrue,
+    );
+    expect(
+      isAtLeast18YearsOld(DateTime(2008, 11, 25), now: today),
+      isFalse,
+    );
+    expect(latestAdultBirthDate(today), DateTime(2008, 11, 24));
   });
 }

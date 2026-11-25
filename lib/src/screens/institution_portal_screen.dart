@@ -254,7 +254,7 @@ class _InstitutionLoginScreenState extends State<InstitutionLoginScreen> {
         'Iniciar sesión',
         style: TextStyle(
           color: appTextColor,
-          fontSize: 20,
+          fontSize: 12,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -619,14 +619,14 @@ class _InstitutionRegistrationScreenState
                 : 'Actualizar institución',
             style: TextStyle(
               color: appTextColor,
-              fontSize: 17,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             'Registra tu universidad, instituto o centro de formación para publicar cursos, diplomados, posgrados y conectar con futuros estudiantes.',
-            style: TextStyle(color: appMutedColor, fontSize: 10, height: 1.5),
+            style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: 14),
           const _Notice(
@@ -860,11 +860,11 @@ class _InstitutionRegistrationScreenState
             activeThumbColor: appOrangeColor,
             title: Text(
               'Solicitar verificación en dos pasos (2FA)',
-              style: TextStyle(color: appTextColor, fontSize: 11),
+              style: TextStyle(color: appTextColor, fontSize: 12),
             ),
             subtitle: Text(
               'La activación requiere configurar un segundo factor en Firebase Authentication.',
-              style: TextStyle(color: appMutedColor, fontSize: 9),
+              style: TextStyle(color: appMutedColor, fontSize: 12),
             ),
             tileColor: appSurfaceColor,
             shape: RoundedRectangleBorder(
@@ -884,7 +884,7 @@ class _InstitutionRegistrationScreenState
                 children: [
                   Text(
                     'Acepto los ',
-                    style: TextStyle(color: appMutedColor, fontSize: 9),
+                    style: TextStyle(color: appMutedColor, fontSize: 12),
                   ),
                   InkWell(
                     onTap: () => showSimulatedLegalDialog(
@@ -896,14 +896,14 @@ class _InstitutionRegistrationScreenState
                       'Términos y Condiciones para Instituciones',
                       style: TextStyle(
                         color: appPurpleColor,
-                        fontSize: 9,
+                        fontSize: 12,
                         decoration: TextDecoration.underline,
                       ),
                     ),
                   ),
                   Text(
                     ' y la ',
-                    style: TextStyle(color: appMutedColor, fontSize: 9),
+                    style: TextStyle(color: appMutedColor, fontSize: 12),
                   ),
                   InkWell(
                     onTap: () => showSimulatedLegalDialog(
@@ -915,14 +915,14 @@ class _InstitutionRegistrationScreenState
                       'Política de Privacidad de Datos Institucionales',
                       style: TextStyle(
                         color: appPurpleColor,
-                        fontSize: 9,
+                        fontSize: 12,
                         decoration: TextDecoration.underline,
                       ),
                     ),
                   ),
                   Text(
                     '.',
-                    style: TextStyle(color: appMutedColor, fontSize: 9),
+                    style: TextStyle(color: appMutedColor, fontSize: 12),
                   ),
                 ],
               ),
@@ -1007,7 +1007,7 @@ class _InstitutionRegistrationScreenState
       child: DropdownButtonFormField<String>(
         initialValue: selectedValue,
         dropdownColor: appSurfaceColor,
-        style: TextStyle(color: appTextColor, fontSize: 11),
+        style: TextStyle(color: appTextColor, fontSize: 12),
         decoration: _inputDecoration(hint ?? 'Selecciona una opción'),
         items: [
           for (final option in uniqueOptions)
@@ -1234,14 +1234,14 @@ class InstitutionDashboardScreen extends StatelessWidget {
                     style: TextStyle(
                       color: appTextColor,
                       fontWeight: FontWeight.w700,
-                      fontSize: 16,
+                      fontSize: 12,
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     '${institution.city}, ${institution.country} · NIT: ${institution.taxId}',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: appMutedColor, fontSize: 11),
+                    style: TextStyle(color: appMutedColor, fontSize: 12),
                   ),
                   const SizedBox(height: 12),
                   _VerificationBadge(verified: verified),
@@ -1257,14 +1257,14 @@ class InstitutionDashboardScreen extends StatelessWidget {
                       Expanded(
                         child: Text(
                           'Dominio institucional:',
-                          style: TextStyle(color: appMutedColor, fontSize: 11),
+                          style: TextStyle(color: appMutedColor, fontSize: 12),
                         ),
                       ),
                       Text(
                         institution.primaryDomain,
                         style: TextStyle(
                           color: appTextColor,
-                          fontSize: 11,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -1298,7 +1298,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
                   backgroundColor: appOrangeColor,
                   foregroundColor: Colors.white,
                   textStyle: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1347,13 +1347,13 @@ class InstitutionDashboardScreen extends StatelessWidget {
                       color: Color(0xFFB48BF1),
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.4,
-                      fontSize: 11,
+                      fontSize: 12,
                     ),
                   ),
                 ),
                 Text(
                   '${courses.length} total',
-                  style: TextStyle(color: appMutedColor, fontSize: 10),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
               ],
             ),
@@ -1381,7 +1381,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
                       color: appOrangeColor,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.4,
-                      fontSize: 11,
+                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -1401,7 +1401,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
                       color: Color(0xFF4BD6A0),
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.4,
-                      fontSize: 11,
+                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -1421,7 +1421,7 @@ class InstitutionDashboardScreen extends StatelessWidget {
                       color: appMutedColor,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.4,
-                      fontSize: 11,
+                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -1875,7 +1875,7 @@ class _InstitutionCourseFormScreenState
                 }),
                 selectedColor: appOrangeColor.withValues(alpha: 0.24),
                 checkmarkColor: appOrangeColor,
-                labelStyle: TextStyle(color: appTextColor, fontSize: 10),
+                labelStyle: TextStyle(color: appTextColor, fontSize: 12),
                 backgroundColor: appSurfaceColor,
                 side: BorderSide(color: appBorderColor),
               ),
@@ -1887,7 +1887,7 @@ class _InstitutionCourseFormScreenState
             Expanded(child: _SectionHeading('C. COSTO E INVERSIÓN')),
             Text(
               'Transparente para alumnos',
-              style: TextStyle(color: appMutedColor, fontSize: 8),
+              style: TextStyle(color: appMutedColor, fontSize: 12),
             ),
           ],
         ),
@@ -1947,11 +1947,11 @@ class _InstitutionCourseFormScreenState
           activeThumbColor: appOrangeColor,
           title: Text(
             'Certificación Universitaria Incluida',
-            style: TextStyle(color: appTextColor, fontSize: 11),
+            style: TextStyle(color: appTextColor, fontSize: 12),
           ),
           subtitle: Text(
             'Acreditado con resolución ministerial válida',
-            style: TextStyle(color: appMutedColor, fontSize: 9),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           tileColor: appSurfaceColor,
           shape: RoundedRectangleBorder(
@@ -2032,7 +2032,7 @@ class _InstitutionCourseFormScreenState
                 'Subir convocatoria o plan de estudios · Máx. 15 MB',
           ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white,
+            foregroundColor: appTextColor,
             padding: const EdgeInsets.all(18),
             side: const BorderSide(color: appPurpleColor),
           ),
@@ -2114,7 +2114,7 @@ class _InstitutionCourseFormScreenState
         DropdownButtonFormField<String>(
           initialValue: safeValue,
           dropdownColor: appSurfaceColor,
-          style: TextStyle(color: appTextColor, fontSize: 10),
+          style: TextStyle(color: appTextColor, fontSize: 12),
           decoration: _inputDecoration('Selecciona una opción'),
           items: [
             for (final option in uniqueOptions)
@@ -2176,7 +2176,7 @@ class _InstitutionCourseCard extends StatelessWidget {
                   style: TextStyle(
                     color: Color(0xFFB48BF1),
                     fontWeight: FontWeight.w700,
-                    fontSize: 10,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -2189,7 +2189,7 @@ class _InstitutionCourseCard extends StatelessWidget {
                 ),
                 child: Text(
                   status,
-                  style: TextStyle(color: statusColor, fontSize: 10),
+                  style: TextStyle(color: statusColor, fontSize: 12),
                 ),
               ),
             ],
@@ -2199,14 +2199,14 @@ class _InstitutionCourseCard extends StatelessWidget {
             course.title,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 5),
           Text(
             '${course.modality} · ${course.totalSeats} cupos · ${course.currency} ${_decimal(course.totalCost)}',
-            style: TextStyle(color: appMutedColor, fontSize: 10),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           if (course.description.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
@@ -2216,7 +2216,7 @@ class _InstitutionCourseCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: appMutedColor,
-                fontSize: 10,
+                fontSize: 12,
                 height: 1.35,
               ),
             ),
@@ -2283,7 +2283,7 @@ class _InstitutionMiniCard extends StatelessWidget {
                 style: TextStyle(
                   color: appTextColor,
                   fontWeight: FontWeight.w700,
-                  fontSize: 11,
+                  fontSize: 12,
                 ),
               ),
               const SizedBox(height: 3),
@@ -2291,7 +2291,7 @@ class _InstitutionMiniCard extends StatelessWidget {
                 institution.isVerified
                     ? 'Institución verificada'
                     : 'Verificación pendiente',
-                style: TextStyle(color: appMutedColor, fontSize: 9),
+                style: TextStyle(color: appMutedColor, fontSize: 12),
               ),
             ],
           ),
@@ -2335,7 +2335,7 @@ class _InstitutionHeader extends StatelessWidget {
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Color(0xFFB48BF1),
-            fontSize: 9,
+            fontSize: 12,
             letterSpacing: 1,
           ),
         ),
@@ -2366,7 +2366,7 @@ class _VerificationBadge extends StatelessWidget {
       ),
       child: Text(
         verified ? 'Institución Acreditada' : 'Verificación pendiente',
-        style: TextStyle(color: color, fontSize: 11),
+        style: TextStyle(color: color, fontSize: 12),
       ),
     );
   }
@@ -2396,20 +2396,20 @@ class _Metric extends StatelessWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: TextStyle(color: appMutedColor, fontSize: 9),
+          style: TextStyle(color: appMutedColor, fontSize: 12),
         ),
         const SizedBox(height: 5),
         Text(
           value,
           style: TextStyle(
             color: appTextColor,
-            fontSize: 20,
+            fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
         ),
         Text(
           detail,
-          style: TextStyle(color: Color(0xFF23C990), fontSize: 9),
+          style: TextStyle(color: Color(0xFF23C990), fontSize: 12),
         ),
       ],
     ),
@@ -2437,7 +2437,7 @@ class _Notice extends StatelessWidget {
     ),
     child: RichText(
       text: TextSpan(
-        style: TextStyle(color: appMutedColor, fontSize: 9, height: 1.45),
+        style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.45),
         children: [
           TextSpan(
             text: '$title: ',
@@ -2474,7 +2474,7 @@ class _SectionHeading extends StatelessWidget {
             title,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.3,
             ),
@@ -2497,7 +2497,7 @@ class _FormLabel extends StatelessWidget {
     required: required,
     style: TextStyle(
       color: appTextColor,
-      fontSize: 10,
+      fontSize: 12,
       fontWeight: FontWeight.w600,
     ),
     padding: const EdgeInsets.only(top: 10, bottom: 5),
@@ -2514,7 +2514,7 @@ class _FieldHint extends StatelessWidget {
     padding: const EdgeInsets.only(top: 4, bottom: 5),
     child: Text(
       text,
-      style: TextStyle(color: appMutedColor, fontSize: 8, height: 1.4),
+      style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.4),
     ),
   );
 }
@@ -2550,7 +2550,7 @@ class _InstitutionInput extends StatelessWidget {
       obscureText: obscureText,
       readOnly: readOnly,
       maxLines: obscureText ? 1 : maxLines,
-      style: TextStyle(color: appTextColor, fontSize: 11),
+      style: TextStyle(color: appTextColor, fontSize: 12),
       decoration: _inputDecoration(hint).copyWith(suffixIcon: suffix),
     ),
   );
@@ -2580,7 +2580,7 @@ class _DateField extends StatelessWidget {
           child: Text('${value.month}/${value.day}/${value.year}'),
         ),
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.white,
+          foregroundColor: appTextColor,
           alignment: Alignment.centerLeft,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
           side: BorderSide(color: appBorderColor),
@@ -2624,7 +2624,7 @@ class _PrimaryAction extends StatelessWidget {
         backgroundColor: appOrangeColor,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
-        textStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+        textStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
       ),
     ),
   );
@@ -2658,7 +2658,7 @@ class _InstitutionAccountMismatch extends StatelessWidget {
             'Inicia sesión con una cuenta institucional independiente para '
             'evitar mezclar perfiles.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: appMutedColor, fontSize: 11),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           const SizedBox(height: 16),
           OutlinedButton(
@@ -2721,7 +2721,7 @@ class _InlineNotice extends StatelessWidget {
     child: Text(
       message,
       textAlign: TextAlign.center,
-      style: TextStyle(color: appMutedColor, fontSize: 10),
+      style: TextStyle(color: appMutedColor, fontSize: 12),
     ),
   );
 }
@@ -2734,7 +2734,7 @@ BoxDecoration _panelDecoration() => BoxDecoration(
 
 InputDecoration _inputDecoration(String hint) => InputDecoration(
   hintText: hint,
-  hintStyle: TextStyle(color: appMutedColor, fontSize: 10),
+  hintStyle: TextStyle(color: appMutedColor, fontSize: 12),
   filled: true,
   fillColor: appSurfaceColor,
   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

@@ -147,7 +147,9 @@ service cloud.firestore {
         && (!('latitude' in request.resource.data.keys())
           || request.resource.data.latitude is number)
         && (!('longitude' in request.resource.data.keys())
-          || request.resource.data.longitude is number);
+          || request.resource.data.longitude is number)
+        && (!('birthDate' in request.resource.data.keys())
+          || request.resource.data.birthDate is string);
     }
 
     match /companies/{companyId} {

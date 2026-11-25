@@ -77,6 +77,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
   ];
 
   String? _city;
+  DateTime? _birthDate;
   late LatLng _homePin;
   var _homeMapGeneration = 0;
   String? _educationLevel;
@@ -93,6 +94,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     super.initState();
     final savedCity = widget.initialProfile?.city;
     _city = savedCity == null || savedCity.isEmpty ? null : savedCity;
+    _birthDate = widget.initialProfile?.birthDate;
     final savedProfile = widget.initialProfile;
     _homePin = savedProfile != null && savedProfile.hasCoordinates
         ? LatLng(savedProfile.latitude!, savedProfile.longitude!)
@@ -176,6 +178,20 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
     if (requiresConsent && !_acceptedTerms) {
       _showMessage(
         'Debes aceptar los Términos y Condiciones y la Política de Privacidad.',
+        kind: AppMessageKind.error,
+      );
+      return;
+    }
+    if (_birthDate == null) {
+      _showMessage(
+        'Selecciona tu fecha de nacimiento.',
+        kind: AppMessageKind.error,
+      );
+      return;
+    }
+    if (!isAtLeast18YearsOld(_birthDate!)) {
+      _showMessage(
+        'Debes tener 18 años o más para crear una cuenta de postulante.',
         kind: AppMessageKind.error,
       );
       return;
@@ -283,6 +299,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
       cvFileName: cvFileName,
       latitude: _homePin.latitude,
       longitude: _homePin.longitude,
+      birthDate: _birthDate,
     );
   }
 
@@ -358,7 +375,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                             : 'Crear tu perfil profesional',
                         style: TextStyle(
                           color: appTextColor,
-                          fontSize: 14,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -368,7 +385,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         'acceder a los cursos y diplomados disponibles.',
                         style: TextStyle(
                           color: appMutedColor,
-                          fontSize: 9,
+                          fontSize: 12,
                           height: 1.45,
                         ),
                       ),
@@ -381,224 +398,260 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                             'POSTULARTE.',
                       ),
                       const SizedBox(height: 14),
-                      _RegistrationField(
-                        label: 'Nombre y apellidos',
-                        hint: 'Ej. Alejandra Morales',
-                        controller: _nameController,
-                        validator: (value) => _required(value, 'El nombre'),
-                        textCapitalization: TextCapitalization.words,
-                      ),
-                      const _FieldHint(
-                        'Tu nombre completo tal como aparece en tu documento.',
-                      ),
-                      _RegistrationField(
-                        label: 'Correo electrónico',
-                        hint: 'correo@ejemplo.com',
-                        controller: _emailController,
-                        validator: _validateEmail,
-                        keyboardType: TextInputType.emailAddress,
-                        readOnly: widget.isEditing,
-                      ),
-                      const _FieldHint('Será tu usuario para iniciar sesión.'),
-                      _RegistrationField(
-                        label: 'Teléfono / WhatsApp',
-                        hint: '+591 7XXXXXXX',
-                        controller: _phoneController,
-                        validator: (value) => _required(value, 'El teléfono'),
-                        keyboardType: TextInputType.phone,
-                      ),
-                      const _FieldHint(
-                        'Para recibir notificaciones y contacto directo de empleadores.',
-                      ),
-                      _CityField(
-                        value: _city,
-                        cities: _availableCities,
-                        onChanged: (value) => setState(() {
-                          _city = value;
-                          if (value != null) {
-                            _homePin = centerForCity(value);
-                            _homeMapGeneration++;
-                          }
-                        }),
-                        validator: (value) =>
-                            value == null ? 'Selecciona tu ciudad.' : null,
-                      ),
-                      const _FieldHint(
-                        'Selecciona la ciudad donde resides actualmente.',
-                      ),
-                      LocationPickerMap(
-                        key: ValueKey('home-$_homeMapGeneration'),
-                        point: _homePin,
-                        label: 'Ubicación de tu casa',
-                        hint:
-                            'Toca el mapa para mover el pin a tu zona. Así podemos mostrarte empresas cercanas.',
-                        onChanged: (value) => setState(() => _homePin = value),
-                      ),
-                      _RegistrationField(
-                        label: 'Área profesional o de interés',
-                        hint: 'Ej. Tecnología, Administración, Ventas, etc.',
-                        controller: _areaController,
-                        validator: (value) =>
-                            _required(value, 'El área profesional'),
-                        textCapitalization: TextCapitalization.sentences,
-                      ),
-                      const _FieldHint(
-                        'Tu especialidad principal o rubro laboral deseado.',
-                      ),
-                      _EducationField(
-                        value: _educationLevel,
-                        options: [
-                          ...profileEducationLevels,
-                          if (_educationLevel != null &&
-                              _educationLevel!.isNotEmpty &&
-                              !profileEducationLevels.contains(
-                                _educationLevel,
-                              ))
-                            _educationLevel!,
-                        ],
-                        onChanged: (value) =>
-                            setState(() => _educationLevel = value),
-                      ),
-                      const _FieldHint('Nivel de estudios alcanzado.'),
-                      _RegistrationField(
-                        label: 'Carrera o título',
-                        hint: 'Ej. Ingeniería Ambiental, Administración...',
-                        controller: _careerController,
-                        textCapitalization: TextCapitalization.sentences,
-                        isRequired: false,
-                      ),
-                      const _FieldHint('Nombre de tu carrera o título.'),
-                      _TagSection(
-                        label: 'Habilidades',
-                        hint: 'Elige las que te describen.',
-                        options: profileSkillTags,
-                        selected: _skills,
-                        onToggle: _toggleSkill,
-                      ),
-                      _LanguageSection(
-                        selected: _languages,
-                        onToggle: _toggleLanguage,
-                        onLevelChanged: _setLanguageLevel,
-                      ),
-                      _RegistrationField(
-                        label: 'Sobre mí',
-                        hint: 'Dos o tres líneas sobre tu perfil profesional.',
-                        controller: _aboutController,
-                        textCapitalization: TextCapitalization.sentences,
-                        maxLines: 3,
-                        maxLength: 240,
-                        isRequired: false,
-                      ),
-                      const _FieldHint('No es obligatorio para registrarte.'),
-                      const SizedBox(height: 12),
-                      Row(
+                      _FormSection(
+                        title: '1. Datos personales',
+                        subtitle: 'Tu identidad y cómo contactarte.',
                         children: [
-                          Expanded(
-                            child: FormFieldLabel(
-                              'Currículum Vitae (CV)',
-                              required: false,
-                              style: TextStyle(
-                                color: appTextColor,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              padding: EdgeInsets.zero,
-                            ),
+                          _RegistrationField(
+                            label: 'Nombre y apellidos',
+                            hint: 'Ej. Alejandra Morales',
+                            controller: _nameController,
+                            validator: (value) => _required(value, 'El nombre'),
+                            textCapitalization: TextCapitalization.words,
                           ),
-                          TextButton(
-                            onPressed: _selectCv,
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              'Recomendado',
-                              style: TextStyle(
-                                color: appPurpleColor,
-                                fontSize: 8,
-                              ),
-                            ),
+                          const _FieldHint(
+                            'Tu nombre completo tal como aparece en tu documento.',
+                          ),
+                          _BirthDateField(
+                            value: _birthDate,
+                            onChanged: (value) =>
+                                setState(() => _birthDate = value),
+                          ),
+                          _RegistrationField(
+                            label: 'Teléfono / WhatsApp',
+                            hint: '+591 7XXXXXXX',
+                            controller: _phoneController,
+                            validator: (value) =>
+                                _required(value, 'El teléfono'),
+                            keyboardType: TextInputType.phone,
+                          ),
+                          const _FieldHint(
+                            'Para recibir notificaciones y contacto directo de empleadores.',
+                          ),
+                          _CityField(
+                            value: _city,
+                            cities: _availableCities,
+                            onChanged: (value) => setState(() {
+                              _city = value;
+                              if (value != null) {
+                                _homePin = centerForCity(value);
+                                _homeMapGeneration++;
+                              }
+                            }),
+                            validator: (value) =>
+                                value == null ? 'Selecciona tu ciudad.' : null,
+                          ),
+                          const _FieldHint(
+                            'Selecciona la ciudad donde resides actualmente.',
+                          ),
+                          LocationPickerMap(
+                            key: ValueKey('home-$_homeMapGeneration'),
+                            point: _homePin,
+                            label: 'Ubicación de tu casa',
+                            hint:
+                                'Toca el mapa para mover el pin a tu zona. Así podemos mostrarte empresas cercanas.',
+                            onChanged: (value) =>
+                                setState(() => _homePin = value),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Sube tu CV para que los reclutadores evalúen tu perfil.',
-                        style: TextStyle(color: appMutedColor, fontSize: 8),
-                      ),
-                      const SizedBox(height: 8),
-                      _CvPicker(
-                        file: _cvFile,
-                        existingFileName: widget.initialProfile?.cvFileName,
-                        onTap: _selectCv,
-                        onRemove: () => setState(() => _cvFile = null),
-                      ),
-                      const _FieldHint(
-                        'Formatos admitidos: PDF, DOCX (Máx. 10 MB)',
-                      ),
-                      const SizedBox(height: 10),
-                      if (!widget.isEditing)
-                        _PasswordField(
-                          label: 'Contraseña',
-                          hint: 'Crea una contraseña segura',
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          onToggleVisibility: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
+                      _FormSection(
+                        title: '2. Acceso',
+                        subtitle: 'Correo y contraseña para entrar a CochaConecta.',
+                        children: [
+                          _RegistrationField(
+                            label: 'Correo electrónico',
+                            hint: 'correo@ejemplo.com',
+                            controller: _emailController,
+                            validator: _validateEmail,
+                            keyboardType: TextInputType.emailAddress,
+                            readOnly: widget.isEditing,
                           ),
-                          validator: (value) {
-                            final error = _required(value, 'La contraseña');
-                            if (error != null) return error;
-                            if (value!.length < 8) {
-                              return 'Mínimo 8 caracteres.';
-                            }
-                            return null;
-                          },
-                        ),
-                      if (!widget.isEditing)
-                        const _FieldHint('Mínimo 8 caracteres.'),
-                      if (!widget.isEditing)
-                        _PasswordField(
-                          label: 'Confirmar contraseña',
-                          hint: 'Repite tu contraseña',
-                          controller: _confirmPasswordController,
-                          obscureText: _obscureConfirmation,
-                          onToggleVisibility: () => setState(
-                            () => _obscureConfirmation = !_obscureConfirmation,
+                          const _FieldHint('Será tu usuario para iniciar sesión.'),
+                          if (!widget.isEditing)
+                            _PasswordField(
+                              label: 'Contraseña',
+                              hint: 'Crea una contraseña segura',
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              onToggleVisibility: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
+                              ),
+                              validator: (value) {
+                                final error = _required(value, 'La contraseña');
+                                if (error != null) return error;
+                                if (value!.length < 8) {
+                                  return 'Mínimo 8 caracteres.';
+                                }
+                                return null;
+                              },
+                            ),
+                          if (!widget.isEditing)
+                            const _FieldHint('Mínimo 8 caracteres.'),
+                          if (!widget.isEditing)
+                            _PasswordField(
+                              label: 'Confirmar contraseña',
+                              hint: 'Repite tu contraseña',
+                              controller: _confirmPasswordController,
+                              obscureText: _obscureConfirmation,
+                              onToggleVisibility: () => setState(
+                                () =>
+                                    _obscureConfirmation = !_obscureConfirmation,
+                              ),
+                              validator: (value) {
+                                final error =
+                                    _required(value, 'La confirmación');
+                                if (error != null) return error;
+                                if (value != _passwordController.text) {
+                                  return 'Las contraseñas no coinciden.';
+                                }
+                                return null;
+                              },
+                            ),
+                          if (!widget.isEditing)
+                            const _FieldHint(
+                              'Asegúrate de que ambas contraseñas coincidan.',
+                            ),
+                        ],
+                      ),
+                      _FormSection(
+                        title: '3. Perfil profesional',
+                        subtitle: 'Esto ayuda a sugerirte empleos y cursos.',
+                        children: [
+                          _RegistrationField(
+                            label: 'Área profesional o de interés',
+                            hint:
+                                'Ej. Tecnología, Administración, Ventas, etc.',
+                            controller: _areaController,
+                            validator: (value) =>
+                                _required(value, 'El área profesional'),
+                            textCapitalization: TextCapitalization.sentences,
                           ),
-                          validator: (value) {
-                            final error = _required(value, 'La confirmación');
-                            if (error != null) return error;
-                            if (value != _passwordController.text) {
-                              return 'Las contraseñas no coinciden.';
-                            }
-                            return null;
-                          },
-                        ),
-                      if (!widget.isEditing)
-                        const _FieldHint(
-                          'Asegúrate de que ambas contraseñas coincidan.',
-                        ),
+                          const _FieldHint(
+                            'Tu especialidad principal o rubro laboral deseado.',
+                          ),
+                          _EducationField(
+                            value: _educationLevel,
+                            options: [
+                              ...profileEducationLevels,
+                              if (_educationLevel != null &&
+                                  _educationLevel!.isNotEmpty &&
+                                  !profileEducationLevels.contains(
+                                    _educationLevel,
+                                  ))
+                                _educationLevel!,
+                            ],
+                            onChanged: (value) =>
+                                setState(() => _educationLevel = value),
+                          ),
+                          const _FieldHint('Nivel de estudios alcanzado.'),
+                          _RegistrationField(
+                            label: 'Carrera o título',
+                            hint:
+                                'Ej. Ingeniería Ambiental, Administración...',
+                            controller: _careerController,
+                            textCapitalization: TextCapitalization.sentences,
+                            isRequired: false,
+                          ),
+                          const _FieldHint('Nombre de tu carrera o título.'),
+                          _TagSection(
+                            label: 'Habilidades',
+                            hint: 'Elige las que te describen.',
+                            options: profileSkillTags,
+                            selected: _skills,
+                            onToggle: _toggleSkill,
+                          ),
+                          _LanguageSection(
+                            selected: _languages,
+                            onToggle: _toggleLanguage,
+                            onLevelChanged: _setLanguageLevel,
+                          ),
+                          _RegistrationField(
+                            label: 'Sobre mí',
+                            hint:
+                                'Dos o tres líneas sobre tu perfil profesional.',
+                            controller: _aboutController,
+                            textCapitalization: TextCapitalization.sentences,
+                            maxLines: 3,
+                            maxLength: 240,
+                            isRequired: false,
+                          ),
+                          const _FieldHint(
+                            'No es obligatorio para registrarte.',
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: FormFieldLabel(
+                                  'Currículum Vitae (CV)',
+                                  required: false,
+                                  style: TextStyle(
+                                    color: appTextColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: _selectCv,
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text(
+                                  'Recomendado',
+                                  style: TextStyle(
+                                    color: appPurpleColor,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Sube tu CV para que los reclutadores evalúen tu perfil.',
+                            style: TextStyle(color: appMutedColor, fontSize: 12),
+                          ),
+                          const SizedBox(height: 8),
+                          _CvPicker(
+                            file: _cvFile,
+                            existingFileName: widget.initialProfile?.cvFileName,
+                            onTap: _selectCv,
+                            onRemove: () => setState(() => _cvFile = null),
+                          ),
+                          const _FieldHint(
+                            'Formatos admitidos: PDF, DOCX (Máx. 10 MB)',
+                          ),
+                        ],
+                      ),
                       if (!widget.isEditing ||
-                          widget.initialProfile?.acceptedTerms != true) ...[
-                        const SizedBox(height: 10),
-                        _TermsCheckbox(
-                          value: _acceptedTerms,
-                          onChanged: (value) =>
-                              setState(() => _acceptedTerms = value ?? false),
-                          onOpenTerms: () => showSimulatedLegalDialog(
-                            context,
-                            title: 'Términos y Condiciones',
-                            body: simulatedTermsBody,
-                          ),
-                          onOpenPrivacy: () => showSimulatedLegalDialog(
-                            context,
-                            title: 'Política de Privacidad',
-                            body: simulatedPrivacyBody,
-                          ),
+                          widget.initialProfile?.acceptedTerms != true)
+                        _FormSection(
+                          title: '4. Condiciones',
+                          children: [
+                            _TermsCheckbox(
+                              value: _acceptedTerms,
+                              onChanged: (value) => setState(
+                                () => _acceptedTerms = value ?? false,
+                              ),
+                              onOpenTerms: () => showSimulatedLegalDialog(
+                                context,
+                                title: 'Términos y Condiciones',
+                                body: simulatedTermsBody,
+                              ),
+                              onOpenPrivacy: () => showSimulatedLegalDialog(
+                                context,
+                                title: 'Política de Privacidad',
+                                body: simulatedPrivacyBody,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
                     ],
                   ),
                 ),
@@ -655,7 +708,7 @@ class _RegistrationHeader extends StatelessWidget {
                 'MI CUENTA',
                 style: TextStyle(
                   color: appMutedColor,
-                  fontSize: 11,
+                  fontSize: 12,
                   letterSpacing: 0.7,
                 ),
               ),
@@ -663,7 +716,7 @@ class _RegistrationHeader extends StatelessWidget {
                 isEditing ? 'ACTUALIZAR PERFIL' : 'REGISTRO DE USUARIO',
                 style: TextStyle(
                   color: appTextColor,
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -691,6 +744,204 @@ class _RegistrationHeader extends StatelessWidget {
   }
 }
 
+class _FormSection extends StatelessWidget {
+  const _FormSection({
+    required this.title,
+    required this.children,
+    this.subtitle,
+  });
+
+  final String title;
+  final String? subtitle;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+      decoration: BoxDecoration(
+        color: appSurfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: appBorderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Color(0xFFB48BF1),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              subtitle!,
+              style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.35),
+            ),
+          ],
+          const SizedBox(height: 10),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _BirthDateField extends StatelessWidget {
+  const _BirthDateField({
+    required this.value,
+    required this.onChanged,
+  });
+
+  final DateTime? value;
+  final ValueChanged<DateTime> onChanged;
+
+  Future<DateTime?> _openCalendar(BuildContext context) async {
+    final latest = latestAdultBirthDate();
+    final firstDate = DateTime(latest.year - 82, 1, 1);
+    return showDatePicker(
+      context: context,
+      initialDate: value == null || value!.isAfter(latest) ? latest : value!,
+      firstDate: firstDate,
+      lastDate: latest,
+      helpText: 'Fecha de nacimiento',
+      cancelText: 'Cancelar',
+      confirmText: 'Listo',
+      fieldHintText: 'dd/mm/aaaa',
+      fieldLabelText: 'Nacimiento',
+      locale: const Locale('es'),
+      builder: (context, child) {
+        final dark = Theme.of(context).brightness == Brightness.dark;
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: (dark ? const ColorScheme.dark() : const ColorScheme.light()).copyWith(
+              primary: appPurpleColor,
+              onPrimary: Colors.white,
+              secondary: appOrangeColor,
+              onSecondary: Colors.white,
+              surface: appSurfaceColor,
+              onSurface: appTextColor,
+            ),
+            datePickerTheme: DatePickerThemeData(
+              backgroundColor: appSurfaceColor,
+              headerBackgroundColor: appPurpleColor,
+              headerForegroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              dayStyle: TextStyle(color: appTextColor, fontWeight: FontWeight.w600),
+              todayForegroundColor: WidgetStateProperty.all(appOrangeColor),
+              todayBackgroundColor: WidgetStateProperty.all(
+                appOrangeColor.withValues(alpha: 0.16),
+              ),
+              dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return Colors.white;
+                if (states.contains(WidgetState.disabled)) return appMutedColor;
+                return appTextColor;
+              }),
+              dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return appOrangeColor;
+                return null;
+              }),
+              weekdayStyle: TextStyle(
+                color: appMutedColor,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+              ),
+              yearForegroundColor: WidgetStateProperty.all(appTextColor),
+              yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return appPurpleColor;
+                return null;
+              }),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FormField<DateTime>(
+      validator: (_) {
+        if (value == null) return 'Selecciona tu fecha de nacimiento.';
+        if (!isAtLeast18YearsOld(value!)) {
+          return 'Debes tener 18 años o más.';
+        }
+        return null;
+      },
+      builder: (state) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const FormFieldLabel('Fecha de nacimiento'),
+              Material(
+                color: appBackgroundColor,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () async {
+                    final picked = await _openCalendar(context);
+                    if (picked == null) return;
+                    onChanged(picked);
+                    state.didChange(picked);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: appBackgroundColor,
+                      hintText: 'Toca para abrir el calendario',
+                      hintStyle: TextStyle(color: appMutedColor, fontSize: 12),
+                      errorText: state.errorText,
+                      suffixIcon: Icon(
+                        Icons.calendar_month_rounded,
+                        color: appOrangeColor,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: appBorderColor),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: appBorderColor),
+                      ),
+                    ),
+                    child: Text(
+                      value == null
+                          ? 'Toca para abrir el calendario'
+                          : formatBirthDateDisplay(value!),
+                      style: TextStyle(
+                        color: value == null ? appMutedColor : appTextColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const _FieldHint(
+                'Solo mayores de 18 años. El calendario no deja elegir una fecha menor.',
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _NoticeCard extends StatelessWidget {
   const _NoticeCard({required this.text});
 
@@ -707,7 +958,7 @@ class _NoticeCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(color: appTextColor, fontSize: 7, height: 1.45),
+        style: TextStyle(color: appTextColor, fontSize: 12, height: 1.45),
       ),
     );
   }
@@ -750,7 +1001,7 @@ class _RegistrationField extends StatelessWidget {
             required: isRequired,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
@@ -764,7 +1015,7 @@ class _RegistrationField extends StatelessWidget {
             readOnly: readOnly,
             maxLines: maxLines,
             maxLength: maxLength,
-            style: TextStyle(color: appTextColor, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 12),
             decoration: _fieldDecoration(hint),
           ),
         ],
@@ -796,7 +1047,7 @@ class _EducationField extends StatelessWidget {
             required: false,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
@@ -807,7 +1058,7 @@ class _EducationField extends StatelessWidget {
             onChanged: onChanged,
             dropdownColor: appSurfaceColor,
             iconEnabledColor: appMutedColor,
-            style: TextStyle(color: appTextColor, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 12),
             decoration: _fieldDecoration('Selecciona un nivel'),
             items: [
               const DropdownMenuItem<String?>(
@@ -851,13 +1102,13 @@ class _TagSection extends StatelessWidget {
             required: false,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 4),
-          Text(hint, style: TextStyle(color: appMutedColor, fontSize: 7)),
+          Text(hint, style: TextStyle(color: appMutedColor, fontSize: 12)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
@@ -874,7 +1125,7 @@ class _TagSection extends StatelessWidget {
                     color: selected.contains(option)
                         ? Colors.white
                         : appMutedColor,
-                    fontSize: 8,
+                    fontSize: 12,
                   ),
                   backgroundColor: appSurfaceColor,
                   side: BorderSide(color: appBorderColor),
@@ -912,7 +1163,7 @@ class _LanguageSection extends StatelessWidget {
             required: false,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
@@ -920,7 +1171,7 @@ class _LanguageSection extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'En Cochabamba, el quechua puede marcar diferencia.',
-            style: TextStyle(color: appMutedColor, fontSize: 7),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -938,7 +1189,7 @@ class _LanguageSection extends StatelessWidget {
                     color: selected.any((language) => language.name == name)
                         ? Colors.white
                         : appMutedColor,
-                    fontSize: 8,
+                    fontSize: 12,
                   ),
                   backgroundColor: appSurfaceColor,
                   side: BorderSide(color: appBorderColor),
@@ -954,14 +1205,14 @@ class _LanguageSection extends StatelessWidget {
                 Expanded(
                   child: Text(
                     language.name,
-                    style: TextStyle(color: appTextColor, fontSize: 9),
+                    style: TextStyle(color: appTextColor, fontSize: 12),
                   ),
                 ),
                 DropdownButton<String>(
                   value: language.level,
                   dropdownColor: appSurfaceColor,
                   underline: const SizedBox.shrink(),
-                  style: TextStyle(color: appTextColor, fontSize: 9),
+                  style: TextStyle(color: appTextColor, fontSize: 12),
                   items: [
                     for (final level in profileLanguageLevels)
                       DropdownMenuItem(value: level, child: Text(level)),
@@ -1004,7 +1255,7 @@ class _CityField extends StatelessWidget {
             required: true,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
@@ -1016,7 +1267,7 @@ class _CityField extends StatelessWidget {
             onChanged: onChanged,
             dropdownColor: appSurfaceColor,
             iconEnabledColor: appMutedColor,
-            style: TextStyle(color: appTextColor, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 12),
             decoration: _fieldDecoration('Selecciona tu ciudad'),
             items: [
               for (final city in cities)
@@ -1058,7 +1309,7 @@ class _CvPicker extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: const Color(0xFF281D2C),
+              color: appBackgroundColor,
               shape: BoxShape.circle,
               border: Border.all(color: appOrangeColor.withValues(alpha: 0.5)),
             ),
@@ -1078,7 +1329,7 @@ class _CvPicker extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 8,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1086,7 +1337,7 @@ class _CvPicker extends StatelessWidget {
           Text(
             'PDF o DOCX, máx. 10 MB. El archivo se simula y no se sube a la nube.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: appMutedColor, fontSize: 7),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           const SizedBox(height: 5),
           if (file == null)
@@ -1099,7 +1350,7 @@ class _CvPicker extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: appPurpleColor,
                 minimumSize: const Size(110, 26),
-                textStyle: TextStyle(fontSize: 8),
+                textStyle: TextStyle(fontSize: 12),
                 side: BorderSide(color: appBorderColor),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
@@ -1111,7 +1362,7 @@ class _CvPicker extends StatelessWidget {
               label: Text('Quitar archivo'),
               style: TextButton.styleFrom(
                 foregroundColor: appOrangeColor,
-                textStyle: TextStyle(fontSize: 8),
+                textStyle: TextStyle(fontSize: 12),
               ),
             ),
         ],
@@ -1149,7 +1400,7 @@ class _PasswordField extends StatelessWidget {
             required: true,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
@@ -1159,7 +1410,7 @@ class _PasswordField extends StatelessWidget {
             controller: controller,
             validator: validator,
             obscureText: obscureText,
-            style: TextStyle(color: appTextColor, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 12),
             decoration: _fieldDecoration(hint).copyWith(
               prefixIcon: Icon(Icons.lock_outline, size: 14),
               suffixIcon: IconButton(
@@ -1192,7 +1443,7 @@ class _FieldHint extends StatelessWidget {
       padding: const EdgeInsets.only(top: 4),
       child: Text(
         text,
-        style: TextStyle(color: appMutedColor, fontSize: 7, height: 1.3),
+        style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.3),
       ),
     );
   }
@@ -1234,12 +1485,12 @@ class _TermsCheckbox extends StatelessWidget {
               children: [
                 Text(
                   'Acepto los ',
-                  style: TextStyle(color: appMutedColor, fontSize: 8),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
                 _TermsLink(text: 'Términos y Condiciones', onTap: onOpenTerms),
                 Text(
                   ' y la ',
-                  style: TextStyle(color: appMutedColor, fontSize: 8),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
                 _TermsLink(
                   text: 'Política de Privacidad',
@@ -1247,7 +1498,7 @@ class _TermsCheckbox extends StatelessWidget {
                 ),
                 Text(
                   '.',
-                  style: TextStyle(color: appMutedColor, fontSize: 8),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
               ],
             ),
@@ -1272,7 +1523,7 @@ class _TermsLink extends StatelessWidget {
         text,
         style: TextStyle(
           color: appPurpleColor,
-          fontSize: 8,
+          fontSize: 12,
           decoration: TextDecoration.underline,
         ),
       ),
@@ -1337,7 +1588,7 @@ class _RegistrationActions extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       textStyle: TextStyle(
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1368,7 +1619,7 @@ class _RegistrationActions extends StatelessWidget {
               ),
               child: Text(
                 '¿Ya tienes una cuenta? Inicia sesión',
-                style: TextStyle(color: appMutedColor, fontSize: 8),
+                style: TextStyle(color: appMutedColor, fontSize: 12),
               ),
             ),
         ],
@@ -1380,12 +1631,12 @@ class _RegistrationActions extends StatelessWidget {
 InputDecoration _fieldDecoration(String hint) {
   return InputDecoration(
     hintText: hint,
-    hintStyle: TextStyle(color: Color(0xFF77748A), fontSize: 9),
+    hintStyle: TextStyle(color: appMutedColor, fontSize: 12),
     filled: true,
     fillColor: appSurfaceColor,
     isDense: true,
     contentPadding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
-    errorStyle: TextStyle(fontSize: 8, height: 1.2),
+    errorStyle: TextStyle(fontSize: 12, height: 1.2),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
       borderSide: BorderSide(color: appBorderColor),

@@ -75,6 +75,7 @@ class UserProfile {
     this.cvFileName,
     this.latitude,
     this.longitude,
+    this.birthDate,
   });
 
   final String uid;
@@ -94,8 +95,12 @@ class UserProfile {
   final String? cvFileName;
   final double? latitude;
   final double? longitude;
+  final DateTime? birthDate;
 
   bool get hasCoordinates => latitude != null && longitude != null;
+
+  bool get isUnder18 =>
+      birthDate != null && !isAtLeast18YearsOld(birthDate!);
 
   Map<String, Object?> toMap() => {
     'uid': uid,
@@ -115,6 +120,7 @@ class UserProfile {
     'cvFileName': cvFileName,
     if (latitude != null) 'latitude': latitude,
     if (longitude != null) 'longitude': longitude,
+    if (birthDate != null) 'birthDate': formatBirthDateIso(birthDate!),
     'updatedAt': DateTime.now().toUtc().toIso8601String(),
   };
 
@@ -137,8 +143,47 @@ class UserProfile {
       cvFileName: data['cvFileName'] as String?,
       latitude: (data['latitude'] as num?)?.toDouble(),
       longitude: (data['longitude'] as num?)?.toDouble(),
+      birthDate: parseBirthDate(data['birthDate']),
     );
   }
+}
+
+DateTime latestAdultBirthDate([DateTime? now]) {
+  final today = now ?? DateTime.now();
+  return DateTime(today.year - 18, today.month, today.day);
+}
+
+bool isAtLeast18YearsOld(DateTime birthDate, {DateTime? now}) {
+  final today = now ?? DateTime.now();
+  final birth = DateTime(birthDate.year, birthDate.month, birthDate.day);
+  var age = today.year - birth.year;
+  if (today.month < birth.month ||
+      (today.month == birth.month && today.day < birth.day)) {
+    age--;
+  }
+  return age >= 18;
+}
+
+String formatBirthDateIso(DateTime date) {
+  final month = date.month.toString().padLeft(2, '0');
+  final day = date.day.toString().padLeft(2, '0');
+  return '${date.year}-$month-$day';
+}
+
+String formatBirthDateDisplay(DateTime date) {
+  final day = date.day.toString().padLeft(2, '0');
+  final month = date.month.toString().padLeft(2, '0');
+  return '$day/$month/${date.year}';
+}
+
+DateTime? parseBirthDate(Object? value) {
+  if (value is DateTime) {
+    return DateTime(value.year, value.month, value.day);
+  }
+  if (value is! String || value.trim().isEmpty) return null;
+  final parsed = DateTime.tryParse(value.trim());
+  if (parsed == null) return null;
+  return DateTime(parsed.year, parsed.month, parsed.day);
 }
 
 List<String> _stringList(Object? value) {

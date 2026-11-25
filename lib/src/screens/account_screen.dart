@@ -179,7 +179,7 @@ class _AccountScreenState extends State<AccountScreen> {
           backgroundColor: appSurfaceColor,
           title: Text(
             'Cambiar correo electrónico',
-            style: TextStyle(color: appTextColor, fontSize: 14),
+            style: TextStyle(color: appTextColor, fontSize: 12),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -318,7 +318,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     'DATOS PERSONALES Y PROFESIONALES',
                     style: TextStyle(
                       color: Color(0xFFB48BF1),
-                      fontSize: 8,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.4,
                     ),
@@ -330,7 +330,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   label: Text('Edición rápida'),
                   style: TextButton.styleFrom(
                     foregroundColor: appOrangeColor,
-                    textStyle: TextStyle(fontSize: 7),
+                    textStyle: TextStyle(fontSize: 12),
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -344,6 +344,14 @@ class _AccountScreenState extends State<AccountScreen> {
               value: user?.email ?? 'No disponible',
               icon: Icons.mail_outline,
               onEdit: _editEmail,
+            ),
+            _PersonalInfoTile(
+              label: 'Fecha de nacimiento',
+              value: profile?.birthDate == null
+                  ? 'No especificado'
+                  : formatBirthDateDisplay(profile!.birthDate!),
+              icon: Icons.cake_outlined,
+              onEdit: () => _editProfile(profile),
             ),
             _PersonalInfoTile(
               label: 'Teléfono / WhatsApp',
@@ -411,7 +419,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 foregroundColor: appOrangeColor,
                 side: const BorderSide(color: Color(0xFF5D2C43)),
                 backgroundColor: appSurfaceColor,
-                textStyle: TextStyle(fontSize: 8),
+                textStyle: TextStyle(fontSize: 12),
               ),
             ),
           ],
@@ -459,7 +467,7 @@ class _AccountHeader extends StatelessWidget {
                 'MI PERFIL',
                 style: TextStyle(
                   color: Color(0xFFB48BF1),
-                  fontSize: 7,
+                  fontSize: 12,
                   letterSpacing: 0.8,
                 ),
               ),
@@ -467,7 +475,7 @@ class _AccountHeader extends StatelessWidget {
                 'MI CUENTA',
                 style: TextStyle(
                   color: appTextColor,
-                  fontSize: 10,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -541,8 +549,8 @@ class _IdentityCard extends StatelessWidget {
                 child: Text(
                   initials.isEmpty ? '?' : initials,
                   style: TextStyle(
-                    color: appTextColor,
-                    fontSize: 16,
+                    color: Colors.white,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -557,7 +565,7 @@ class _IdentityCard extends StatelessWidget {
                     color: appOrangeColor,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.edit, size: 11, color: appTextColor),
+                  child: Icon(Icons.edit, size: 11, color: Colors.white),
                 ),
               ),
             ],
@@ -572,7 +580,7 @@ class _IdentityCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: appTextColor,
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -591,7 +599,7 @@ class _IdentityCard extends StatelessWidget {
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: appMutedColor, fontSize: 7),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -660,7 +668,7 @@ class _AccountStatusCard extends StatelessWidget {
                   'ESTADOS DE LA CUENTA',
                   style: TextStyle(
                     color: Color(0xFFB48BF1),
-                    fontSize: 8,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
                   ),
@@ -668,7 +676,7 @@ class _AccountStatusCard extends StatelessWidget {
               ),
               Text(
                 'Perfil personal',
-                style: TextStyle(color: appMutedColor, fontSize: 6),
+                style: TextStyle(color: appMutedColor, fontSize: 12),
               ),
             ],
           ),
@@ -720,8 +728,7 @@ class _StatusMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: appBackgroundColor.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(8),
@@ -737,14 +744,14 @@ class _StatusMetric extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(color: appMutedColor, fontSize: 6),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
                   style: TextStyle(
                     color: isVisible ? const Color(0xFF4BD6A0) : appMutedColor,
-                    fontSize: 7,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -796,8 +803,7 @@ class _MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: appBackgroundColor.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(8),
@@ -808,16 +814,16 @@ class _MetricCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(color: appMutedColor, fontSize: 6),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
-          const Spacer(),
+          const SizedBox(height: 6),
           Row(
             children: [
               Icon(icon, color: appPurpleColor, size: 9),
               const SizedBox(width: 4),
               Text(
                 value,
-                style: TextStyle(color: appTextColor, fontSize: 7),
+                style: TextStyle(color: appTextColor, fontSize: 12),
               ),
             ],
           ),
@@ -853,7 +859,7 @@ class _CvCard extends StatelessWidget {
             width: 24,
             height: 28,
             decoration: BoxDecoration(
-              color: const Color(0xFF2D1E47),
+              color: appPurpleColor.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
@@ -875,7 +881,7 @@ class _CvCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: appTextColor,
-                      fontSize: 7,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -884,7 +890,7 @@ class _CvCard extends StatelessWidget {
                     fileName == null
                         ? 'Selecciona Editar perfil para cargar tu CV'
                         : 'Archivo cargado · Toca para abrir',
-                    style: TextStyle(color: appMutedColor, fontSize: 6),
+                    style: TextStyle(color: appMutedColor, fontSize: 12),
                   ),
                 ],
               ),
@@ -935,7 +941,7 @@ class _PersonalInfoTile extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: TextStyle(color: appMutedColor, fontSize: 6),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
                 const SizedBox(height: 3),
                 Row(
@@ -949,7 +955,7 @@ class _PersonalInfoTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: appTextColor,
-                          fontSize: 7,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -997,12 +1003,12 @@ class _PasswordTile extends StatelessWidget {
               children: [
                 Text(
                   'Seguridad / Contraseña',
-                  style: TextStyle(color: appMutedColor, fontSize: 6),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
                 SizedBox(height: 3),
                 Text(
                   '••••••••••••',
-                  style: TextStyle(color: appTextColor, fontSize: 8),
+                  style: TextStyle(color: appTextColor, fontSize: 12),
                 ),
               ],
             ),
@@ -1013,7 +1019,7 @@ class _PasswordTile extends StatelessWidget {
             label: Text('Cambiar'),
             style: TextButton.styleFrom(
               foregroundColor: appOrangeColor,
-              textStyle: TextStyle(fontSize: 7),
+              textStyle: TextStyle(fontSize: 12),
               padding: EdgeInsets.zero,
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1056,7 +1062,7 @@ class _StatusChip extends StatelessWidget {
             label,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 7,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1118,7 +1124,7 @@ class _AccountError extends StatelessWidget {
             Text(
               '$error',
               textAlign: TextAlign.center,
-              style: TextStyle(color: appMutedColor, fontSize: 9),
+              style: TextStyle(color: appMutedColor, fontSize: 12),
             ),
             const SizedBox(height: 12),
             OutlinedButton(onPressed: onRetry, child: Text('Reintentar')),

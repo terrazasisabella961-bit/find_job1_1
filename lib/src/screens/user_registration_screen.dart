@@ -375,7 +375,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                             : 'Crear tu perfil profesional',
                         style: TextStyle(
                           color: appTextColor,
-                          fontSize: 14,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -385,7 +385,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                         'acceder a los cursos y diplomados disponibles.',
                         style: TextStyle(
                           color: appMutedColor,
-                          fontSize: 9,
+                          fontSize: 12,
                           height: 1.45,
                         ),
                       ),
@@ -588,7 +588,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                                   required: false,
                                   style: TextStyle(
                                     color: appTextColor,
-                                    fontSize: 9,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
                                   padding: EdgeInsets.zero,
@@ -606,7 +606,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                                   'Recomendado',
                                   style: TextStyle(
                                     color: appPurpleColor,
-                                    fontSize: 8,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ),
@@ -615,7 +615,7 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
                           const SizedBox(height: 4),
                           Text(
                             'Sube tu CV para que los reclutadores evalúen tu perfil.',
-                            style: TextStyle(color: appMutedColor, fontSize: 8),
+                            style: TextStyle(color: appMutedColor, fontSize: 12),
                           ),
                           const SizedBox(height: 8),
                           _CvPicker(
@@ -708,7 +708,7 @@ class _RegistrationHeader extends StatelessWidget {
                 'MI CUENTA',
                 style: TextStyle(
                   color: appMutedColor,
-                  fontSize: 11,
+                  fontSize: 12,
                   letterSpacing: 0.7,
                 ),
               ),
@@ -716,7 +716,7 @@ class _RegistrationHeader extends StatelessWidget {
                 isEditing ? 'ACTUALIZAR PERFIL' : 'REGISTRO DE USUARIO',
                 style: TextStyle(
                   color: appTextColor,
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -781,7 +781,7 @@ class _FormSection extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle!,
-              style: TextStyle(color: appMutedColor, fontSize: 10, height: 1.35),
+              style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.35),
             ),
           ],
           const SizedBox(height: 10),
@@ -899,7 +899,7 @@ class _BirthDateField extends StatelessWidget {
                       filled: true,
                       fillColor: appBackgroundColor,
                       hintText: 'Toca para abrir el calendario',
-                      hintStyle: TextStyle(color: appMutedColor, fontSize: 13),
+                      hintStyle: TextStyle(color: appMutedColor, fontSize: 12),
                       errorText: state.errorText,
                       suffixIcon: Icon(
                         Icons.calendar_month_rounded,
@@ -907,7 +907,7 @@ class _BirthDateField extends StatelessWidget {
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
-                        vertical: 14,
+                        vertical: 10,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -924,8 +924,8 @@ class _BirthDateField extends StatelessWidget {
                           : formatBirthDateDisplay(value!),
                       style: TextStyle(
                         color: value == null ? appMutedColor : appTextColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -958,7 +958,7 @@ class _NoticeCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(color: appTextColor, fontSize: 7, height: 1.45),
+        style: TextStyle(color: appTextColor, fontSize: 12, height: 1.45),
       ),
     );
   }
@@ -1001,7 +1001,7 @@ class _RegistrationField extends StatelessWidget {
             required: isRequired,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
@@ -1015,7 +1015,7 @@ class _RegistrationField extends StatelessWidget {
             readOnly: readOnly,
             maxLines: maxLines,
             maxLength: maxLength,
-            style: TextStyle(color: appTextColor, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 12),
             decoration: _fieldDecoration(hint),
           ),
         ],
@@ -1047,7 +1047,7 @@ class _EducationField extends StatelessWidget {
             required: false,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
@@ -1058,7 +1058,7 @@ class _EducationField extends StatelessWidget {
             onChanged: onChanged,
             dropdownColor: appSurfaceColor,
             iconEnabledColor: appMutedColor,
-            style: TextStyle(color: appTextColor, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 12),
             decoration: _fieldDecoration('Selecciona un nivel'),
             items: [
               const DropdownMenuItem<String?>(
@@ -1102,13 +1102,13 @@ class _TagSection extends StatelessWidget {
             required: false,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
           ),
           const SizedBox(height: 4),
-          Text(hint, style: TextStyle(color: appMutedColor, fontSize: 7)),
+          Text(hint, style: TextStyle(color: appMutedColor, fontSize: 12)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 6,
@@ -1125,7 +1125,7 @@ class _TagSection extends StatelessWidget {
                     color: selected.contains(option)
                         ? Colors.white
                         : appMutedColor,
-                    fontSize: 8,
+                    fontSize: 12,
                   ),
                   backgroundColor: appSurfaceColor,
                   side: BorderSide(color: appBorderColor),
@@ -1163,7 +1163,7 @@ class _LanguageSection extends StatelessWidget {
             required: false,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
@@ -1171,7 +1171,7 @@ class _LanguageSection extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'En Cochabamba, el quechua puede marcar diferencia.',
-            style: TextStyle(color: appMutedColor, fontSize: 7),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -1189,7 +1189,7 @@ class _LanguageSection extends StatelessWidget {
                     color: selected.any((language) => language.name == name)
                         ? Colors.white
                         : appMutedColor,
-                    fontSize: 8,
+                    fontSize: 12,
                   ),
                   backgroundColor: appSurfaceColor,
                   side: BorderSide(color: appBorderColor),
@@ -1205,14 +1205,14 @@ class _LanguageSection extends StatelessWidget {
                 Expanded(
                   child: Text(
                     language.name,
-                    style: TextStyle(color: appTextColor, fontSize: 9),
+                    style: TextStyle(color: appTextColor, fontSize: 12),
                   ),
                 ),
                 DropdownButton<String>(
                   value: language.level,
                   dropdownColor: appSurfaceColor,
                   underline: const SizedBox.shrink(),
-                  style: TextStyle(color: appTextColor, fontSize: 9),
+                  style: TextStyle(color: appTextColor, fontSize: 12),
                   items: [
                     for (final level in profileLanguageLevels)
                       DropdownMenuItem(value: level, child: Text(level)),
@@ -1255,7 +1255,7 @@ class _CityField extends StatelessWidget {
             required: true,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
@@ -1267,7 +1267,7 @@ class _CityField extends StatelessWidget {
             onChanged: onChanged,
             dropdownColor: appSurfaceColor,
             iconEnabledColor: appMutedColor,
-            style: TextStyle(color: appTextColor, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 12),
             decoration: _fieldDecoration('Selecciona tu ciudad'),
             items: [
               for (final city in cities)
@@ -1329,7 +1329,7 @@ class _CvPicker extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 8,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1337,7 +1337,7 @@ class _CvPicker extends StatelessWidget {
           Text(
             'PDF o DOCX, máx. 10 MB. El archivo se simula y no se sube a la nube.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: appMutedColor, fontSize: 7),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           const SizedBox(height: 5),
           if (file == null)
@@ -1350,7 +1350,7 @@ class _CvPicker extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: appPurpleColor,
                 minimumSize: const Size(110, 26),
-                textStyle: TextStyle(fontSize: 8),
+                textStyle: TextStyle(fontSize: 12),
                 side: BorderSide(color: appBorderColor),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
@@ -1362,7 +1362,7 @@ class _CvPicker extends StatelessWidget {
               label: Text('Quitar archivo'),
               style: TextButton.styleFrom(
                 foregroundColor: appOrangeColor,
-                textStyle: TextStyle(fontSize: 8),
+                textStyle: TextStyle(fontSize: 12),
               ),
             ),
         ],
@@ -1400,7 +1400,7 @@ class _PasswordField extends StatelessWidget {
             required: true,
             style: TextStyle(
               color: appTextColor,
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
             padding: EdgeInsets.zero,
@@ -1410,7 +1410,7 @@ class _PasswordField extends StatelessWidget {
             controller: controller,
             validator: validator,
             obscureText: obscureText,
-            style: TextStyle(color: appTextColor, fontSize: 9),
+            style: TextStyle(color: appTextColor, fontSize: 12),
             decoration: _fieldDecoration(hint).copyWith(
               prefixIcon: Icon(Icons.lock_outline, size: 14),
               suffixIcon: IconButton(
@@ -1443,7 +1443,7 @@ class _FieldHint extends StatelessWidget {
       padding: const EdgeInsets.only(top: 4),
       child: Text(
         text,
-        style: TextStyle(color: appMutedColor, fontSize: 7, height: 1.3),
+        style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.3),
       ),
     );
   }
@@ -1485,12 +1485,12 @@ class _TermsCheckbox extends StatelessWidget {
               children: [
                 Text(
                   'Acepto los ',
-                  style: TextStyle(color: appMutedColor, fontSize: 8),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
                 _TermsLink(text: 'Términos y Condiciones', onTap: onOpenTerms),
                 Text(
                   ' y la ',
-                  style: TextStyle(color: appMutedColor, fontSize: 8),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
                 _TermsLink(
                   text: 'Política de Privacidad',
@@ -1498,7 +1498,7 @@ class _TermsCheckbox extends StatelessWidget {
                 ),
                 Text(
                   '.',
-                  style: TextStyle(color: appMutedColor, fontSize: 8),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
               ],
             ),
@@ -1523,7 +1523,7 @@ class _TermsLink extends StatelessWidget {
         text,
         style: TextStyle(
           color: appPurpleColor,
-          fontSize: 8,
+          fontSize: 12,
           decoration: TextDecoration.underline,
         ),
       ),
@@ -1588,7 +1588,7 @@ class _RegistrationActions extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       textStyle: TextStyle(
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1619,7 +1619,7 @@ class _RegistrationActions extends StatelessWidget {
               ),
               child: Text(
                 '¿Ya tienes una cuenta? Inicia sesión',
-                style: TextStyle(color: appMutedColor, fontSize: 8),
+                style: TextStyle(color: appMutedColor, fontSize: 12),
               ),
             ),
         ],
@@ -1631,12 +1631,12 @@ class _RegistrationActions extends StatelessWidget {
 InputDecoration _fieldDecoration(String hint) {
   return InputDecoration(
     hintText: hint,
-    hintStyle: TextStyle(color: Color(0xFF77748A), fontSize: 9),
+    hintStyle: TextStyle(color: Color(0xFF77748A), fontSize: 12),
     filled: true,
     fillColor: appSurfaceColor,
     isDense: true,
     contentPadding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
-    errorStyle: TextStyle(fontSize: 8, height: 1.2),
+    errorStyle: TextStyle(fontSize: 12, height: 1.2),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
       borderSide: BorderSide(color: appBorderColor),

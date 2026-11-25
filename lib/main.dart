@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -16,6 +17,7 @@ import 'src/services/user_profile_repository.dart';
 import 'src/theme/app_theme_settings.dart';
 import 'src/widgets/app_bottom_navigation.dart';
 import 'src/widgets/app_feedback.dart';
+import 'src/widgets/student_age_gate.dart';
 import 'src/widgets/cocha_conecta_logo.dart';
 import 'src/widgets/form_field_label.dart';
 
@@ -106,6 +108,13 @@ class _MyAppState extends State<MyApp> {
         return MaterialApp(
           title: 'CochaConecta',
           debugShowCheckedModeBanner: false,
+          locale: const Locale('es'),
+          supportedLocales: const [Locale('es'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           theme: _theme(Brightness.light),
           darkTheme: _theme(Brightness.dark),
           themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
@@ -273,14 +282,19 @@ class _AuthenticatedGate extends StatelessWidget {
                 accountType: 'institution',
               );
             }
-            return AppShell(
+            return StudentAgeGate(
+              userUid: user.uid,
               authRepository: authRepository,
               profileRepository: profileRepository,
-              recruitmentRepository: recruitmentRepository,
-              institutionRepository: institutionRepository,
-              applicationRepository: applicationRepository,
-              initialSelectedIndex: 0,
-              accountType: 'student',
+              child: AppShell(
+                authRepository: authRepository,
+                profileRepository: profileRepository,
+                recruitmentRepository: recruitmentRepository,
+                institutionRepository: institutionRepository,
+                applicationRepository: applicationRepository,
+                initialSelectedIndex: 0,
+                accountType: 'student',
+              ),
             );
           },
         );

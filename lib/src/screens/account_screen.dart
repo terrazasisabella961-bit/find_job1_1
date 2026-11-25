@@ -346,6 +346,14 @@ class _AccountScreenState extends State<AccountScreen> {
               onEdit: _editEmail,
             ),
             _PersonalInfoTile(
+              label: 'Fecha de nacimiento',
+              value: profile?.birthDate == null
+                  ? 'No especificado'
+                  : formatBirthDateDisplay(profile!.birthDate!),
+              icon: Icons.cake_outlined,
+              onEdit: () => _editProfile(profile),
+            ),
+            _PersonalInfoTile(
               label: 'Teléfono / WhatsApp',
               value: _nonEmpty(profile?.phone),
               icon: Icons.call_outlined,

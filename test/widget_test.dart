@@ -490,7 +490,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('REGISTRO DE USUARIO'), findsOneWidget);
+    expect(find.text('1. Datos personales'), findsOneWidget);
     expect(find.text('Nombre y apellidos'), findsOneWidget);
+    expect(find.text('Fecha de nacimiento'), findsOneWidget);
     expect(find.text('Correo electrónico'), findsOneWidget);
     expect(find.text('Teléfono / WhatsApp'), findsOneWidget);
     expect(find.text('Ciudad de residencia'), findsOneWidget);

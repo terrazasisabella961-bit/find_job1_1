@@ -27,7 +27,7 @@ class AppearanceSettingsCard extends StatelessWidget {
                 'APARIENCIA',
                 style: TextStyle(
                   color: Color(0xFFB48BF1),
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.4,
                 ),
@@ -35,7 +35,7 @@ class AppearanceSettingsCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 'Elegí modo noche o modo claro. Se guarda en este dispositivo.',
-                style: TextStyle(color: appMutedColor, fontSize: 11, height: 1.35),
+                style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.35),
               ),
               const SizedBox(height: 10),
               Row(

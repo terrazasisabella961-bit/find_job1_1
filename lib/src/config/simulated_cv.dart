@@ -117,7 +117,7 @@ class _SimulatedCvScreenState extends State<SimulatedCvScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: appTextColor,
-                  fontSize: 20,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -127,7 +127,7 @@ class _SimulatedCvScreenState extends State<SimulatedCvScreen> {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: appMutedColor,
-                  fontSize: 14,
+                  fontSize: 12,
                   height: 1.4,
                 ),
               ),
@@ -147,7 +147,7 @@ class _SimulatedCvScreenState extends State<SimulatedCvScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: appTextColor,
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

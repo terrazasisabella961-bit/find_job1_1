@@ -132,8 +132,8 @@ class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
                             Text(
                               '${programs.length} programas encontrados',
                               style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 10,
+                                color: appMutedColor,
+                                fontSize: 12,
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -214,7 +214,7 @@ class _CatalogLoadError extends StatelessWidget {
     child: Text(
       'No se pudo actualizar la lista de cursos publicados. Inténtalo nuevamente más tarde.',
       textAlign: TextAlign.center,
-      style: TextStyle(color: Colors.white70, fontSize: 11),
+      style: TextStyle(color: appMutedColor, fontSize: 12),
     ),
   );
 }
@@ -287,7 +287,7 @@ class _CatalogHeader extends StatelessWidget {
                 'CATÁLOGO DE',
                 style: TextStyle(
                   color: appMutedColor,
-                  fontSize: 9,
+                  fontSize: 12,
                   letterSpacing: 1.1,
                 ),
               ),
@@ -296,7 +296,7 @@ class _CatalogHeader extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Color(0xFFB48BF1),
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -337,10 +337,10 @@ class _SearchField extends StatelessWidget {
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        style: TextStyle(color: appTextColor, fontSize: 11),
+        style: TextStyle(color: appTextColor, fontSize: 12),
         decoration: InputDecoration(
           hintText: 'Filtrar por categoría o institución',
-          hintStyle: TextStyle(color: appMutedColor, fontSize: 10),
+          hintStyle: TextStyle(color: appMutedColor, fontSize: 12),
           prefixIcon: Icon(Icons.search, color: appPurpleColor, size: 17),
           suffixIcon: controller.text.isEmpty
               ? null
@@ -386,10 +386,10 @@ class _CategoryDropdown extends StatelessWidget {
         onChanged: onChanged,
         dropdownColor: appSurfaceColor,
         iconEnabledColor: appPurpleColor,
-        style: TextStyle(color: appTextColor, fontSize: 11),
+        style: TextStyle(color: appTextColor, fontSize: 12),
         decoration: InputDecoration(
           labelText: 'Elige un área de estudio',
-          labelStyle: TextStyle(color: appMutedColor, fontSize: 9),
+          labelStyle: TextStyle(color: appMutedColor, fontSize: 12),
           filled: true,
           fillColor: appSurfaceColor,
           contentPadding: const EdgeInsets.symmetric(
@@ -454,7 +454,7 @@ class _ProgramCard extends StatelessWidget {
                       program.title,
                       style: TextStyle(
                         color: appTextColor,
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                         height: 1.35,
                       ),
@@ -482,7 +482,7 @@ class _ProgramCard extends StatelessWidget {
               _ProgramInfoRow(
                 icon: Icons.account_balance_outlined,
                 text: program.institution,
-                color: const Color(0xFFE5E1EF),
+                color: appTextColor,
                 bold: true,
               ),
               const SizedBox(height: 6),
@@ -606,7 +606,7 @@ class _ProgramInfoRow extends StatelessWidget {
             text,
             style: TextStyle(
               color: color,
-              fontSize: 9,
+              fontSize: 12,
               height: 1.35,
               fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -631,7 +631,7 @@ class _EmptyResults extends StatelessWidget {
           Text(
             'No hay cursos publicados que coincidan con tu búsqueda.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: appMutedColor, fontSize: 11),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
         ],
       ),
@@ -688,10 +688,10 @@ class _ProgramDetailScreenState extends State<_ProgramDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: appBackgroundColor,
-        foregroundColor: Colors.white,
+        foregroundColor: appTextColor,
         title: Text(
           'DETALLE DEL PROGRAMA',
-          style: TextStyle(fontSize: 13),
+          style: TextStyle(fontSize: 12),
         ),
         actions: [
           IconButton(
@@ -712,7 +712,7 @@ class _ProgramDetailScreenState extends State<_ProgramDetailScreen> {
               program.title,
               style: TextStyle(
                 color: appTextColor,
-                fontSize: 20,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 height: 1.3,
               ),
@@ -722,7 +722,7 @@ class _ProgramDetailScreenState extends State<_ProgramDetailScreen> {
               program.institution,
               style: TextStyle(
                 color: Color(0xFFB48BF1),
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -772,7 +772,7 @@ class _ProgramDetailScreenState extends State<_ProgramDetailScreen> {
             const SizedBox(height: 18),
             Text(
               'La información mostrada corresponde a los datos de la publicación institucional.',
-              style: TextStyle(color: appMutedColor, fontSize: 11, height: 1.5),
+              style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.5),
             ),
           ],
         ),
@@ -802,7 +802,7 @@ class _DetailRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(color: appMutedColor, fontSize: 10),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           const SizedBox(height: 5),
           Text(

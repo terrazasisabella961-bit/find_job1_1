@@ -58,7 +58,7 @@ class _UnderageBlockedScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: appTextColor,
-                  fontSize: 20,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -67,7 +67,7 @@ class _UnderageBlockedScreen extends StatelessWidget {
                 'CochaConecta es para postulantes mayores de edad. '
                 'Esta cuenta no puede iniciar sesión.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: appMutedColor, fontSize: 14, height: 1.4),
+                style: TextStyle(color: appMutedColor, fontSize: 12, height: 1.4),
               ),
               const SizedBox(height: 24),
               FilledButton(

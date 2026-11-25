@@ -321,7 +321,7 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
                 Expanded(
                   child: Text(
                     'Recordar esta terminal',
-                    style: TextStyle(color: appMutedColor, fontSize: 10),
+                    style: TextStyle(color: appMutedColor, fontSize: 12),
                   ),
                 ),
                 TextButton(
@@ -345,7 +345,7 @@ class _CompanyLoginScreenState extends State<_CompanyLoginScreen> {
             Center(
               child: Text(
                 'O VERIFICAR ACCESO MEDIANTE',
-                style: TextStyle(color: appMutedColor, fontSize: 10),
+                style: TextStyle(color: appMutedColor, fontSize: 12),
               ),
             ),
             const SizedBox(height: 12),
@@ -631,7 +631,7 @@ class _CompanyDashboard extends StatelessWidget {
                             : company.name.substring(0, 1).toUpperCase(),
                         style: TextStyle(
                           color: appPurpleColor,
-                          fontSize: 26,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -644,7 +644,7 @@ class _CompanyDashboard extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: appTextColor,
-                        fontSize: 17,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -656,7 +656,7 @@ class _CompanyDashboard extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: appMutedColor,
-                        fontSize: 10,
+                        fontSize: 12,
                       ),
                     ),
                   ),
@@ -688,7 +688,7 @@ class _CompanyDashboard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           'Sitio web:',
-                          style: TextStyle(color: appMutedColor, fontSize: 10),
+                          style: TextStyle(color: appMutedColor, fontSize: 12),
                         ),
                       ),
                       Flexible(
@@ -699,7 +699,7 @@ class _CompanyDashboard extends StatelessWidget {
                           textAlign: TextAlign.right,
                           style: TextStyle(
                             color: appTextColor,
-                            fontSize: 10,
+                            fontSize: 12,
                           ),
                         ),
                       ),
@@ -753,7 +753,7 @@ class _CompanyDashboard extends StatelessWidget {
                 ),
                 Text(
                   '${jobs.where((job) => job.status == 'published').length} activas',
-                  style: TextStyle(color: appMutedColor, fontSize: 11),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
               ],
             ),
@@ -1043,7 +1043,7 @@ class _CompanyFormScreenState extends State<CompanyFormScreen> {
             editing ? 'Actualizar empresa o entidad' : 'Registrar empresa',
             style: TextStyle(
               color: appTextColor,
-              fontSize: 18,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -1699,7 +1699,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                 activeColor: appOrangeColor,
                 title: Text(
                   'Mantener remuneración como “A convenir / Confidencial”',
-                  style: TextStyle(color: appMutedColor, fontSize: 10),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
               ),
               const _SectionLabel('Beneficios Adicionales', required: false),
@@ -1734,7 +1734,7 @@ class _JobFormScreenState extends State<JobFormScreen> {
                       : _formatDate(_deadline!),
                 ),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
+                  foregroundColor: appTextColor,
                   alignment: Alignment.centerLeft,
                   padding: const EdgeInsets.all(14),
                   side: BorderSide(color: appBorderColor),
@@ -1888,7 +1888,7 @@ class _CompanyJobCard extends StatelessWidget {
                   job.title,
                   style: TextStyle(
                     color: appTextColor,
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1899,7 +1899,7 @@ class _CompanyJobCard extends StatelessWidget {
                   color: job.status == 'published'
                       ? const Color(0xFF4BD6A0)
                       : appMutedColor,
-                  fontSize: 11,
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -1907,7 +1907,7 @@ class _CompanyJobCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${job.city} · ${job.modality} · ${job.employmentType}',
-            style: TextStyle(color: appMutedColor, fontSize: 11),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           const SizedBox(height: 9),
           Wrap(
@@ -1996,7 +1996,7 @@ class _PageHeader extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Color(0xFFB48BF1),
-                  fontSize: 9,
+                  fontSize: 12,
                   letterSpacing: 0.8,
                 ),
               ),
@@ -2036,7 +2036,7 @@ class _NoticeCard extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(color: appTextColor, fontSize: 11, height: 1.4),
+        style: TextStyle(color: appTextColor, fontSize: 12, height: 1.4),
       ),
     );
   }
@@ -2052,7 +2052,7 @@ class _RecruitmentHint extends StatelessWidget {
     padding: const EdgeInsets.only(top: 4, bottom: 4),
     child: Text(
       text,
-      style: TextStyle(color: appMutedColor, fontSize: 9),
+      style: TextStyle(color: appMutedColor, fontSize: 12),
     ),
   );
 }
@@ -2081,7 +2081,7 @@ class _FormSection extends StatelessWidget {
             title,
             style: TextStyle(
               color: appOrangeColor,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -2139,7 +2139,7 @@ class _CompanyMiniCard extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 'Publicando como ${company.sector}',
-                style: TextStyle(color: appMutedColor, fontSize: 9),
+                style: TextStyle(color: appMutedColor, fontSize: 12),
               ),
             ],
           ),
@@ -2166,7 +2166,7 @@ class _CompanyStatusBadge extends StatelessWidget {
     ),
     child: Text(
       label,
-      style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w600),
+      style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
     ),
   );
 }
@@ -2191,7 +2191,7 @@ class _CheckOption extends StatelessWidget {
     activeColor: appOrangeColor,
     title: Text(
       label,
-      style: TextStyle(color: appMutedColor, fontSize: 10),
+      style: TextStyle(color: appMutedColor, fontSize: 12),
     ),
     tileColor: appSurfaceColor,
     shape: RoundedRectangleBorder(
@@ -2233,7 +2233,7 @@ class _RadioOption extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             label,
-            style: TextStyle(color: appTextColor, fontSize: 10),
+            style: TextStyle(color: appTextColor, fontSize: 12),
           ),
         ],
       ),
@@ -2282,7 +2282,7 @@ class _FormInput extends StatelessWidget {
     style: TextStyle(color: appTextColor, fontSize: 12),
     decoration: InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: appMutedColor, fontSize: 11),
+      hintStyle: TextStyle(color: appMutedColor, fontSize: 12),
       filled: true,
       fillColor: appSurfaceColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

@@ -1309,7 +1309,7 @@ class _CvPicker extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: const Color(0xFF281D2C),
+              color: appBackgroundColor,
               shape: BoxShape.circle,
               border: Border.all(color: appOrangeColor.withValues(alpha: 0.5)),
             ),
@@ -1631,7 +1631,7 @@ class _RegistrationActions extends StatelessWidget {
 InputDecoration _fieldDecoration(String hint) {
   return InputDecoration(
     hintText: hint,
-    hintStyle: TextStyle(color: Color(0xFF77748A), fontSize: 12),
+    hintStyle: TextStyle(color: appMutedColor, fontSize: 12),
     filled: true,
     fillColor: appSurfaceColor,
     isDense: true,

@@ -67,14 +67,14 @@ class CompanyPublicScreen extends StatelessWidget {
                   company.name,
                   style: TextStyle(
                     color: appTextColor,
-                    fontSize: 22,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   company.sector,
-                  style: TextStyle(color: appPurpleColor, fontSize: 14),
+                  style: TextStyle(color: appPurpleColor, fontSize: 12),
                 ),
                 if (distanceLabel != null) ...[
                   const SizedBox(height: 6),
@@ -89,7 +89,7 @@ class CompanyPublicScreen extends StatelessWidget {
                   style: TextStyle(
                     color: Color(0xFFB48BF1),
                     fontWeight: FontWeight.w700,
-                    fontSize: 11,
+                    fontSize: 12,
                     letterSpacing: 0.4,
                   ),
                 ),
@@ -100,7 +100,7 @@ class CompanyPublicScreen extends StatelessWidget {
                       : company.description,
                   style: TextStyle(
                     color: appTextColor,
-                    fontSize: 13,
+                    fontSize: 12,
                     height: 1.4,
                   ),
                 ),
@@ -133,7 +133,7 @@ class CompanyPublicScreen extends StatelessWidget {
                   style: TextStyle(
                     color: Color(0xFFB48BF1),
                     fontWeight: FontWeight.w700,
-                    fontSize: 11,
+                    fontSize: 12,
                     letterSpacing: 0.4,
                   ),
                 ),

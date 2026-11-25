@@ -33,7 +33,7 @@ void showAppMessage(
           message,
           style: TextStyle(
             color: Colors.white,
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
             height: 1.35,
           ),

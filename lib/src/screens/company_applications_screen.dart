@@ -49,7 +49,7 @@ class CompanyApplicationsScreen extends StatelessWidget {
               job.title,
               style: TextStyle(
                 color: appTextColor,
-                fontSize: 18,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -98,7 +98,7 @@ class _ApplicantCard extends StatelessWidget {
             style: TextStyle(
               color: appTextColor,
               fontWeight: FontWeight.w700,
-              fontSize: 14,
+              fontSize: 12,
             ),
           ),
           const SizedBox(height: 4),
@@ -108,7 +108,7 @@ class _ApplicantCard extends StatelessWidget {
               application.areaOfInterest,
               application.availability,
             ].where((item) => item.trim().isNotEmpty).join(' · '),
-            style: TextStyle(color: appMutedColor, fontSize: 11),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           const SizedBox(height: 8),
           Text(

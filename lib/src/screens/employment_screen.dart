@@ -176,7 +176,7 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                             hintText: 'Filtrar por ciudad o localidad',
                             hintStyle: TextStyle(
                               color: appMutedColor,
-                              fontSize: 11,
+                              fontSize: 12,
                             ),
                             prefixIcon: Icon(
                               Icons.search,
@@ -225,7 +225,7 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                           child: Icon(Icons.tune),
                         ),
                         style: IconButton.styleFrom(
-                          foregroundColor: Colors.white,
+                          foregroundColor: appTextColor,
                           backgroundColor: appSurfaceColor,
                           side: BorderSide(color: appBorderColor),
                           fixedSize: const Size(48, 48),
@@ -261,7 +261,7 @@ class _EmploymentScreenState extends State<EmploymentScreen> {
                     '${_activeFilterCount > 0 ? ' · $_activeFilterCount filtros' : ''}',
                     style: TextStyle(
                       color: appMutedColor,
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -409,14 +409,14 @@ class JobDetailsScreen extends StatelessWidget {
               job.title,
               style: TextStyle(
                 color: appTextColor,
-                fontSize: 22,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               job.companyName,
-              style: TextStyle(color: appPurpleColor, fontSize: 15),
+              style: TextStyle(color: appPurpleColor, fontSize: 12),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -637,7 +637,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
       child: DropdownButtonFormField<String?>(
         initialValue: validValue,
         dropdownColor: appSurfaceColor,
-        style: TextStyle(color: appTextColor, fontSize: 13),
+        style: TextStyle(color: appTextColor, fontSize: 12),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(color: appMutedColor),
@@ -712,7 +712,7 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                 'Filtrar ofertas',
                 style: TextStyle(
                   color: appTextColor,
-                  fontSize: 18,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -816,7 +816,7 @@ class _SalaryField extends StatelessWidget {
   Widget build(BuildContext context) => TextField(
     controller: controller,
     keyboardType: TextInputType.number,
-    style: TextStyle(color: appTextColor, fontSize: 13),
+    style: TextStyle(color: appTextColor, fontSize: 12),
     decoration: InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(color: appMutedColor),
@@ -966,7 +966,7 @@ class _SuggestionsTray extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF24183C),
+        color: appSurfaceColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: appPurpleColor.withValues(alpha: 0.55)),
       ),
@@ -1005,7 +1005,7 @@ class _SuggestionsTray extends StatelessWidget {
                     SizedBox(height: 2),
                     Text(
                       'Según tu área, carrera y habilidades, no según el filtro de búsqueda.',
-                      style: TextStyle(color: appMutedColor, fontSize: 10),
+                      style: TextStyle(color: appMutedColor, fontSize: 12),
                     ),
                   ],
                 ),
@@ -1020,7 +1020,7 @@ class _SuggestionsTray extends StatelessWidget {
                   'Tu perfil',
                   style: TextStyle(
                     color: appOrangeColor,
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -1054,7 +1054,7 @@ class _SuggestionCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: const Color(0xFF1A172F),
+        color: appBackgroundColor,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           onTap: onTap,
@@ -1077,7 +1077,7 @@ class _SuggestionCard extends StatelessWidget {
                         style: TextStyle(
                           color: appTextColor,
                           fontWeight: FontWeight.w700,
-                          fontSize: 13,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -1093,8 +1093,8 @@ class _SuggestionCard extends StatelessWidget {
                       child: Text(
                         label,
                         style: TextStyle(
-                          color: Color(0xFFD7C4FF),
-                          fontSize: 10,
+                          color: appPurpleColor,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -1104,17 +1104,17 @@ class _SuggestionCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   job.companyName,
-                  style: TextStyle(color: appMutedColor, fontSize: 11),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
                 Text(
                   '${job.city} · ${job.modality}',
-                  style: TextStyle(color: appMutedColor, fontSize: 11),
+                  style: TextStyle(color: appMutedColor, fontSize: 12),
                 ),
                 const SizedBox(height: 6),
                 for (final reason in reasons.take(3))
                   Text(
                     '• $reason',
-                    style: TextStyle(color: appTextColor, fontSize: 11),
+                    style: TextStyle(color: appTextColor, fontSize: 12),
                   ),
               ],
             ),
@@ -1137,7 +1137,7 @@ class _JobsHeader extends StatelessWidget {
         'Anuncios de empleo activos',
         style: TextStyle(
           color: appTextColor,
-          fontSize: 16,
+          fontSize: 12,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -1170,7 +1170,7 @@ class _JobsCatalogHeading extends StatelessWidget {
               SizedBox(height: 2),
               Text(
                 'Catálogo completo. Usa el buscador y los filtros.',
-                style: TextStyle(color: appMutedColor, fontSize: 10),
+                style: TextStyle(color: appMutedColor, fontSize: 12),
               ),
             ],
           ),
@@ -1232,7 +1232,7 @@ class _PublicJobCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: appTextColor,
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1285,7 +1285,7 @@ class _JobMetadata extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: TextStyle(color: appMutedColor, fontSize: 10),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
         ),
       ],
@@ -1312,7 +1312,7 @@ class _Tag extends StatelessWidget {
       children: [
         Icon(icon, color: appPurpleColor, size: 13),
         const SizedBox(width: 5),
-        Text(text, style: TextStyle(color: appTextColor, fontSize: 11)),
+        Text(text, style: TextStyle(color: appTextColor, fontSize: 12)),
       ],
     ),
   );
@@ -1344,7 +1344,7 @@ class _DetailText extends StatelessWidget {
           style: TextStyle(
             color: appTextColor,
             height: 1.4,
-            fontSize: 13,
+            fontSize: 12,
           ),
         ),
       ],
@@ -1367,7 +1367,7 @@ class _EmptyJobs extends StatelessWidget {
           style: TextStyle(
             color: appTextColor,
             fontWeight: FontWeight.w700,
-            fontSize: 15,
+            fontSize: 12,
           ),
         ),
         SizedBox(height: 6),
@@ -1433,7 +1433,7 @@ class _JobsLoadError extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(color: appMutedColor, fontSize: 11),
+            style: TextStyle(color: appMutedColor, fontSize: 12),
           ),
           const SizedBox(height: 12),
           OutlinedButton(onPressed: onRetry, child: Text('Reintentar')),
